@@ -6,16 +6,49 @@
 //
 
 import SwiftUI
+import RealityKit
 
 /// Maintains app-wide state
 @MainActor
 @Observable
 class AppModel {
-    let immersiveSpaceID = "ImmersiveSpace"
-    enum ImmersiveSpaceState {
-        case closed
-        case inTransition
-        case open
+    
+    var rootEntity: Entity?
+    var turnOnImmersiveSpace = false
+    var blurRadius: Float = 8
+    var inTexture: MTLTexture?
+    var lowLevelTexture: LowLevelTexture?
+    
+    func clear() {
+        rootEntity?.children.removeAll()
+        inTexture = nil
+        lowLevelTexture = nil
     }
-    var immersiveSpaceState = ImmersiveSpaceState.closed
+    
+    /// Resets game state information.
+    func reset() {
+        debugPrint(#function)
+        
+        blurRadius = 8
+        clear()
+    }
+    
+}
+
+
+
+/// A description of the modules that the app can present.
+enum Module: String, Identifiable, CaseIterable, Equatable {
+    case imageWithMPS
+    case imageWithCIFilter
+    
+    var id: Self { self }
+    var name: LocalizedStringKey {
+        LocalizedStringKey(rawValue)
+    }
+
+    var immersiveId: String {
+        self.rawValue + "ID"
+    }
+
 }

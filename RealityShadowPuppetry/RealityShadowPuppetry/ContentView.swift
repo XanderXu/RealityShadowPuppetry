@@ -10,17 +10,51 @@ import RealityKit
 import RealityKitContent
 
 struct ContentView: View {
-
+    @State private var selectedModule: Module = .imageWithMPS
+    
+    @Environment(AppModel.self) private var model
+    @Environment(\.openImmersiveSpace) var openImmersiveSpace
+    @Environment(\.dismissImmersiveSpace) var dismissImmersiveSpace
+    
     var body: some View {
-        VStack {
-            Model3D(named: "Scene", bundle: realityKitContentBundle)
-                .padding(.bottom, 50)
-
-            Text("Hello, world!")
-
-            ToggleImmersiveSpaceButton()
+        NavigationSplitView {
+            List(Module.allCases) { module in
+                Button(action: {
+                    selectedModule = module
+                }, label: {
+                    Text(module.name)
+                })
+                .listRowBackground(
+                    RoundedRectangle(cornerRadius: 8)
+                        .background(Color.clear)
+                        .foregroundColor((module == selectedModule) ? Color.teal.opacity(0.3) : .clear)
+                )
+                
+            }
+            .navigationTitle("Hand Vector Demo")
+        } detail: {
+            DetailView()
+                .navigationTitle(selectedModule.name)
+            
         }
-        .padding()
+        .frame(minWidth: 800, minHeight: 500)
+        .onChange(of: selectedModule) { _, newValue in
+            Task {
+                if model.turnOnImmersiveSpace {
+                    model.turnOnImmersiveSpace = false
+                }
+            }
+        }
+        .onChange(of: model.turnOnImmersiveSpace) { _, newValue in
+            Task {
+                if newValue {
+                    await openImmersiveSpace(id: selectedModule.immersiveId)
+                } else {
+                    await dismissImmersiveSpace()
+                    model.reset()
+                }
+            }
+        }
     }
 }
 

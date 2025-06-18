@@ -10,24 +10,29 @@ import SwiftUI
 @main
 struct RealityShadowPuppetryApp: App {
 
-    @State private var appModel = AppModel()
+    @State private var model = AppModel()
 
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environment(appModel)
+                .environment(model)
         }
 
-        ImmersiveSpace(id: appModel.immersiveSpaceID) {
-            ImmersiveView()
-                .environment(appModel)
-                .onAppear {
-                    appModel.immersiveSpaceState = .open
-                }
-                .onDisappear {
-                    appModel.immersiveSpaceState = .closed
-                }
+        .windowResizability(.contentSize)
+        .defaultSize(width: 1, height: 0.6, depth: 0.1, in: .meters)
+
+        ImmersiveSpace(id: Module.imageWithMPS.immersiveId) {
+            ImageWithMPSImmersiveView()
+                .environment(model)
         }
         .immersionStyle(selection: .constant(.mixed), in: .mixed)
+        
+        ImmersiveSpace(id: Module.imageWithCIFilter.immersiveId) {
+            ImageWithCIFilterImmersiveView()
+                .environment(model)
+        }
+        .immersionStyle(selection: .constant(.mixed), in: .mixed)
+        
+        
      }
 }
