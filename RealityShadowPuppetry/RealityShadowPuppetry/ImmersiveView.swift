@@ -51,7 +51,8 @@ struct ImmersiveView: View {
         let llt = try LowLevelTexture(descriptor: textureDescriptor)
         
         
-        populate(inTexture: inTexture, lowLevelTexture: llt, device: device)
+//        populateMPS(inTexture: inTexture, lowLevelTexture: llt, device: device)
+        populateCIFilter(inTexture: inTexture, lowLevelTexture: llt, device: device)
 
         // Create a TextureResource from the LowLevelTexture.
         let resource = try TextureResource(from: llt)
@@ -63,7 +64,7 @@ struct ImmersiveView: View {
         return ModelEntity(mesh: .generatePlane(width: 1, height: 1), materials: [material])
     }
     
-    func populate(inTexture: MTLTexture, lowLevelTexture: LowLevelTexture, device: MTLDevice) {
+    func populateMPS(inTexture: MTLTexture, lowLevelTexture: LowLevelTexture, device: MTLDevice) {
         // Set up the Metal command queue and compute command encoder,
         // or abort if that fails.
         guard let commandQueue = device.makeCommandQueue(),
@@ -73,13 +74,44 @@ struct ImmersiveView: View {
         
         // Create a MPS filter.
         let blur = MPSImageGaussianBlur(device: device, sigma: 8)
+        // set input output
         let outTexture = lowLevelTexture.replace(using: commandBuffer)
-        
         blur.encode(commandBuffer: commandBuffer, sourceTexture: inTexture, destinationTexture: outTexture)
+        
         // The usual Metal enqueue process.
         commandBuffer.commit()
         commandBuffer.waitUntilCompleted()
-
+    }
+    
+    func populateCIFilter(inTexture: MTLTexture, lowLevelTexture: LowLevelTexture, device: MTLDevice) {
+        // Set up the Metal command queue and compute command encoder,
+        // or abort if that fails.
+        guard let commandQueue = device.makeCommandQueue(),
+              let commandBuffer = commandQueue.makeCommandBuffer() else {
+            return
+        }
+        
+        // Create a CIFilter.
+        let blur = CIFilter(name: "CIGaussianBlur")
+        blur?.setValue(CIImage(mtlTexture: inTexture), forKey: kCIInputImageKey)
+        blur?.setValue(8, forKey: kCIInputRadiusKey)
+        
+        // set input output
+        let outTexture = lowLevelTexture.replace(using: commandBuffer)
+        let render = CIRenderDestination(mtlTexture: outTexture, commandBuffer: commandBuffer)
+        // Create a Context for GPU-Based Rendering
+        let ciContext = CIContext(mtlCommandQueue: commandQueue)
+        if let outImage = blur?.outputImage {
+            do {
+                try ciContext.startTask(toRender: outImage, to: render)
+            } catch  {
+                print(error)
+            }
+        }
+        
+        // The usual Metal enqueue process.
+        commandBuffer.commit()
+        commandBuffer.waitUntilCompleted()
     }
 }
 
