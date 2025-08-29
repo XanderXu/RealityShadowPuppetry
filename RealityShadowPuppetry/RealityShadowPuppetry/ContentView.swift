@@ -10,7 +10,7 @@ import RealityKit
 import RealityKitContent
 
 struct ContentView: View {
-    @State private var selectedModule: Module = .imageWithMPS
+    @State private var selectedModule: Module = .handShadow
     
     @Environment(AppModel.self) private var model
     @Environment(\.openImmersiveSpace) var openImmersiveSpace
@@ -31,7 +31,7 @@ struct ContentView: View {
                 )
                 
             }
-            .navigationTitle("Hand Vector Demo")
+            .navigationTitle("RealityShadowPuppetry")
         } detail: {
             DetailView()
                 .navigationTitle(selectedModule.name)

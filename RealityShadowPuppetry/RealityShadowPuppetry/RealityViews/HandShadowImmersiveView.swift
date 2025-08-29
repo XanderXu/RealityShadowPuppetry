@@ -1,5 +1,5 @@
 //
-//  ImageWithCIFilterImmersiveView.swift
+//  HandShadowImmersiveView.swift
 //  RealityShadowPuppetry
 //
 //  Created by 许M4 on 2025/6/18.
@@ -7,9 +7,10 @@
 
 import SwiftUI
 import RealityKit
+import MetalPerformanceShaders
 import MetalKit
 
-struct ImageWithCIFilterImmersiveView: View {
+struct HandShadowImmersiveView: View {
     @Environment(AppModel.self) private var model
     let device = MTLCreateSystemDefaultDevice()!
     var body: some View {
@@ -22,14 +23,14 @@ struct ImageWithCIFilterImmersiveView: View {
             
             do {
                 let textureLoader = MTKTextureLoader(device: device)
-                let inTexture = try textureLoader.newTexture(name: "panghu", scaleFactor: 1, bundle: nil)
+                let inTexture = try textureLoader.newTexture(name: "Shop_L", scaleFactor: 1, bundle: nil)
                 
                 // Create a descriptor for the LowLevelTexture.
                 let textureDescriptor = createTextureDescriptor(width: inTexture.width, height: inTexture.height)
                 // Create the LowLevelTexture and populate it on the GPU.
                 let llt = try LowLevelTexture(descriptor: textureDescriptor)
                 
-                populateCIFilter(inTexture: inTexture, lowLevelTexture: llt, device: device)
+                populateMPS(inTexture: inTexture, lowLevelTexture: llt, device: device)
 
                 // Create a TextureResource from the LowLevelTexture.
                 let resource = try TextureResource(from: llt)
@@ -48,13 +49,12 @@ struct ImageWithCIFilterImmersiveView: View {
                 print(error)
             }
 
-        } update: { content in
-            
-            print("update")
+        }
+        .onChange(of: model.shadowStyle) { oldValue, newValue in
             guard model.inTexture != nil && model.lowLevelTexture != nil else {
                 return
             }
-            populateCIFilter(inTexture: model.inTexture!, lowLevelTexture: model.lowLevelTexture!, device: device)
+            populateMPS(inTexture: model.inTexture!, lowLevelTexture: model.lowLevelTexture!, device: device)
         }
         
         
@@ -80,7 +80,7 @@ struct ImageWithCIFilterImmersiveView: View {
     
     
     
-    func populateCIFilter(inTexture: MTLTexture, lowLevelTexture: LowLevelTexture, device: MTLDevice) {
+    func populateMPS(inTexture: MTLTexture, lowLevelTexture: LowLevelTexture, device: MTLDevice) {
         // Set up the Metal command queue and compute command encoder,
         // or abort if that fails.
         guard let commandQueue = device.makeCommandQueue(),
@@ -88,23 +88,11 @@ struct ImageWithCIFilterImmersiveView: View {
             return
         }
         
-        // Create a CIFilter.
-        let blur = CIFilter(name: "CIGaussianBlur")
-        blur?.setValue(CIImage(mtlTexture: inTexture), forKey: kCIInputImageKey)
-        blur?.setValue(model.blurRadius, forKey: kCIInputRadiusKey)
-        
+        // Create a MPS filter.
+        let blur = MPSImageGaussianBlur(device: device, sigma: 8)
         // set input output
         let outTexture = lowLevelTexture.replace(using: commandBuffer)
-        let render = CIRenderDestination(mtlTexture: outTexture, commandBuffer: commandBuffer)
-        // Create a Context for GPU-Based Rendering
-        let ciContext = CIContext(mtlCommandQueue: commandQueue)
-        if let outImage = blur?.outputImage {
-            do {
-                try ciContext.startTask(toRender: outImage, to: render)
-            } catch  {
-                print(error)
-            }
-        }
+        blur.encode(commandBuffer: commandBuffer, sourceTexture: inTexture, destinationTexture: outTexture)
         
         // The usual Metal enqueue process.
         commandBuffer.commit()
@@ -113,5 +101,5 @@ struct ImageWithCIFilterImmersiveView: View {
 }
 
 #Preview {
-    ImageWithCIFilterImmersiveView()
+    HandShadowImmersiveView()
 }

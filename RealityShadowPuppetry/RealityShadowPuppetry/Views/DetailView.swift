@@ -19,11 +19,21 @@ struct DetailView: View {
                     .padding(.bottom, 40)
                 
             }
-            Text("Blur Radius: \(model.blurRadius.formatted())")
-            Slider(value: $model.blurRadius, in: 1...20, step: 1) {
-                Text("Blur Radius: \(model.blurRadius)")
+            
+            Picker(selection: $model.shadowStyle, label: Text("Shadow Style")) {
+                ForEach(AppModel.ShadowStyle.allCases, id: \.self) { type in
+                    Text(type.rawValue)
+                }
             }
+            .pickerStyle(.segmented)
+            .padding(.bottom, 40)
             .frame(width: 400)
+            
+            Toggle("Show Video", isOn: $model.showVideo)
+                .disabled(!model.turnOnImmersiveSpace)
+                .toggleStyle(ButtonToggleStyle())
+                .padding(.bottom, 40)
+                .frame(width: 400)
         }
     }
 }

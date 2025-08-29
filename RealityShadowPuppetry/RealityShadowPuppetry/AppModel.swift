@@ -12,10 +12,14 @@ import RealityKit
 @MainActor
 @Observable
 class AppModel {
-    
+    enum ShadowStyle: String, CaseIterable {
+        case Gray
+        case Color
+    }
     var rootEntity: Entity?
     var turnOnImmersiveSpace = false
-    var blurRadius: Float = 8
+    var shadowStyle = ShadowStyle.Gray
+    var showVideo = false
     var inTexture: MTLTexture?
     var lowLevelTexture: LowLevelTexture?
     
@@ -29,7 +33,7 @@ class AppModel {
     func reset() {
         debugPrint(#function)
         
-        blurRadius = 8
+        shadowStyle = ShadowStyle.Gray
         clear()
     }
     
@@ -39,8 +43,8 @@ class AppModel {
 
 /// A description of the modules that the app can present.
 enum Module: String, Identifiable, CaseIterable, Equatable {
-    case imageWithMPS
-    case imageWithCIFilter
+    case handShadow
+    case bodyShadow
     
     var id: Self { self }
     var name: LocalizedStringKey {

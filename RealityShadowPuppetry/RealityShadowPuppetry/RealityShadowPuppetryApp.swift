@@ -21,14 +21,14 @@ struct RealityShadowPuppetryApp: App {
         .windowResizability(.contentSize)
         .defaultSize(width: 1, height: 0.6, depth: 0.1, in: .meters)
 
-        ImmersiveSpace(id: Module.imageWithMPS.immersiveId) {
-            ImageWithMPSImmersiveView()
+        ImmersiveSpace(id: Module.handShadow.immersiveId) {
+            HandShadowImmersiveView()
                 .environment(model)
         }
         .immersionStyle(selection: .constant(.mixed), in: .mixed)
         
-        ImmersiveSpace(id: Module.imageWithCIFilter.immersiveId) {
-            ImageWithCIFilterImmersiveView()
+        ImmersiveSpace(id: Module.bodyShadow.immersiveId) {
+            BodyShadowImmersiveView()
                 .environment(model)
         }
         .immersionStyle(selection: .constant(.mixed), in: .mixed)
