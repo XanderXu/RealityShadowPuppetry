@@ -9,6 +9,7 @@ import SwiftUI
 import RealityKit
 import MetalKit
 import AVFoundation
+import MetalPerformanceShaders
 
 struct HandShadowImmersiveView: View {
     @Environment(AppModel.self) private var model
@@ -21,7 +22,6 @@ struct HandShadowImmersiveView: View {
             entity.name = "GameRoot"
             model.rootEntity = entity
             content.add(entity)
-            
             do {
                 let inTexture = try model.createMTLTexture(name: "Shop_L", bundle: nil)
                 let (player, llt) = try await model.createPlayerAndLowLevelTextureWithAsset(asset: asset)
@@ -48,10 +48,20 @@ struct HandShadowImmersiveView: View {
                 
                 
                 player.play()
+                
+                
+                let box = ModelEntity(mesh: MeshResource.generateBox(size: 0.1), materials: [UnlitMaterial(color: .green)])
+                box.name = "Box"
+                box.position = SIMD3(x: 0, y: 0, z: -2)
+                let off = try OffscreenRenderModel(scene: box, device: model.mtlDevice, textureSize: SIMD2(3840, 2160))
+                try off.render()
+                SampleCustomCompositor.inTexture = off.colorTexture
+                
+
             } catch {
                 print(error)
             }
-
+            
         }
         .onChange(of: model.shadowStyle) { oldValue, newValue in
             

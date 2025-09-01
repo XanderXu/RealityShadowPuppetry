@@ -23,7 +23,7 @@ class AppModel {
     var shadowStyle = ShadowStyle.Gray
     var showVideo = false
     
-    private let mtlDevice = MTLCreateSystemDefaultDevice()!
+    let mtlDevice = MTLCreateSystemDefaultDevice()!
     
     func clear() {
         rootEntity?.children.removeAll()
@@ -76,7 +76,7 @@ class AppModel {
 
         desc.mipmapLevelCount = 1
         desc.pixelFormat = .bgra8Unorm
-        desc.textureUsage = [.shaderRead, .shaderWrite]
+        desc.textureUsage = [ .shaderWrite]
         desc.swizzle = .init(red: .red, green: .green, blue: .blue, alpha: .alpha)
 
         return desc
