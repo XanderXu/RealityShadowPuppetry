@@ -23,9 +23,7 @@ struct HandShadowImmersiveView: View {
             model.rootEntity = entity
             content.add(entity)
             do {
-                let inTexture = try model.createMTLTexture(name: "Shop_L", bundle: nil)
-                let (player, llt) = try await model.createPlayerAndLowLevelTextureWithAsset(asset: asset)
-                
+                let (player, size) = try await model.createPlayerAndSizeWithAsset(asset: asset)
                 let videoMaterial = VideoMaterial(avPlayer: player)
                 // Return an entity of a plane which uses the VideoMaterial.
                 let modelEntity = ModelEntity(mesh: .generatePlane(width: 1, height: 1), materials: [videoMaterial])
@@ -35,7 +33,10 @@ struct HandShadowImmersiveView: View {
                 modelEntity.isEnabled = model.showVideo
                 
                 
-                model.setupCustomCompositor(inTexture: inTexture, llt: llt)
+                let llt = try model.createLowLevelTexture(width: Int(size.width), height: Int(size.height))
+//                let inTexture = try model.createMTLTexture(name: "Shop_L", bundle: nil)
+                
+
                 // Create a TextureResource from the LowLevelTexture.
                 let resource = try await TextureResource(from: llt)
                 // Create a material that uses the texture.
@@ -53,9 +54,9 @@ struct HandShadowImmersiveView: View {
                 let box = ModelEntity(mesh: MeshResource.generateBox(size: 0.1), materials: [UnlitMaterial(color: .green)])
                 box.name = "Box"
                 box.position = SIMD3(x: 0, y: 0, z: -2)
-                let off = try OffscreenRenderModel(scene: box, device: model.mtlDevice, textureSize: SIMD2(3840, 2160))
+                let off = try OffscreenRenderModel(scene: box, device: model.mtlDevice, textureSize: size)
                 try off.render()
-                SampleCustomCompositor.inTexture = off.colorTexture
+                model.setupCustomCompositor(inTexture: off.colorTexture, llt: llt)
                 
 
             } catch {

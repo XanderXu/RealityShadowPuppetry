@@ -15,7 +15,7 @@ final class OffscreenRenderModel {
     
     let colorTexture: MTLTexture
         
-    init(scene: Entity, device: MTLDevice, textureSize: SIMD2<Int>) throws {
+    init(scene: Entity, device: MTLDevice, textureSize: CGSize) throws {
         renderer = try RealityRenderer()
         
         renderer.entities.append(scene)
@@ -26,8 +26,8 @@ final class OffscreenRenderModel {
         
         let textureDesc = MTLTextureDescriptor()
         textureDesc.pixelFormat = .rgba8Unorm
-        textureDesc.width = textureSize.x
-        textureDesc.height = textureSize.y
+        textureDesc.width = Int(textureSize.width)
+        textureDesc.height = Int(textureSize.height)
         textureDesc.usage = [.renderTarget, .shaderRead]
         
         colorTexture = device.makeTexture(descriptor: textureDesc)!

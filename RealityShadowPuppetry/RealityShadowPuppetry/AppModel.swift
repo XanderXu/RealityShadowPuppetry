@@ -37,7 +37,7 @@ class AppModel {
         shadowStyle = ShadowStyle.Gray
         clear()
     }
-    func createPlayerAndLowLevelTextureWithAsset(asset: AVAsset) async throws -> (AVPlayer, LowLevelTexture) {
+    func createPlayerAndSizeWithAsset(asset: AVAsset) async throws -> (AVPlayer, CGSize) {
         // Create a video composition with CustomCompositor
         let composition = try await AVMutableVideoComposition.videoComposition(withPropertiesOf: asset)
         composition.customVideoCompositorClass = SampleCustomCompositor.self
@@ -48,10 +48,12 @@ class AppModel {
         let videoTrack = try await asset.loadTracks(withMediaType: .video).first!
         let naturalSize = try await videoTrack.load(.naturalSize)
         
-        let textureDescriptor = createTextureDescriptor(width: Int(naturalSize.width), height: Int(naturalSize.height))
+        return (player, naturalSize)
+    }
+    func createLowLevelTexture(width: Int, height: Int) throws -> LowLevelTexture {
+        let textureDescriptor = createTextureDescriptor(width: width, height: height)
         let llt = try LowLevelTexture(descriptor: textureDescriptor)
-        
-        return (player, llt)
+        return llt
     }
     func setupCustomCompositor(inTexture: any MTLTexture, llt: LowLevelTexture) {
         SampleCustomCompositor.mtlDevice = mtlDevice
