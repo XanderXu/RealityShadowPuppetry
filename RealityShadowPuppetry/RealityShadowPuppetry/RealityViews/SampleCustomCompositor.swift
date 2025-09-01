@@ -25,7 +25,7 @@ enum CustomCompositorError: Int, Error, LocalizedError {
 }
 
 class SampleCustomCompositor: NSObject, AVVideoCompositing {
-    static var blurRadius: Float = 0
+    static var inTexture: (any MTLTexture)? = nil
     static var llt: LowLevelTexture?
     static var mtlDevice: MTLDevice?
 
@@ -88,7 +88,7 @@ class SampleCustomCompositor: NSObject, AVVideoCompositing {
               let commandBuffer = commandQueue.makeCommandBuffer() else {
             return
         }
-        
+        guard let inTexture = Self.inTexture else { return }
         // Now sourceBuffer should already be in BGRA format, create Metal texture directly
         var mtlTextureCache: CVMetalTextureCache? = nil
         CVMetalTextureCacheCreate(kCFAllocatorDefault, nil, device, nil, &mtlTextureCache)
@@ -117,9 +117,7 @@ class SampleCustomCompositor: NSObject, AVVideoCompositing {
             print("Expected BGRA format: \(kCVPixelFormatType_32BGRA)")
             return
         }
-        // Create a MPS filter with dynamic blur radius
-        let blurRadius = Self.blurRadius
-        let blur = MPSImageGaussianBlur(device: device, sigma: blurRadius)
+        
 
         // Check input and output texture compatibility
         guard bgraTexture.width <= lowLevelTexture.descriptor.width,
@@ -128,9 +126,11 @@ class SampleCustomCompositor: NSObject, AVVideoCompositing {
             return
         }
 
+        // Create a MPS filter with dynamic blur radius
+        let add = MPSImageAdd(device: device)
         // set input output
         let outTexture = lowLevelTexture.replace(using: commandBuffer)
-        blur.encode(commandBuffer: commandBuffer, sourceTexture: bgraTexture, destinationTexture: outTexture)
+        add.encode(commandBuffer: commandBuffer, primaryTexture: bgraTexture, secondaryTexture: inTexture, destinationTexture: outTexture)
 
         // The usual Metal enqueue process.
         commandBuffer.commit()

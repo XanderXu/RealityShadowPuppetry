@@ -7,6 +7,8 @@
 
 import SwiftUI
 import RealityKit
+import MetalKit
+import AVFoundation
 
 /// Maintains app-wide state
 @MainActor
@@ -20,6 +22,7 @@ class AppModel {
     var turnOnImmersiveSpace = false
     var shadowStyle = ShadowStyle.Gray
     var showVideo = false
+    
     private let mtlDevice = MTLCreateSystemDefaultDevice()!
     
     func clear() {
@@ -34,11 +37,31 @@ class AppModel {
         shadowStyle = ShadowStyle.Gray
         clear()
     }
-    
-    func createLowLevelTexture(width: Int, height: Int) throws -> LowLevelTexture {
-        let textureDescriptor = createTextureDescriptor(width: width, height: height)
+    func createPlayerAndLowLevelTextureWithAsset(asset: AVAsset) async throws -> (AVPlayer, LowLevelTexture) {
+        // Create a video composition with CustomCompositor
+        let composition = try await AVMutableVideoComposition.videoComposition(withPropertiesOf: asset)
+        composition.customVideoCompositorClass = SampleCustomCompositor.self
+        let playerItem = AVPlayerItem(asset: asset)
+        playerItem.videoComposition = composition
+        let player = AVPlayer(playerItem: playerItem)
+        
+        let videoTrack = try await asset.loadTracks(withMediaType: .video).first!
+        let naturalSize = try await videoTrack.load(.naturalSize)
+        
+        let textureDescriptor = createTextureDescriptor(width: Int(naturalSize.width), height: Int(naturalSize.height))
         let llt = try LowLevelTexture(descriptor: textureDescriptor)
-        return llt
+        
+        return (player, llt)
+    }
+    func setupCustomCompositor(inTexture: any MTLTexture, llt: LowLevelTexture) {
+        SampleCustomCompositor.mtlDevice = mtlDevice
+        SampleCustomCompositor.llt = llt
+        SampleCustomCompositor.inTexture = inTexture
+    }
+    func createMTLTexture(name: String, bundle: Bundle? = nil) throws -> any MTLTexture {
+        let textureLoader = MTKTextureLoader(device: mtlDevice)
+        let inTexture = try textureLoader.newTexture(name: name, scaleFactor: 1, bundle: bundle)
+        return inTexture
     }
     
     private func createTextureDescriptor(width: Int, height: Int) -> LowLevelTexture.Descriptor {
