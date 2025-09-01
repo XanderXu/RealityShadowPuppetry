@@ -20,13 +20,11 @@ class AppModel {
     var turnOnImmersiveSpace = false
     var shadowStyle = ShadowStyle.Gray
     var showVideo = false
-    var inTexture: MTLTexture?
-    var lowLevelTexture: LowLevelTexture?
+    private let mtlDevice = MTLCreateSystemDefaultDevice()!
     
     func clear() {
         rootEntity?.children.removeAll()
-        inTexture = nil
-        lowLevelTexture = nil
+        
     }
     
     /// Resets game state information.
@@ -37,6 +35,29 @@ class AppModel {
         clear()
     }
     
+    func createLowLevelTexture(width: Int, height: Int) throws -> LowLevelTexture {
+        let textureDescriptor = createTextureDescriptor(width: width, height: height)
+        let llt = try LowLevelTexture(descriptor: textureDescriptor)
+        return llt
+    }
+    
+    private func createTextureDescriptor(width: Int, height: Int) -> LowLevelTexture.Descriptor {
+        var desc = LowLevelTexture.Descriptor()
+
+        desc.textureType = .type2D
+        desc.arrayLength = 1
+
+        desc.width = width
+        desc.height = height
+        desc.depth = 1
+
+        desc.mipmapLevelCount = 1
+        desc.pixelFormat = .bgra8Unorm
+        desc.textureUsage = [.shaderRead, .shaderWrite]
+        desc.swizzle = .init(red: .red, green: .green, blue: .blue, alpha: .alpha)
+
+        return desc
+    }
 }
 
 
