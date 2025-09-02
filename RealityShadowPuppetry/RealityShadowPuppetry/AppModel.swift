@@ -27,9 +27,8 @@ class AppModel {
         
     func clear() {
         rootEntity?.children.removeAll()
-        videoShadowCenter?.shadowEntity?.setParent(nil)
-        videoShadowCenter?.originalEntity?.setParent(nil)
-        videoShadowCenter?.player?.pause()
+        rootEntity?.removeFromParent()
+        videoShadowCenter?.clean()
         videoShadowCenter = nil
     }
     

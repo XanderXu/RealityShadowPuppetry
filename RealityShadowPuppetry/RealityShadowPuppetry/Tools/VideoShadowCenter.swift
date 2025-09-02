@@ -14,11 +14,11 @@ import AVFoundation
 final class VideoShadowCenter {
     let mtlDevice = MTLCreateSystemDefaultDevice()!
     
-    private(set) var originalEntity: Entity?
-    private(set) var shadowEntity: Entity?
+    let originalEntity = ModelEntity()
+    let shadowEntity = ModelEntity()
     private(set) var videoSize: CGSize?
-    private(set) var offscreenRenderer: OffscreenRenderer?
     private(set) var player: AVPlayer?
+    private(set) var offscreenRenderer: OffscreenRenderer?
     
     
     init(asset: AVAsset) async throws {
@@ -29,9 +29,9 @@ final class VideoShadowCenter {
         
         let videoMaterial = VideoMaterial(avPlayer: player)
         // Return an entity of a plane which uses the VideoMaterial.
-        originalEntity = ModelEntity(mesh: .generatePlane(width: 1, height: Float(size.height/size.width)), materials: [videoMaterial])
-        originalEntity?.name = "OriginalVideo"
-        originalEntity?.position = SIMD3(x: 0, y: 1, z: -2)
+        originalEntity.model = .init(mesh: .generatePlane(width: 1, height: Float(size.height/size.width)), materials: [videoMaterial])
+        originalEntity.name = "OriginalVideo"
+        originalEntity.position = SIMD3(x: 0, y: 1, z: -2)
         
         let textureDescriptor = createTextureDescriptor(width: Int(size.width), height: Int(size.height))
         let llt = try LowLevelTexture(descriptor: textureDescriptor)
@@ -39,10 +39,9 @@ final class VideoShadowCenter {
         let resource = try await TextureResource(from: llt)
         // Create a material that uses the texture.
         let material = UnlitMaterial(texture: resource)
-        // Return an entity of a plane which uses the generated texture.
-        shadowEntity = ModelEntity(mesh: .generatePlane(width: 1, height: Float(size.height/size.width)), materials: [material])
-        shadowEntity?.name = "MixedTexture"
-        shadowEntity?.position = SIMD3(x: 1.2, y: 1, z: -2)
+        shadowEntity.model = .init(mesh: .generatePlane(width: 1, height: Float(size.height/size.width)), materials: [material])
+        shadowEntity.name = "MixedTexture"
+        shadowEntity.position = SIMD3(x: 1.2, y: 1, z: -2)
         
         
         player.play()
@@ -61,7 +60,20 @@ final class VideoShadowCenter {
     }
     
     
-    func createPlayerAndSizeWithAsset(asset: AVAsset) async throws -> (AVPlayer, CGSize) {
+    public func clean() {
+        originalEntity.removeFromParent()
+        shadowEntity.removeFromParent()
+        offscreenRenderer?.removeAllEntities()
+        player?.pause()
+        player = nil
+        SampleCustomCompositor.mtlDevice = nil
+        SampleCustomCompositor.llt = nil
+        SampleCustomCompositor.inTexture = nil
+    }
+    
+    
+    
+    private func createPlayerAndSizeWithAsset(asset: AVAsset) async throws -> (AVPlayer, CGSize) {
         // Create a video composition with CustomCompositor
         let composition = try await AVMutableVideoComposition.videoComposition(withPropertiesOf: asset)
         composition.customVideoCompositorClass = SampleCustomCompositor.self

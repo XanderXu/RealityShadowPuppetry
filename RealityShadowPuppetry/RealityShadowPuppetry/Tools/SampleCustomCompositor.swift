@@ -71,7 +71,7 @@ class SampleCustomCompositor: NSObject, AVVideoCompositing {
             let sourceBuffer = request.sourceFrame(byTrackID: sourceID.value(of: Int32.self)!)!
             
             Task {@MainActor in
-                populateMPS(sourceBuffer: sourceBuffer, lowLevelTexture: SampleCustomCompositor.llt!, device: SampleCustomCompositor.mtlDevice!)
+                populateMPS(sourceBuffer: sourceBuffer, lowLevelTexture: Self.llt, device: Self.mtlDevice, inTexture: Self.inTexture)
             }
             
             request.finish(withComposedVideoFrame: sourceBuffer)
@@ -81,25 +81,36 @@ class SampleCustomCompositor: NSObject, AVVideoCompositing {
     }
     
     
-    @MainActor func populateMPS(sourceBuffer: CVPixelBuffer, lowLevelTexture: LowLevelTexture, device: MTLDevice) {
+    @MainActor
+    func populateMPS(sourceBuffer: CVPixelBuffer, lowLevelTexture: LowLevelTexture?, device: MTLDevice?, inTexture: (any MTLTexture)?) {
+        guard let lowLevelTexture = lowLevelTexture, let device = device, let inTexture = inTexture else { return }
+        
         // Set up the Metal command queue and compute command encoder,
         // or abort if that fails.
         guard let commandQueue = device.makeCommandQueue(),
               let commandBuffer = commandQueue.makeCommandBuffer() else {
             return
         }
-        guard let inTexture = Self.inTexture else { return }
-        // Now sourceBuffer should already be in BGRA format, create Metal texture directly
-        var mtlTextureCache: CVMetalTextureCache? = nil
-        CVMetalTextureCacheCreate(kCFAllocatorDefault, nil, device, nil, &mtlTextureCache)
 
         let width = CVPixelBufferGetWidth(sourceBuffer)
         let height = CVPixelBufferGetHeight(sourceBuffer)
 
+        // Now sourceBuffer should already be in BGRA format, create Metal texture directly
+        var mtlTextureCache: CVMetalTextureCache? = nil
+        let cacheResult = CVMetalTextureCacheCreate(kCFAllocatorDefault, nil, device, nil, &mtlTextureCache)
+        guard cacheResult == kCVReturnSuccess, let textureCache = mtlTextureCache else {
+            print("Failed to create Metal texture cache")
+            return
+        }
+        // 确保在函数结束时清理缓存
+        defer {
+            CVMetalTextureCacheFlush(textureCache, 0)
+        }
+        
         var cvTexture: CVMetalTexture?
         let result = CVMetalTextureCacheCreateTextureFromImage(
             kCFAllocatorDefault,
-            mtlTextureCache!,
+            textureCache,
             sourceBuffer,
             nil,
             .bgra8Unorm,
@@ -117,7 +128,6 @@ class SampleCustomCompositor: NSObject, AVVideoCompositing {
             print("Expected BGRA format: \(kCVPixelFormatType_32BGRA)")
             return
         }
-        
 
         // Check input and output texture compatibility
         guard bgraTexture.width <= lowLevelTexture.descriptor.width,
