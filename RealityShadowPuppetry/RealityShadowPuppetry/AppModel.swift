@@ -24,6 +24,9 @@ class AppModel {
     var showVideo = false
     
     let mtlDevice = MTLCreateSystemDefaultDevice()!
+    var offscreenRenderModel: OffscreenRenderModel?
+    var lowLevelTexture: LowLevelTexture?
+    var inTexture: (any MTLTexture)?
     
     func clear() {
         rootEntity?.children.removeAll()
@@ -60,11 +63,11 @@ class AppModel {
         SampleCustomCompositor.llt = llt
         SampleCustomCompositor.inTexture = inTexture
     }
-    func createMTLTexture(name: String, bundle: Bundle? = nil) throws -> any MTLTexture {
-        let textureLoader = MTKTextureLoader(device: mtlDevice)
-        let inTexture = try textureLoader.newTexture(name: name, scaleFactor: 1, bundle: bundle)
-        return inTexture
-    }
+//    func createMTLTexture(name: String, bundle: Bundle? = nil) throws -> any MTLTexture {
+//        let textureLoader = MTKTextureLoader(device: mtlDevice)
+//        let inTexture = try textureLoader.newTexture(name: name, scaleFactor: 1, bundle: bundle)
+//        return inTexture
+//    }
     
     private func createTextureDescriptor(width: Int, height: Int) -> LowLevelTexture.Descriptor {
         var desc = LowLevelTexture.Descriptor()

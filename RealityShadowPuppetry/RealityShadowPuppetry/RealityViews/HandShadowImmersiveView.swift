@@ -34,9 +34,6 @@ struct HandShadowImmersiveView: View {
                 
                 
                 let llt = try model.createLowLevelTexture(width: Int(size.width), height: Int(size.height))
-//                let inTexture = try model.createMTLTexture(name: "Shop_L", bundle: nil)
-                
-
                 // Create a TextureResource from the LowLevelTexture.
                 let resource = try await TextureResource(from: llt)
                 // Create a material that uses the texture.
@@ -44,7 +41,7 @@ struct HandShadowImmersiveView: View {
                 // Return an entity of a plane which uses the generated texture.
                 let modelEntity2 = ModelEntity(mesh: .generatePlane(width: 1, height: 1), materials: [material])
                 entity.addChild(modelEntity2)
-                modelEntity2.name = "GeneratedTexture"
+                modelEntity2.name = "MixedTexture"
                 modelEntity2.position = SIMD3(x: 1.2, y: 1, z: -2)
                 
                 
@@ -54,7 +51,8 @@ struct HandShadowImmersiveView: View {
                 let box = ModelEntity(mesh: MeshResource.generateBox(size: 0.1), materials: [UnlitMaterial(color: .green)])
                 box.name = "Box"
                 box.position = SIMD3(x: 0, y: 0, z: -2)
-                let off = try OffscreenRenderModel(scene: box, device: model.mtlDevice, textureSize: size)
+                let off = try OffscreenRenderModel(device: model.mtlDevice, textureSize: size)
+                off.addEntity(box)
                 try off.render()
                 model.setupCustomCompositor(inTexture: off.colorTexture, llt: llt)
                 

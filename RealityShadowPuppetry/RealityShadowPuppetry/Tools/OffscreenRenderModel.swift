@@ -10,17 +10,20 @@ import MetalKit
 @Observable
 @MainActor
 final class OffscreenRenderModel {
-        
     private let renderer: RealityRenderer
-    
     let colorTexture: MTLTexture
+    let camera: Entity
         
-    init(scene: Entity, device: MTLDevice, textureSize: CGSize) throws {
+    init(device: MTLDevice, textureSize: CGSize) throws {
         renderer = try RealityRenderer()
         
-        renderer.entities.append(scene)
+        var orthComponent = OrthographicCameraComponent()
+        orthComponent.near = 0.1
+        orthComponent.far = 100
+        orthComponent.scale = 1
         
-        let camera = PerspectiveCamera()
+        camera = Entity()
+        camera.components.set(orthComponent)
         renderer.activeCamera = camera
         renderer.entities.append(camera)
         
@@ -32,18 +35,18 @@ final class OffscreenRenderModel {
         
         colorTexture = device.makeTexture(descriptor: textureDesc)!
     }
+    func addEntity(_ scene: Entity) {
+        renderer.entities.append(scene)
+    }
+    func removeEntity(_ scene: Entity) {
+        renderer.entities.removeAll(where: { $0 == scene })
+    }
+    func removeAllEntities() {
+        renderer.entities.removeAll(where: { $0 != renderer.activeCamera })
+    }
     
     func render() throws {
-        
-        let cameraOutputDesc = RealityRenderer.CameraOutput.Descriptor.singleProjection(colorTexture: colorTexture)
-        
-        let cameraOutput = try RealityRenderer.CameraOutput(cameraOutputDesc)
- 
-        try renderer.updateAndRender(deltaTime: 0.1, cameraOutput: cameraOutput, onComplete: { renderer in
-            
-            guard let colorTexture = cameraOutput.colorTextures.first else { fatalError() }
-            
-            // The colorTexture holds the rendered scene.
-        })
+        let cameraOutput = try RealityRenderer.CameraOutput(.singleProjection(colorTexture: colorTexture))
+        try renderer.updateAndRender(deltaTime: 0, cameraOutput: cameraOutput)
     }
 }
