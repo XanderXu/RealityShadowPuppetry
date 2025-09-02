@@ -1,5 +1,5 @@
 //
-//  OffscreenRenderModel.swift
+//  OffscreenRenderer.swift
 //  RealityShadowPuppetry
 //
 //  Created by 许M4 on 2025/9/1.
@@ -7,9 +7,8 @@
 @preconcurrency import RealityKit
 import MetalKit
 
-@Observable
 @MainActor
-final class OffscreenRenderModel {
+final class OffscreenRenderer {
     private let renderer: RealityRenderer
     let colorTexture: MTLTexture
     let camera: Entity
@@ -35,6 +34,7 @@ final class OffscreenRenderModel {
         
         colorTexture = device.makeTexture(descriptor: textureDesc)!
     }
+    
     func addEntity(_ scene: Entity) {
         renderer.entities.append(scene)
     }

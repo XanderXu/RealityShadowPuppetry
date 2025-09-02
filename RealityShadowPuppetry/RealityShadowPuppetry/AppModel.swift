@@ -19,18 +19,18 @@ class AppModel {
         case Color
     }
     var rootEntity: Entity?
+    var videoShadowCenter: VideoShadowCenter?
+    
     var turnOnImmersiveSpace = false
     var shadowStyle = ShadowStyle.Gray
     var showVideo = false
-    
-    let mtlDevice = MTLCreateSystemDefaultDevice()!
-    var offscreenRenderModel: OffscreenRenderModel?
-    var lowLevelTexture: LowLevelTexture?
-    var inTexture: (any MTLTexture)?
-    
+        
     func clear() {
         rootEntity?.children.removeAll()
-        
+        videoShadowCenter?.shadowEntity?.setParent(nil)
+        videoShadowCenter?.originalEntity?.setParent(nil)
+        videoShadowCenter?.player?.pause()
+        videoShadowCenter = nil
     }
     
     /// Resets game state information.
@@ -40,52 +40,7 @@ class AppModel {
         shadowStyle = ShadowStyle.Gray
         clear()
     }
-    func createPlayerAndSizeWithAsset(asset: AVAsset) async throws -> (AVPlayer, CGSize) {
-        // Create a video composition with CustomCompositor
-        let composition = try await AVMutableVideoComposition.videoComposition(withPropertiesOf: asset)
-        composition.customVideoCompositorClass = SampleCustomCompositor.self
-        let playerItem = AVPlayerItem(asset: asset)
-        playerItem.videoComposition = composition
-        let player = AVPlayer(playerItem: playerItem)
-        
-        let videoTrack = try await asset.loadTracks(withMediaType: .video).first!
-        let naturalSize = try await videoTrack.load(.naturalSize)
-        
-        return (player, naturalSize)
-    }
-    func createLowLevelTexture(width: Int, height: Int) throws -> LowLevelTexture {
-        let textureDescriptor = createTextureDescriptor(width: width, height: height)
-        let llt = try LowLevelTexture(descriptor: textureDescriptor)
-        return llt
-    }
-    func setupCustomCompositor(inTexture: any MTLTexture, llt: LowLevelTexture) {
-        SampleCustomCompositor.mtlDevice = mtlDevice
-        SampleCustomCompositor.llt = llt
-        SampleCustomCompositor.inTexture = inTexture
-    }
-//    func createMTLTexture(name: String, bundle: Bundle? = nil) throws -> any MTLTexture {
-//        let textureLoader = MTKTextureLoader(device: mtlDevice)
-//        let inTexture = try textureLoader.newTexture(name: name, scaleFactor: 1, bundle: bundle)
-//        return inTexture
-//    }
     
-    private func createTextureDescriptor(width: Int, height: Int) -> LowLevelTexture.Descriptor {
-        var desc = LowLevelTexture.Descriptor()
-
-        desc.textureType = .type2D
-        desc.arrayLength = 1
-
-        desc.width = width
-        desc.height = height
-        desc.depth = 1
-
-        desc.mipmapLevelCount = 1
-        desc.pixelFormat = .bgra8Unorm
-        desc.textureUsage = [ .shaderWrite]
-        desc.swizzle = .init(red: .red, green: .green, blue: .blue, alpha: .alpha)
-
-        return desc
-    }
 }
 
 
