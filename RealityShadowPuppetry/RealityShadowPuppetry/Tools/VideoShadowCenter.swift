@@ -52,12 +52,12 @@ final class VideoShadowCenter {
         
         
         player.play()
-        
-        let box = ModelEntity(mesh: MeshResource.generateBox(size: 0.1), materials: [UnlitMaterial(color: .green)])
-        box.name = "Box"
-        box.position = SIMD3(x: 0, y: 0, z: -2)
-        offscreenRenderer?.addEntity(box)
-        try offscreenRenderer?.render()
+//        
+//        let box = ModelEntity(mesh: MeshResource.generateBox(size: 0.1), materials: [UnlitMaterial(color: .green)])
+//        box.name = "Box"
+//        box.position = SIMD3(x: 0, y: 0, z: -2)
+//        offscreenRenderer?.addEntity(box)
+//        try offscreenRenderer?.render()
     }
     
     

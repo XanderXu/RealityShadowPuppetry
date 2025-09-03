@@ -42,6 +42,22 @@ struct HandShadowImmersiveView: View {
             let videoEntity = model.rootEntity?.findEntity(named: "OriginalVideo")
             videoEntity?.isEnabled = newValue
         }
+        .upperLimbVisibility(model.latestHandTracking.isSkeletonVisible ? .hidden : .automatic)
+        
+        .task {
+            await model.startHandTracking()
+        }
+        .task {
+            await model.publishHandTrackingUpdates()
+        }
+        .task {
+            await model.monitorSessionEvents()
+        }
+#if targetEnvironment(simulator)
+        .task {
+            await model.publishSimHandTrackingUpdates()
+        }
+#endif
         
     }
     
