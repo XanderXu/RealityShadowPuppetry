@@ -39,7 +39,7 @@ final class OffscreenRenderer {
         renderer.entities.append(scene)
     }
     func removeEntity(_ scene: Entity) {
-        renderer.entities.removeAll(where: { $0 == scene })
+        renderer.entities.removeAll(where: { $0 == scene && $0 != renderer.activeCamera })
     }
     func removeAllEntities() {
         renderer.entities.removeAll(where: { $0 != renderer.activeCamera })

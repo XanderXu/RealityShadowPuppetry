@@ -25,10 +25,12 @@ enum CustomCompositorError: Int, Error, LocalizedError {
 }
 
 class SampleCustomCompositor: NSObject, AVVideoCompositing {
-    static var inTexture: (any MTLTexture)? = nil
-    static var llt: LowLevelTexture?
-    static var mtlDevice: MTLDevice?
+    var inTexture: (any MTLTexture)? = nil
+    var llt: LowLevelTexture?
+    var mtlDevice: MTLDevice?
 
+    private var isCancelled = false
+    private var request: AVAsynchronousVideoCompositionRequest?
     var sourcePixelBufferAttributes: [String: any Sendable]? = [
         String(kCVPixelBufferPixelFormatTypeKey): [kCVPixelFormatType_32BGRA],
         String(kCVPixelBufferMetalCompatibilityKey): true // Critical!
@@ -45,9 +47,14 @@ class SampleCustomCompositor: NSObject, AVVideoCompositing {
     func renderContextChanged(_ newRenderContext: AVVideoCompositionRenderContext) {
         return
     }
-    
+    func cancelAllPendingVideoCompositionRequests() {
+        isCancelled = true
+        request?.finishCancelledRequest()
+        request = nil
+    }
     func startRequest(_ request: AVAsynchronousVideoCompositionRequest) {
-        
+        self.request = request
+        isCancelled = false  // 重置取消状态
         guard let outputPixelBuffer = request.renderContext.newPixelBuffer() else {
             print("No valid pixel buffer found. Returning.")
             request.finish(with: CustomCompositorError.ciFilterFailedToProduceOutputImage)
@@ -66,14 +73,14 @@ class SampleCustomCompositor: NSObject, AVVideoCompositing {
             return
         }
         
-        if sourceCount == 1, SampleCustomCompositor.llt != nil, SampleCustomCompositor.mtlDevice != nil {
+        if sourceCount == 1 {
             let sourceID = requiredTrackIDs[0]
             let sourceBuffer = request.sourceFrame(byTrackID: sourceID.value(of: Int32.self)!)!
-            
-            Task {@MainActor in
-                populateMPS(sourceBuffer: sourceBuffer, lowLevelTexture: Self.llt, device: Self.mtlDevice, inTexture: Self.inTexture)
+            if self.llt != nil, self.mtlDevice != nil, self.inTexture != nil {
+                Task {@MainActor in
+                    populateMPS(sourceBuffer: sourceBuffer, lowLevelTexture: self.llt, device: self.mtlDevice, inTexture: self.inTexture)
+                }
             }
-            
             request.finish(withComposedVideoFrame: sourceBuffer)
         }
         
@@ -83,6 +90,9 @@ class SampleCustomCompositor: NSObject, AVVideoCompositing {
     
     @MainActor
     func populateMPS(sourceBuffer: CVPixelBuffer, lowLevelTexture: LowLevelTexture?, device: MTLDevice?, inTexture: (any MTLTexture)?) {
+        if isCancelled {
+            return
+        }
         guard let lowLevelTexture = lowLevelTexture, let device = device, let inTexture = inTexture else { return }
         
         // Set up the Metal command queue and compute command encoder,

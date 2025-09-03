@@ -19,13 +19,14 @@ final class VideoShadowCenter {
     private(set) var videoSize: CGSize?
     private(set) var player: AVPlayer?
     private(set) var offscreenRenderer: OffscreenRenderer?
-    
+    private var customCompositor: SampleCustomCompositor?
     
     init(asset: AVAsset) async throws {
         
         let (player, size) = try await createPlayerAndSizeWithAsset(asset: asset)
         self.player = player
         self.videoSize = size
+        self.customCompositor = player.currentItem?.customVideoCompositor as? SampleCustomCompositor
         
         let videoMaterial = VideoMaterial(avPlayer: player)
         // Return an entity of a plane which uses the VideoMaterial.
@@ -44,19 +45,19 @@ final class VideoShadowCenter {
         shadowEntity.position = SIMD3(x: 1.2, y: 1, z: -2)
         
         
-        player.play()
+        offscreenRenderer = try OffscreenRenderer(device: mtlDevice, textureSize: size)
+        customCompositor?.mtlDevice = mtlDevice
+        customCompositor?.llt = llt
+        customCompositor?.inTexture = offscreenRenderer?.colorTexture
         
+        
+        player.play()
         
         let box = ModelEntity(mesh: MeshResource.generateBox(size: 0.1), materials: [UnlitMaterial(color: .green)])
         box.name = "Box"
         box.position = SIMD3(x: 0, y: 0, z: -2)
-        offscreenRenderer = try OffscreenRenderer(device: mtlDevice, textureSize: size)
         offscreenRenderer?.addEntity(box)
         try offscreenRenderer?.render()
-        
-        SampleCustomCompositor.mtlDevice = mtlDevice
-        SampleCustomCompositor.llt = llt
-        SampleCustomCompositor.inTexture = offscreenRenderer?.colorTexture
     }
     
     
@@ -65,10 +66,10 @@ final class VideoShadowCenter {
         shadowEntity.removeFromParent()
         offscreenRenderer?.removeAllEntities()
         player?.pause()
-        player = nil
-        SampleCustomCompositor.mtlDevice = nil
-        SampleCustomCompositor.llt = nil
-        SampleCustomCompositor.inTexture = nil
+        customCompositor?.cancelAllPendingVideoCompositionRequests()
+        customCompositor?.mtlDevice = nil
+        customCompositor?.llt = nil
+        customCompositor?.inTexture = nil
     }
     
     
