@@ -8,7 +8,7 @@
 import RealityKit
 import MetalKit
 import AVFoundation
-
+import MetalPerformanceShaders
 
 @MainActor
 final class VideoShadowCenter {
@@ -46,10 +46,16 @@ final class VideoShadowCenter {
         
         
         offscreenRenderer = try OffscreenRenderer(device: mtlDevice, textureSize: size)
-        customCompositor?.mtlDevice = mtlDevice
-        customCompositor?.llt = llt
-        customCompositor?.inTexture = offscreenRenderer?.colorTexture
+        offscreenRenderer?.rendererUpdate = { [weak self, weak customCompositor] in
+            if player.timeControlStatus != .playing {
+                self?.populateMPS(videoTexture: customCompositor?.lastestPixel, offscreenTexture: self?.offscreenRenderer?.colorTexture, lowLevelTexture: llt, device: self?.mtlDevice)
+            }
+        }
         
+        customCompositor?.videoPixelUpdate = { [weak self, weak customCompositor] in
+            self?.populateMPS(videoTexture: customCompositor?.lastestPixel, offscreenTexture: self?.offscreenRenderer?.colorTexture, lowLevelTexture: llt, device: self?.mtlDevice)
+        }
+ 
         
         player.play()
 
@@ -60,11 +66,11 @@ final class VideoShadowCenter {
         originalEntity.removeFromParent()
         shadowEntity.removeFromParent()
         offscreenRenderer?.removeAllEntities()
+        offscreenRenderer?.rendererUpdate = nil
         player?.pause()
         customCompositor?.cancelAllPendingVideoCompositionRequests()
-        customCompositor?.mtlDevice = nil
-        customCompositor?.llt = nil
-        customCompositor?.inTexture = nil
+        customCompositor?.lastestPixel = nil
+        customCompositor?.videoPixelUpdate = nil
     }
     
     
@@ -101,5 +107,35 @@ final class VideoShadowCenter {
         desc.swizzle = .init(red: .red, green: .green, blue: .blue, alpha: .alpha)
 
         return desc
+    }
+    
+    
+    @MainActor
+    func populateMPS(videoTexture: (any MTLTexture)?, offscreenTexture: (any MTLTexture)?, lowLevelTexture: LowLevelTexture?, device: MTLDevice?) {
+        
+        guard let lowLevelTexture = lowLevelTexture, let device = device, let offscreenTexture = offscreenTexture else { return }
+        
+        // Set up the Metal command queue and compute command encoder,
+        // or abort if that fails.
+        guard let commandQueue = device.makeCommandQueue(),
+              let commandBuffer = commandQueue.makeCommandBuffer() else {
+            return
+        }
+        let outTexture = lowLevelTexture.replace(using: commandBuffer)
+        if let videoTexture = videoTexture {
+            // Create a MPS filter with dynamic blur radius
+            let add = MPSImageAdd(device: device)
+            // set input output
+            add.encode(commandBuffer: commandBuffer, primaryTexture: videoTexture, secondaryTexture: offscreenTexture, destinationTexture: outTexture)
+        } else {
+            // 创建一个blit编码器将结果复制到RealityKit纹理
+            if let blitEncoder = commandBuffer.makeBlitCommandEncoder() {
+                blitEncoder.copy(from: offscreenTexture, to: outTexture)
+                blitEncoder.endEncoding()
+            }
+        }
+        // The usual Metal enqueue process.
+        commandBuffer.commit()
+        commandBuffer.waitUntilCompleted()
     }
 }

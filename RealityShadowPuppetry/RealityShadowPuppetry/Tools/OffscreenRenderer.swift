@@ -13,7 +13,9 @@ final class OffscreenRenderer {
     let colorTexture: MTLTexture
     let camera = Entity()
     let light = Entity()
-        
+    
+    var rendererUpdate: (() -> Void)?
+    
     init(device: MTLDevice, textureSize: CGSize) throws {
         renderer = try RealityRenderer()
         
@@ -56,10 +58,15 @@ final class OffscreenRenderer {
     func removeAllEntities() {
         renderer.entities.removeAll(where: { $0 != renderer.activeCamera && $0 != light })
     }
-    @MainActor
+    
     func render() throws {
         let cameraOutput = try RealityRenderer.CameraOutput(.singleProjection(colorTexture: colorTexture))
-        let c = colorTexture
-        try renderer.updateAndRender(deltaTime: 0, cameraOutput: cameraOutput)
+//        let c = colorTexture
+//        try renderer.updateAndRender(deltaTime: 0, cameraOutput: cameraOutput)
+        try renderer.updateAndRender(deltaTime: 0, cameraOutput: cameraOutput) {[weak self] render in
+            Task { @MainActor in
+                self?.rendererUpdate?()
+            }
+        }
     }
 }

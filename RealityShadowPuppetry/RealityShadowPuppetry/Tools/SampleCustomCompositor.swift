@@ -25,10 +25,9 @@ enum CustomCompositorError: Int, Error, LocalizedError {
 }
 
 class SampleCustomCompositor: NSObject, AVVideoCompositing {
-    var inTexture: (any MTLTexture)? = nil
-    var llt: LowLevelTexture?
-    var mtlDevice: MTLDevice?
-
+    var videoPixelUpdate: (() -> Void)?
+    var lastestPixel: (any MTLTexture)?
+    
     private var isCancelled = false
     private var request: AVAsynchronousVideoCompositionRequest?
     var sourcePixelBufferAttributes: [String: any Sendable]? = [
@@ -39,11 +38,7 @@ class SampleCustomCompositor: NSObject, AVVideoCompositing {
         String(kCVPixelBufferPixelFormatTypeKey):[kCVPixelFormatType_32BGRA],
         String(kCVPixelBufferMetalCompatibilityKey): true
     ]
-    
-    
-    var supportsWideColorSourceFrames = false
-    var supportsHDRSourceFrames = false
-    
+ 
     func renderContextChanged(_ newRenderContext: AVVideoCompositionRenderContext) {
         return
     }
@@ -76,41 +71,29 @@ class SampleCustomCompositor: NSObject, AVVideoCompositing {
         if sourceCount == 1 {
             let sourceID = requiredTrackIDs[0]
             let sourceBuffer = request.sourceFrame(byTrackID: sourceID.value(of: Int32.self)!)!
-            if self.llt != nil, self.mtlDevice != nil, self.inTexture != nil {
-                Task {@MainActor in
-                    populateMPS(sourceBuffer: sourceBuffer, lowLevelTexture: self.llt, device: self.mtlDevice, inTexture: self.inTexture)
-                }
+            Task {@MainActor in
+                self.lastestPixel = self.convertToMetalTexture(sourceBuffer)
+                self.videoPixelUpdate?()
             }
             request.finish(withComposedVideoFrame: sourceBuffer)
         }
         
         request.finish(withComposedVideoFrame: outputPixelBuffer)
     }
-    
-    
-    @MainActor
-    func populateMPS(sourceBuffer: CVPixelBuffer, lowLevelTexture: LowLevelTexture?, device: MTLDevice?, inTexture: (any MTLTexture)?) {
-        if isCancelled {
-            return
+    func convertToMetalTexture(_ pixelBuffer: CVPixelBuffer) -> MTLTexture? {
+        guard let device = MTLCreateSystemDefaultDevice() else {
+            print("Failed to create Metal device")
+            return nil
         }
-        guard let lowLevelTexture = lowLevelTexture, let device = device, let inTexture = inTexture else { return }
+        let width = CVPixelBufferGetWidth(pixelBuffer)
+        let height = CVPixelBufferGetHeight(pixelBuffer)
         
-        // Set up the Metal command queue and compute command encoder,
-        // or abort if that fails.
-        guard let commandQueue = device.makeCommandQueue(),
-              let commandBuffer = commandQueue.makeCommandBuffer() else {
-            return
-        }
-
-        let width = CVPixelBufferGetWidth(sourceBuffer)
-        let height = CVPixelBufferGetHeight(sourceBuffer)
-
         // Now sourceBuffer should already be in BGRA format, create Metal texture directly
         var mtlTextureCache: CVMetalTextureCache? = nil
         let cacheResult = CVMetalTextureCacheCreate(kCFAllocatorDefault, nil, device, nil, &mtlTextureCache)
         guard cacheResult == kCVReturnSuccess, let textureCache = mtlTextureCache else {
             print("Failed to create Metal texture cache")
-            return
+            return nil
         }
         // 确保在函数结束时清理缓存
         defer {
@@ -121,7 +104,7 @@ class SampleCustomCompositor: NSObject, AVVideoCompositing {
         let result = CVMetalTextureCacheCreateTextureFromImage(
             kCFAllocatorDefault,
             textureCache,
-            sourceBuffer,
+            pixelBuffer,
             nil,
             .bgra8Unorm,
             width,
@@ -129,31 +112,16 @@ class SampleCustomCompositor: NSObject, AVVideoCompositing {
             0,
             &cvTexture
         )
-
+        
         guard result == kCVReturnSuccess,
               let cvTexture = cvTexture,
               let bgraTexture = CVMetalTextureGetTexture(cvTexture) else {
             print("Failed to create Metal texture from BGRA pixel buffer")
-            print("CVPixelBuffer format: \(CVPixelBufferGetPixelFormatType(sourceBuffer))")
+            print("CVPixelBuffer format: \(CVPixelBufferGetPixelFormatType(pixelBuffer))")
             print("Expected BGRA format: \(kCVPixelFormatType_32BGRA)")
-            return
+            return nil
         }
-
-        // Check input and output texture compatibility
-        guard bgraTexture.width <= lowLevelTexture.descriptor.width,
-              bgraTexture.height <= lowLevelTexture.descriptor.height else {
-            print("Texture size mismatch: input(\(bgraTexture.width)x\(bgraTexture.height)) vs output(\(lowLevelTexture.descriptor.width)x\(lowLevelTexture.descriptor.height))")
-            return
-        }
-
-        // Create a MPS filter with dynamic blur radius
-        let add = MPSImageAdd(device: device)
-        // set input output
-        let outTexture = lowLevelTexture.replace(using: commandBuffer)
-        add.encode(commandBuffer: commandBuffer, primaryTexture: bgraTexture, secondaryTexture: inTexture, destinationTexture: outTexture)
-
-        // The usual Metal enqueue process.
-        commandBuffer.commit()
-        commandBuffer.waitUntilCompleted()
+        
+        return bgraTexture
     }
 }
