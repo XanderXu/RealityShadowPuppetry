@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		6C25938D2DFFFD23003157A0 /* RealityKitContent in Frameworks */ = {isa = PBXBuildFile; productRef = 6C25938C2DFFFD23003157A0 /* RealityKitContent */; };
-		6CE0C0CC2E6827E9009259B4 /* HandVector in Frameworks */ = {isa = PBXBuildFile; productRef = 6CE0C0CB2E6827E9009259B4 /* HandVector */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -42,7 +41,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6CE0C0CC2E6827E9009259B4 /* HandVector in Frameworks */,
 				6C25938D2DFFFD23003157A0 /* RealityKitContent in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -96,7 +94,6 @@
 			name = RealityShadowPuppetry;
 			packageProductDependencies = (
 				6C25938C2DFFFD23003157A0 /* RealityKitContent */,
-				6CE0C0CB2E6827E9009259B4 /* HandVector */,
 			);
 			productName = RealityShadowPuppetry;
 			productReference = 6C2593872DFFFD23003157A0 /* RealityShadowPuppetry.app */;
@@ -127,7 +124,6 @@
 			mainGroup = 6C25937E2DFFFD23003157A0;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				6CE0C0CA2E6827E9009259B4 /* XCRemoteSwiftPackageReference "HandVector" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 6C2593882DFFFD23003157A0 /* Products */;
@@ -354,26 +350,10 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-		6CE0C0CA2E6827E9009259B4 /* XCRemoteSwiftPackageReference "HandVector" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/XanderXu/HandVector.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.1.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
 /* Begin XCSwiftPackageProductDependency section */
 		6C25938C2DFFFD23003157A0 /* RealityKitContent */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = RealityKitContent;
-		};
-		6CE0C0CB2E6827E9009259B4 /* HandVector */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 6CE0C0CA2E6827E9009259B4 /* XCRemoteSwiftPackageReference "HandVector" */;
-			productName = HandVector;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -11,12 +11,13 @@ import MetalKit
 final class OffscreenRenderer {
     private let renderer: RealityRenderer
     let colorTexture: MTLTexture
-    let camera: Entity
+    let camera = Entity()
+    let light = Entity()
         
     init(device: MTLDevice, textureSize: CGSize) throws {
         renderer = try RealityRenderer()
         
-        let light = Entity()
+        
         var lc = DirectionalLightComponent()
         lc.intensity = 5000
         lc.color = .white
@@ -30,7 +31,6 @@ final class OffscreenRenderer {
         orthComponent.far = 100
         orthComponent.scale = 0.5
         
-        camera = Entity()
         camera.components.set(orthComponent)
 //        camera.position = [0, 0, 20]
         camera.name = "Camera"
@@ -51,10 +51,10 @@ final class OffscreenRenderer {
         camera.look(at: scene.position, from: [0, scene.position.y, 20], relativeTo: nil)
     }
     func removeEntity(_ scene: Entity) {
-        renderer.entities.removeAll(where: { $0 == scene && $0 != renderer.activeCamera })
+        renderer.entities.removeAll(where: { $0 == scene && $0 != renderer.activeCamera && $0 != light })
     }
     func removeAllEntities() {
-        renderer.entities.removeAll(where: { $0 != renderer.activeCamera })
+        renderer.entities.removeAll(where: { $0 != renderer.activeCamera && $0 != light })
     }
     @MainActor
     func render() throws {

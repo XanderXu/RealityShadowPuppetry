@@ -8,7 +8,6 @@
 import SwiftUI
 import RealityKit
 import ARKit
-import HandVector
 
 /// Maintains app-wide state
 @MainActor
@@ -21,28 +20,27 @@ class AppModel {
     var rootEntity: Entity?
     var videoShadowCenter: VideoShadowCenter?
     
+    let handCenter = HandCenter()
     var turnOnImmersiveSpace = false
     var shadowStyle = ShadowStyle.Gray
     var showVideo = false
     
     
-    var latestHandTracking: HandVectorManager = .init(left: nil, right: nil)
     private let session = ARKitSession()
-    private let worldTracking = WorldTrackingProvider()
+//    private let worldTracking = WorldTrackingProvider()
     private let handTracking = HandTrackingProvider()
     private let simHandProvider = SimulatorHandTrackingProvider()
-    
-    
     init() {
-        self.latestHandTracking.isSkeletonVisible = true
+        
     }
     func clear() {
-        latestHandTracking.left?.removeFromParent()
-        latestHandTracking.right?.removeFromParent()
-        rootEntity?.children.removeAll()
-        rootEntity?.removeFromParent()
+        stopHandTracking()
+        handCenter.clean()
         videoShadowCenter?.clean()
         videoShadowCenter = nil
+        
+        rootEntity?.children.removeAll()
+        rootEntity?.removeFromParent()
     }
     
     /// Resets game state information.
@@ -53,7 +51,9 @@ class AppModel {
         clear()
     }
     
-    
+    func stopHandTracking() {
+        session.stop()
+    }
     func startHandTracking() async {
         do {
             if HandTrackingProvider.isSupported {
@@ -63,9 +63,8 @@ class AppModel {
         } catch {
             print("ARKitSession error:", error)
         }
-        
+        videoShadowCenter?.offscreenRenderer?.addEntity(handCenter.rootEntity)
     }
-    
     func publishHandTrackingUpdates() async {
         for await update in handTracking.anchorUpdates {
             switch update.event {
@@ -74,23 +73,15 @@ class AppModel {
                 guard anchor.isTracked else {
                     continue
                 }
-                let handInfo = latestHandTracking.generateHandInfo(from: anchor)
-                if let handInfo {
-                    await latestHandTracking.updateHandSkeletonEntity(from: handInfo)
-                    if let left = latestHandTracking.left {
-                        rootEntity?.addChild(left)
-                    }
-                    if let right = latestHandTracking.right {
-                        rootEntity?.addChild(right)
-                    }
-                }
+                
             case .removed:
                 let anchor = update.anchor
-                latestHandTracking.removeHand(from: anchor)
+//                latestHandTracking.removeHand(from: anchor)
             }
+            
+            try? videoShadowCenter?.offscreenRenderer?.render()
         }
     }
-    
     func monitorSessionEvents() async {
         for await event in session.events {
             switch event {
@@ -108,15 +99,9 @@ class AppModel {
     func publishSimHandTrackingUpdates() async {
         for await simHand in simHandProvider.simHands {
             if simHand.landmarks.isEmpty { continue }
-            await latestHandTracking.updateHand(from: simHand)
-            if let left = latestHandTracking.left {
-                videoShadowCenter?.offscreenRenderer?.addEntity(left)
-//                rootEntity?.addChild(left)
-            }
-            if let right = latestHandTracking.right {
-//                videoShadowCenter?.offscreenRenderer?.addEntity(right)
-//                rootEntity?.addChild(right)
-            }
+            await handCenter.updateHand(from: simHand)
+            
+            videoShadowCenter?.offscreenRenderer?.addEntity(handCenter.rootEntity)
             try? videoShadowCenter?.offscreenRenderer?.render()
         }
     }
