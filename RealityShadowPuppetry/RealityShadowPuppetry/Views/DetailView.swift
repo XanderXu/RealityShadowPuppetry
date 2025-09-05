@@ -29,12 +29,46 @@ struct DetailView: View {
             .padding(.bottom, 40)
             .frame(width: 400)
             
-            Toggle("Show Video", isOn: $model.showVideo)
-                .disabled(!model.turnOnImmersiveSpace)
-                .toggleStyle(ButtonToggleStyle())
-                .padding(.bottom, 40)
-                .frame(width: 400)
+            HStack(spacing: 20) {
+                Toggle("Play Video", isOn: $model.isPlaying)
+                    .disabled(!model.turnOnImmersiveSpace)
+                    .toggleStyle(ButtonToggleStyle())
+                    .padding(.bottom, 40)
+                
+                Toggle("Show Video", isOn: $model.showVideo)
+                    .disabled(!model.turnOnImmersiveSpace)
+                    .toggleStyle(ButtonToggleStyle())
+                    .padding(.bottom, 40)
+            }
+            
         }
+    }
+
+    /// 切换播放/暂停状态
+    private func togglePlayback() {
+        guard model.turnOnImmersiveSpace else {
+            print("沉浸式空间未开启")
+            return
+        }
+        
+        guard let videoShadowCenter = model.videoShadowCenter else {
+            print("VideoShadowCenter 不可用")
+            return
+        }
+        
+        if model.isPlaying {
+            // 当前正在播放，点击暂停
+            videoShadowCenter.player?.pause()
+            print("用户暂停视频")
+        } else {
+            // 当前已暂停，点击播放
+            videoShadowCenter.player?.play()
+            print("用户开始播放视频")
+        }
+        
+        // 注意：不需要手动设置 model.isPlaying
+        // 因为 AppModel.setup() 中已经设置了播放状态监听
+        // videoShadowCenter.playerStatusDidChange 会自动更新 model.isPlaying
     }
 }
 

@@ -8,6 +8,7 @@
 import SwiftUI
 import RealityKit
 import ARKit
+import AVFoundation
 
 /// Maintains app-wide state
 @MainActor
@@ -24,6 +25,15 @@ class AppModel {
     var turnOnImmersiveSpace = false
     var shadowStyle = ShadowStyle.Gray
     var showVideo = false
+    var isPlaying = false {
+        didSet {
+            if isPlaying {
+                videoShadowCenter?.player?.play()
+            } else {
+                videoShadowCenter?.player?.pause()
+            }
+        }
+    }
     
     
     private let session = ARKitSession()
@@ -32,6 +42,16 @@ class AppModel {
     private let simHandProvider = SimulatorHandTrackingProvider()
     init() {
         
+    }
+    func setup(asset: AVAsset) async throws {
+        videoShadowCenter = try await VideoShadowCenter(asset: asset)
+//        videoShadowCenter?.playerStatusDidChange = { [weak self] status in
+//            self?.isPlaying = status == .playing
+//        }
+        videoShadowCenter?.playbackDidFinish = { [weak self] in
+            self?.videoShadowCenter?.player?.seek(to: .zero)
+            self?.isPlaying = false
+        }
     }
     func clear() {
         stopHandTracking()

@@ -7,9 +7,7 @@
 
 import SwiftUI
 import RealityKit
-import MetalKit
 import AVFoundation
-import MetalPerformanceShaders
 
 struct HandShadowImmersiveView: View {
     @Environment(AppModel.self) private var model
@@ -23,7 +21,7 @@ struct HandShadowImmersiveView: View {
             model.rootEntity = entity
             content.add(entity)
             do {
-                model.videoShadowCenter = try await VideoShadowCenter(asset: asset)
+                try await model.setup(asset: asset)
                 guard let originalEntity = model.videoShadowCenter?.originalEntity, let shadowEntity = model.videoShadowCenter?.shadowEntity else {
                     return
                 }

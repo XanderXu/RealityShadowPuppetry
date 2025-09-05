@@ -21,6 +21,16 @@ final class VideoShadowCenter {
     private(set) var offscreenRenderer: OffscreenRenderer?
     private var customCompositor: SampleCustomCompositor?
     
+    
+    // 播放状态监听相关属性
+    var playerStatusDidChange: ((AVPlayer.TimeControlStatus) -> Void)?
+    var playerItemStatusDidChange: ((AVPlayerItem.Status) -> Void)?
+    var playbackDidFinish: (() -> Void)?
+    
+    private var timeControlStatusObserver: NSKeyValueObservation?
+    private var playerItemStatusObserver: NSKeyValueObservation?
+    private var playbackFinishedObserver: NSObjectProtocol?
+    
     init(asset: AVAsset) async throws {
         
         let (player, size) = try await createPlayerAndSizeWithAsset(asset: asset)
@@ -28,6 +38,9 @@ final class VideoShadowCenter {
         self.videoSize = size
         self.customCompositor = player.currentItem?.customVideoCompositor as? SampleCustomCompositor
         
+        setupPlayerObservers()
+
+
         let videoMaterial = VideoMaterial(avPlayer: player)
         // Return an entity of a plane which uses the VideoMaterial.
         originalEntity.model = .init(mesh: .generatePlane(width: 1, height: Float(size.height/size.width)), materials: [videoMaterial])
@@ -55,18 +68,68 @@ final class VideoShadowCenter {
         customCompositor?.videoPixelUpdate = { [weak self, weak customCompositor] in
             self?.populateMPS(videoTexture: customCompositor?.lastestPixel, offscreenTexture: self?.offscreenRenderer?.colorTexture, lowLevelTexture: llt, device: self?.mtlDevice)
         }
- 
         
-        player.play()
-
     }
     
+    private func setupPlayerObservers() {
+        guard let player = player else { return }
+        
+        // 监听播放控制状态变化 (playing, paused, waitingToPlayAtSpecifiedRate)
+        timeControlStatusObserver = player.observe(\.timeControlStatus, options: [.new, .old]) { [weak self] player, change in
+            DispatchQueue.main.async {
+                self?.playerStatusDidChange?(player.timeControlStatus)
+                print("Player status changed to: \(player.timeControlStatus)")
+            }
+        }
+        
+        // 监听播放项状态变化 (unknown, readyToPlay, failed)
+        if let playerItem = player.currentItem {
+            playerItemStatusObserver = playerItem.observe(\.status, options: [.new, .old]) { [weak self] playerItem, change in
+                DispatchQueue.main.async {
+                    self?.playerItemStatusDidChange?(playerItem.status)
+                    print("PlayerItem status changed to: \(playerItem.status)")
+                }
+            }
+        }
+        
+        // 监听播放完成通知
+        playbackFinishedObserver = NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemDidPlayToEndTime,
+            object: player.currentItem,
+            queue: .main
+        ) { [weak self] notification in
+            DispatchQueue.main.async {
+                self?.playbackDidFinish?()
+                print("Playback finished")
+            }
+        }
+    }
+    
+    private func removePlayerObservers() {
+        timeControlStatusObserver?.invalidate()
+        timeControlStatusObserver = nil
+        
+        playerItemStatusObserver?.invalidate()
+        playerItemStatusObserver = nil
+        
+        if let playbackFinishedObserver = playbackFinishedObserver {
+            NotificationCenter.default.removeObserver(playbackFinishedObserver)
+            self.playbackFinishedObserver = nil
+        }
+        
+        // 清理闭包引用
+        playerStatusDidChange = nil
+        playerItemStatusDidChange = nil
+        playbackDidFinish = nil
+    }
     
     public func clean() {
+        removePlayerObservers()
         originalEntity.removeFromParent()
         shadowEntity.removeFromParent()
         offscreenRenderer?.removeAllEntities()
         offscreenRenderer?.rendererUpdate = nil
+        
         player?.pause()
         customCompositor?.cancelAllPendingVideoCompositionRequests()
         customCompositor?.lastestPixel = nil
