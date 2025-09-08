@@ -9,6 +9,17 @@ import RealityKit
 import ARKit
 
 final class HandCenter {
+    private let wm = UnlitMaterial(color: .white)
+    
+    private lazy var colorsM: [UnlitMaterial] = {
+        let rm = UnlitMaterial(color: .red)
+        let gm = UnlitMaterial(color: .green)
+        let bm = UnlitMaterial(color: .blue)
+        let rnm = UnlitMaterial(color: .init(red: 0.5, green: 0, blue: 0, alpha: 1))
+        let gnm = UnlitMaterial(color: .init(red: 0, green: 0.5, blue: 0, alpha: 1))
+        let bnm = UnlitMaterial(color: .init(red: 0, green: 0, blue: 0.5, alpha: 1))
+        return [bm, gm, bnm, gnm, rm, rnm]
+    }()
     let rootEntity = Entity()
     
     var left: Entity?
@@ -20,13 +31,69 @@ final class HandCenter {
         left = nil
         right = nil
     }
+    @MainActor
+    public func generateHandEntity(from handAnchor: HandAnchor, filter: CollisionFilter = .default) -> Entity {
+        let hand = Entity()
+        hand.name = handAnchor.chirality == .left ? "leftHand" : "rightHand"
+        hand.transform.matrix = handAnchor.originFromAnchorTransform
+        
+        for positionInfo in handAnchor.handSkeleton?.allJoints ?? [] {
+            let modelEntity = ModelEntity(mesh: .generateBox(width: 0.015, height: 0.015, depth: 0.015, splitFaces: true), materials: colorsM)//[+z, +y, -z, -y, +x, -x]
+            modelEntity.transform.matrix = positionInfo.parentFromJointTransform
+            modelEntity.name = positionInfo.name.description + "-model"
+            hand.addChild(modelEntity)
+        }
+        return hand
+    }
+    @MainActor
+    public func updateHand(from handAnchor: HandAnchor, filter: CollisionFilter = .default) async {
+        if handAnchor.chirality == .left {
+            if left == nil {
+                left = generateHandEntity(from: handAnchor, filter: filter)
+                rootEntity.addChild(left!)
+            } else {
+                updateHandEntity(from: handAnchor, inEntiy: left!)
+            }
+            left?.isEnabled = handAnchor.isTracked
+        } else {
+            if right == nil {
+                right = generateHandEntity(from: handAnchor, filter: filter)
+                rootEntity.addChild(right!)
+            } else {
+                updateHandEntity(from: handAnchor, inEntiy: right!)
+            }
+            
+            right?.isEnabled = handAnchor.isTracked
+        }
+    }
+    private func updateHandEntity(from handAnchor: HandAnchor, inEntiy: Entity) {
+        inEntiy.transform.matrix = handAnchor.originFromAnchorTransform
+        for positionInfo in handAnchor.handSkeleton?.allJoints ?? [] {
+            let modelEntity = inEntiy.findEntity(named: positionInfo.name.description + "-model")
+            modelEntity?.transform.matrix = positionInfo.parentFromJointTransform
+        }
+    }
+    
+    public func removeHand(from handAnchor: HandAnchor) {
+        if handAnchor.chirality == .left {
+            left?.removeFromParent()
+            left = nil
+        } else if handAnchor.chirality == .right { // Update right hand info.
+            right?.removeFromParent()
+            right = nil
+        }
+    }
+    
+    
+    
+    
     
     @MainActor
     public func updateHand(from simHand: SimHand, filter: CollisionFilter = .default) async {
         let handVectors = simHand.convertToHandVector(offset: .init(0, 0.2, -0.2))
         if let leftHandVector = handVectors.left {
             if left == nil {
-                left = generateHandEntity(from: leftHandVector, filter: filter)
+                left = generateHandRootEntity(from: leftHandVector, filter: filter)
                 left?.name = "leftHand"
                 rootEntity.addChild(left!)
             } else {
@@ -39,7 +106,7 @@ final class HandCenter {
         
         if let rightHandVector = handVectors.right {
             if right == nil {
-                right = generateHandEntity(from: rightHandVector, filter: filter)
+                right = generateHandRootEntity(from: rightHandVector, filter: filter)
                 right?.name = "rightHand"
                 rootEntity.addChild(right!)
             } else {
@@ -52,16 +119,8 @@ final class HandCenter {
     }
     
     @MainActor
-    private func generateHandEntity(from handVector: simd_float4x4, filter: CollisionFilter = .default) -> Entity {
-        
-        let rm = UnlitMaterial(color: .red)
-        let gm = UnlitMaterial(color: .green)
-        let bm = UnlitMaterial(color: .blue)
-        let rnm = UnlitMaterial(color: .init(red: 0.5, green: 0, blue: 0, alpha: 1))
-        let gnm = UnlitMaterial(color: .init(red: 0, green: 0.5, blue: 0, alpha: 1))
-        let bnm = UnlitMaterial(color: .init(red: 0, green: 0, blue: 0.5, alpha: 1))
-        
-        let modelEntity = ModelEntity(mesh: .generateBox(width: 0.15, height: 0.15, depth: 0.15, splitFaces: true), materials: [bm, gm, bnm, gnm, rm, rnm])
+    private func generateHandRootEntity(from handVector: simd_float4x4, filter: CollisionFilter = .default) -> Entity {
+        let modelEntity = ModelEntity(mesh: .generateBox(width: 0.15, height: 0.15, depth: 0.15, splitFaces: true), materials: colorsM)
         modelEntity.transform.matrix = handVector
         return modelEntity
     }
