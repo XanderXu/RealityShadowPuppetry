@@ -20,6 +20,14 @@ struct HandShadowImmersiveView: View {
             entity.name = "GameRoot"
             model.rootEntity = entity
             content.add(entity)
+            let hand = try? await Entity(named: "Max-walk")
+//            hand?.printHierarchy()
+//            hand?.printChildrenInfo()
+            let p = hand?.findEntity(named: "max_root")
+            let pose = p?.components[SkeletalPosesComponent.self]
+            pose?.poses.forEach { sp in
+                print(sp.id,sp.jointNames)
+            }
             do {
                 try await model.setup(asset: asset)
                 guard let originalEntity = model.videoShadowCenter?.originalEntity, let shadowEntity = model.videoShadowCenter?.shadowEntity else {
