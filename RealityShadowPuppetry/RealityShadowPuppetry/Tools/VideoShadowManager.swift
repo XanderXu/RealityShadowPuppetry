@@ -1,5 +1,5 @@
 //
-//  VideoShadowCenter.swift
+//  VideoShadowManager.swift
 //  RealityShadowPuppetry
 //
 //  Created by 许M4 on 2025/9/2.
@@ -11,7 +11,7 @@ import AVFoundation
 import MetalPerformanceShaders
 
 @MainActor
-final class VideoShadowCenter {
+final class VideoShadowManager {
     let mtlDevice = MTLCreateSystemDefaultDevice()!
     
     let originalEntity = ModelEntity()

@@ -31,7 +31,7 @@ struct HandShadowImmersiveView: View {
 //            }
             do {
                 try await model.setup(asset: asset)
-                guard let originalEntity = model.videoShadowCenter?.originalEntity, let shadowEntity = model.videoShadowCenter?.shadowEntity else {
+                guard let originalEntity = model.videoShadowManager?.originalEntity, let shadowEntity = model.videoShadowManager?.shadowEntity else {
                     return
                 }
                 entity.addChild(originalEntity)
@@ -46,7 +46,7 @@ struct HandShadowImmersiveView: View {
             
         }
         .onChange(of: model.showVideo) { oldValue, newValue in
-            let videoEntity = model.rootEntity?.findEntity(named: "OriginalVideo")
+            let videoEntity = model.videoShadowManager?.originalEntity
             videoEntity?.isEnabled = newValue
         }
         

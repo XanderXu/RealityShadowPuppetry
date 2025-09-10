@@ -51,8 +51,8 @@ struct DetailView: View {
             return
         }
         
-        guard let videoShadowCenter = model.videoShadowCenter else {
-            print("VideoShadowCenter 不可用")
+        guard let videoShadowCenter = model.videoShadowManager else {
+            print("VideoShadowManager 不可用")
             return
         }
         
@@ -68,7 +68,7 @@ struct DetailView: View {
         
         // 注意：不需要手动设置 model.isPlaying
         // 因为 AppModel.setup() 中已经设置了播放状态监听
-        // videoShadowCenter.playerStatusDidChange 会自动更新 model.isPlaying
+        // videoShadowManager.playerStatusDidChange 会自动更新 model.isPlaying
     }
 }
 

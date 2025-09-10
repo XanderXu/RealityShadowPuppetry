@@ -12,21 +12,23 @@ final class OffscreenRenderer {
     private let renderer: RealityRenderer
     let colorTexture: MTLTexture
     let camera = Entity()
-    let light = Entity()
+    var useDefaultLight: Bool = true {
+        didSet {
+            if useDefaultLight {
+                var lc = DirectionalLightComponent()
+                lc.intensity = 5000
+                lc.color = .white
+                camera.components.set(lc)
+            } else {
+                camera.components.remove(DirectionalLightComponent.self)
+            }
+        }
+    }
     
     var rendererUpdate: (() -> Void)?
     
     init(device: MTLDevice, textureSize: CGSize) throws {
         renderer = try RealityRenderer()
-        
-        
-        var lc = DirectionalLightComponent()
-        lc.intensity = 5000
-        lc.color = .white
-        light.components.set(lc)
-        light.position = [0, 0, 20]
-        light.name = "Light"
-        renderer.entities.append(light)
         
         var orthComponent = OrthographicCameraComponent()
         orthComponent.near = 0.1
@@ -47,16 +49,17 @@ final class OffscreenRenderer {
         
         colorTexture = device.makeTexture(descriptor: textureDesc)!
     }
-    
+    func cameraLook(at position: SIMD3<Float>, from: SIMD3<Float>, relativeTo: Entity? = nil) {
+        camera.look(at: position, from: from, relativeTo: relativeTo)
+    }
     func addEntity(_ scene: Entity) {
         renderer.entities.append(scene)
-        camera.look(at: scene.position, from: [0, scene.position.y, 20], relativeTo: nil)
     }
     func removeEntity(_ scene: Entity) {
-        renderer.entities.removeAll(where: { $0 == scene && $0 != renderer.activeCamera && $0 != light })
+        renderer.entities.removeAll(where: { $0 == scene && $0 != renderer.activeCamera})
     }
     func removeAllEntities() {
-        renderer.entities.removeAll(where: { $0 != renderer.activeCamera && $0 != light })
+        renderer.entities.removeAll(where: { $0 != renderer.activeCamera})
     }
     
     func render() throws {

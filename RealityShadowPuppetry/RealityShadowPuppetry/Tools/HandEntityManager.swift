@@ -1,5 +1,5 @@
 //
-//  HandCenter.swift
+//  HandEntityManager.swift
 //  RealityShadowPuppetry
 //
 //  Created by 许M4 on 2025/9/4.
@@ -8,9 +8,8 @@
 import RealityKit
 import ARKit
 
-final class HandCenter {
+final class HandEntityManager {
     private let wm = UnlitMaterial(color: .white)
-    
     private lazy var colorsM: [UnlitMaterial] = {
         let rm = UnlitMaterial(color: .red)
         let gm = UnlitMaterial(color: .green)
@@ -20,6 +19,8 @@ final class HandCenter {
         let bnm = UnlitMaterial(color: .init(red: 0, green: 0, blue: 0.5, alpha: 1))
         return [bm, gm, bnm, gnm, rm, rnm]
     }()
+    
+    
     let rootEntity = Entity()
     
     var left: Entity?
@@ -86,11 +87,11 @@ final class HandCenter {
     
     
     
-    
+    public var simHandOffset = simd_float3(0, 1.4, -0.2)
     
     @MainActor
     public func updateHand(from simHand: SimHand, filter: CollisionFilter = .default) async {
-        let handVectors = simHand.convertToHandVector(offset: .init(0, 0.2, -0.2))
+        let handVectors = simHand.convertToHandVector(offset: simHandOffset)
         if let leftHandVector = handVectors.left {
             if left == nil {
                 left = generateHandRootEntity(from: leftHandVector, filter: filter)

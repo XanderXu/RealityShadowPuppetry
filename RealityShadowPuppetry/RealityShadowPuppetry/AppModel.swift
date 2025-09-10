@@ -19,18 +19,18 @@ class AppModel {
         case Color
     }
     var rootEntity: Entity?
-    var videoShadowCenter: VideoShadowCenter?
+    var videoShadowManager: VideoShadowManager?
     
-    let handCenter = HandCenter()
+    let handEntityManager = HandEntityManager()
     var turnOnImmersiveSpace = false
     var shadowStyle = ShadowStyle.Gray
     var showVideo = false
     var isPlaying = false {
         didSet {
             if isPlaying {
-                videoShadowCenter?.player?.play()
+                videoShadowManager?.player?.play()
             } else {
-                videoShadowCenter?.player?.pause()
+                videoShadowManager?.player?.pause()
             }
         }
     }
@@ -44,20 +44,20 @@ class AppModel {
         
     }
     func setup(asset: AVAsset) async throws {
-        videoShadowCenter = try await VideoShadowCenter(asset: asset)
-//        videoShadowCenter?.playerStatusDidChange = { [weak self] status in
+        videoShadowManager = try await VideoShadowManager(asset: asset)
+//        videoShadowManager?.playerStatusDidChange = { [weak self] status in
 //            self?.isPlaying = status == .playing
 //        }
-        videoShadowCenter?.playbackDidFinish = { [weak self] in
-            self?.videoShadowCenter?.player?.seek(to: .zero)
+        videoShadowManager?.playbackDidFinish = { [weak self] in
+            self?.videoShadowManager?.player?.seek(to: .zero)
             self?.isPlaying = false
         }
     }
     func clear() {
         stopHandTracking()
-        handCenter.clean()
-        videoShadowCenter?.clean()
-        videoShadowCenter = nil
+        handEntityManager.clean()
+        videoShadowManager?.clean()
+        videoShadowManager = nil
         
         rootEntity?.children.removeAll()
         rootEntity?.removeFromParent()
@@ -83,23 +83,21 @@ class AppModel {
         } catch {
             print("ARKitSession error:", error)
         }
-        videoShadowCenter?.offscreenRenderer?.addEntity(handCenter.rootEntity)
+        videoShadowManager?.offscreenRenderer?.addEntity(handEntityManager.rootEntity)
+        videoShadowManager?.offscreenRenderer?.cameraLook(at: SIMD3<Float>(0, 1.4, 0), from: SIMD3<Float>(0, 1.4, 20))
     }
     func publishHandTrackingUpdates() async {
         for await update in handTracking.anchorUpdates {
             switch update.event {
             case .added, .updated:
                 let anchor = update.anchor
-                guard anchor.isTracked else {
-                    continue
-                }
-                
+                await handEntityManager.updateHand(from: anchor)
             case .removed:
                 let anchor = update.anchor
-//                latestHandTracking.removeHand(from: anchor)
+                handEntityManager.removeHand(from: anchor)
             }
             
-            try? videoShadowCenter?.offscreenRenderer?.render()
+            try? videoShadowManager?.offscreenRenderer?.render()
         }
     }
     func monitorSessionEvents() async {
@@ -119,10 +117,11 @@ class AppModel {
     func publishSimHandTrackingUpdates() async {
         for await simHand in simHandProvider.simHands {
             if simHand.landmarks.isEmpty { continue }
-            await handCenter.updateHand(from: simHand)
+            await handEntityManager.updateHand(from: simHand)
             
-            videoShadowCenter?.offscreenRenderer?.addEntity(handCenter.rootEntity)
-            try? videoShadowCenter?.offscreenRenderer?.render()
+            videoShadowManager?.offscreenRenderer?.addEntity(handEntityManager.rootEntity)
+            videoShadowManager?.offscreenRenderer?.cameraLook(at: SIMD3<Float>(0, 1.4, 0), from: SIMD3<Float>(0, 1.4, 20))
+            try? videoShadowManager?.offscreenRenderer?.render()
         }
     }
 }
