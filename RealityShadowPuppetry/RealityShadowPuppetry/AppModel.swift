@@ -17,7 +17,7 @@ class AppModel {
     
     var rootEntity: Entity?
     var videoShadowManager: VideoShadowManager?
-    var shadowStyle = VideoShadowManager.ShadowMixStyle.GrayShadow
+    var shadowStyle = VideoShadowManager.ShadowMixStyle.GrayAdd
     let handEntityManager = HandEntityManager()
     var turnOnImmersiveSpace = false
     

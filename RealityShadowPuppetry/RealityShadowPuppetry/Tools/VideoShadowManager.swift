@@ -13,33 +13,35 @@ import MetalPerformanceShaders
 @MainActor
 final class VideoShadowManager {
     enum ShadowMixStyle: String, CaseIterable {
-        case GrayShadow
         case ColorAdd
+        case GrayAdd
+        case GrayMixRed
     }
     let mtlDevice = MTLCreateSystemDefaultDevice()!
     
     let originalEntity = ModelEntity()
     let shadowEntity = ModelEntity()
-    var shadowStyle = ShadowMixStyle.GrayShadow
+    var shadowStyle = ShadowMixStyle.GrayAdd
     
+    // MARK: - Initialization
+    var playerStatusDidChange: ((AVPlayer.TimeControlStatus) -> Void)?
+    var playerItemStatusDidChange: ((AVPlayerItem.Status) -> Void)?
+    var playbackDidFinish: (() -> Void)?
     
     
     private(set) var videoSize: CGSize?
     private(set) var player: AVPlayer?
     private(set) var offscreenRenderer: OffscreenRenderer?
+    // MARK: - Private Properties
     private var customCompositor: SampleCustomCompositor?
-    
-    
-    // 播放状态监听相关属性
-    var playerStatusDidChange: ((AVPlayer.TimeControlStatus) -> Void)?
-    var playerItemStatusDidChange: ((AVPlayerItem.Status) -> Void)?
-    var playbackDidFinish: (() -> Void)?
-    
+    private var grayMixRedPipelineState: MTLComputePipelineState?
     private var timeControlStatusObserver: NSKeyValueObservation?
     private var playerItemStatusObserver: NSKeyValueObservation?
     private var playbackFinishedObserver: NSObjectProtocol?
     
     init(asset: AVAsset) async throws {
+        // 初始化计算管线状态
+        grayMixRedPipelineState = Self.createGrayMixRedComputePipelineState(device: mtlDevice)
         
         let (player, size) = try await createPlayerAndSizeWithAsset(asset: asset)
         self.player = player
@@ -47,7 +49,6 @@ final class VideoShadowManager {
         self.customCompositor = player.currentItem?.customVideoCompositor as? SampleCustomCompositor
         
         setupPlayerObservers()
-
 
         let videoMaterial = VideoMaterial(avPlayer: player)
         // Return an entity of a plane which uses the VideoMaterial.
@@ -65,7 +66,6 @@ final class VideoShadowManager {
         shadowEntity.name = "MixedTexture"
         shadowEntity.position = SIMD3(x: 1.2, y: 1, z: -2)
         
-        
         offscreenRenderer = try OffscreenRenderer(device: mtlDevice, textureSize: size)
         offscreenRenderer?.rendererUpdate = { [weak self, weak customCompositor] in
             if player.timeControlStatus != .playing {
@@ -76,7 +76,6 @@ final class VideoShadowManager {
         customCompositor?.videoPixelUpdate = { [weak self, weak customCompositor] in
             self?.populateMPS(videoTexture: customCompositor?.lastestPixel, offscreenTexture: self?.offscreenRenderer?.colorTexture, lowLevelTexture: llt, device: self?.mtlDevice)
         }
-        
     }
     
     private func setupPlayerObservers() {
@@ -132,7 +131,6 @@ final class VideoShadowManager {
     }
     
     public func clean() {
-        shadowStyle = .GrayShadow
         removePlayerObservers()
         originalEntity.removeFromParent()
         shadowEntity.removeFromParent()
@@ -181,88 +179,155 @@ final class VideoShadowManager {
         return desc
     }
     
+    // MARK: - Metal Shader Setup
+    
+    /// 创建灰度混合红色通道的计算管线状态
+    private static func createGrayMixRedComputePipelineState(device: MTLDevice) -> MTLComputePipelineState? {
+        guard let defaultLibrary = device.makeDefaultLibrary(),
+              let kernelFunction = defaultLibrary.makeFunction(name: "grayMixRedKernel") else {
+            print("Failed to create grayMixRedKernel function from default library")
+            return nil
+        }
+        
+        do {
+            return try device.makeComputePipelineState(function: kernelFunction)
+        } catch {
+            print("Failed to create compute pipeline state: \(error)")
+            return nil
+        }
+    }
+    
+    // MARK: - Texture Processing
     
     @MainActor
     func populateMPS(videoTexture: (any MTLTexture)?, offscreenTexture: (any MTLTexture)?, lowLevelTexture: LowLevelTexture?, device: MTLDevice?) {
         
-        guard let lowLevelTexture = lowLevelTexture, let device = device, let offscreenTexture = offscreenTexture else { return }
+        guard let lowLevelTexture = lowLevelTexture, 
+              let device = device, 
+              let offscreenTexture = offscreenTexture else { return }
         
-        // Set up the Metal command queue and compute command encoder,
-        // or abort if that fails.
         guard let commandQueue = device.makeCommandQueue(),
               let commandBuffer = commandQueue.makeCommandBuffer() else {
+            print("Failed to create command queue or command buffer")
             return
         }
+        
         let outTexture = lowLevelTexture.replace(using: commandBuffer)
         
-        if shadowStyle == .ColorAdd {
-            if let videoTexture = videoTexture {
-                // Create a MPS filter for color addition
-                let add = MPSImageAdd(device: device)
-                // set input output
-                add.encode(commandBuffer: commandBuffer, primaryTexture: videoTexture, secondaryTexture: offscreenTexture, destinationTexture: outTexture)
-            } else {
-                // 创建一个blit编码器将结果复制到RealityKit纹理
-                if let blitEncoder = commandBuffer.makeBlitCommandEncoder() {
-                    blitEncoder.copy(from: offscreenTexture, to: outTexture)
-                    blitEncoder.endEncoding()
-                }
-            }
-        } else {
-            // GrayShadow mode: 将两个纹理转换为黑白图像后相加
-            // 创建临时纹理用于存储黑白处理结果
-            let tempTextureDesc = MTLTextureDescriptor.texture2DDescriptor(
-                pixelFormat: offscreenTexture.pixelFormat,
-                width: offscreenTexture.width,
-                height: offscreenTexture.height,
-                mipmapped: false
-            )
-            tempTextureDesc.usage = [.shaderRead, .shaderWrite]
+        switch shadowStyle {
+        case .ColorAdd:
+            processColorAdd(videoTexture: videoTexture, offscreenTexture: offscreenTexture, outputTexture: outTexture, commandBuffer: commandBuffer, device: device)
             
-            guard let tempOffscreenTexture = device.makeTexture(descriptor: tempTextureDesc) else {
-                print("Failed to create temporary offscreen texture")
-                // 回退方案：直接复制离屏纹理
-                if let blitEncoder = commandBuffer.makeBlitCommandEncoder() {
-                    blitEncoder.copy(from: offscreenTexture, to: outTexture)
-                    blitEncoder.endEncoding()
-                }
+        case .GrayAdd:
+            processGrayAdd(videoTexture: videoTexture, offscreenTexture: offscreenTexture, outputTexture: outTexture, commandBuffer: commandBuffer, device: device)
+            
+        case .GrayMixRed:
+            processGrayMixRed(videoTexture: videoTexture, offscreenTexture: offscreenTexture, outputTexture: outTexture, commandBuffer: commandBuffer, device: device)
+        }
+        
+        // Commit and wait for completion
+        commandBuffer.commit()
+        commandBuffer.waitUntilCompleted()
+    }
+    
+    // MARK: - Processing Methods
+    
+    /// 处理颜色相加模式
+    private func processColorAdd(videoTexture: (any MTLTexture)?, offscreenTexture: MTLTexture, outputTexture: MTLTexture, commandBuffer: MTLCommandBuffer, device: MTLDevice) {
+        if let videoTexture = videoTexture {
+            let add = MPSImageAdd(device: device)
+            add.encode(commandBuffer: commandBuffer, primaryTexture: videoTexture, secondaryTexture: offscreenTexture, destinationTexture: outputTexture)
+        } else {
+            copyTexture(from: offscreenTexture, to: outputTexture, commandBuffer: commandBuffer)
+        }
+    }
+    
+    /// 处理灰度相加模式
+    private func processGrayAdd(videoTexture: (any MTLTexture)?, offscreenTexture: MTLTexture, outputTexture: MTLTexture, commandBuffer: MTLCommandBuffer, device: MTLDevice) {
+        let tempTextureDesc = createTempTextureDescriptor(from: offscreenTexture)
+        
+        guard let tempOffscreenTexture = device.makeTexture(descriptor: tempTextureDesc) else {
+            print("Failed to create temporary offscreen texture")
+            copyTexture(from: offscreenTexture, to: outputTexture, commandBuffer: commandBuffer)
+            return
+        }
+        
+        // 将离屏纹理转换为二值化图像
+        let offscreenThreshold = MPSImageThresholdBinary(device: device, thresholdValue: 0.001, maximumValue: 0.8, linearGrayColorTransform: nil)
+        offscreenThreshold.encode(commandBuffer: commandBuffer, sourceTexture: offscreenTexture, destinationTexture: tempOffscreenTexture)
+        
+        if let videoTexture = videoTexture {
+            guard let tempVideoTexture = device.makeTexture(descriptor: tempTextureDesc) else {
+                print("Failed to create temporary video texture")
+                copyTexture(from: tempOffscreenTexture, to: outputTexture, commandBuffer: commandBuffer)
                 return
             }
             
-            // 先将离屏纹理转换为黑白图像
-            let offscreenThreshold = MPSImageThresholdBinary(device: device, thresholdValue: 0.1, maximumValue: 0.6, linearGrayColorTransform: nil)
-            offscreenThreshold.encode(commandBuffer: commandBuffer, sourceTexture: offscreenTexture, destinationTexture: tempOffscreenTexture)
             
-            if let videoTexture = videoTexture {
-                // 有视频纹理时：创建临时视频纹理并转换为黑白图像
-                guard let tempVideoTexture = device.makeTexture(descriptor: tempTextureDesc) else {
-                    print("Failed to create temporary video texture")
-                    // 回退方案：直接复制已处理的离屏纹理
-                    if let blitEncoder = commandBuffer.makeBlitCommandEncoder() {
-                        blitEncoder.copy(from: tempOffscreenTexture, to: outTexture)
-                        blitEncoder.endEncoding()
-                    }
-                    return
-                }
-                
-                // 将视频纹理转换为黑白图像
-                let videoThreshold = MPSImageThresholdBinary(device: device, thresholdValue: 0.1, maximumValue: 0.6, linearGrayColorTransform: nil)
-                videoThreshold.encode(commandBuffer: commandBuffer, sourceTexture: videoTexture, destinationTexture: tempVideoTexture)
-                
-                // 将两个黑白图像相加
-                let add = MPSImageAdd(device: device)
-                add.encode(commandBuffer: commandBuffer, primaryTexture: tempVideoTexture, secondaryTexture: tempOffscreenTexture, destinationTexture: outTexture)
-            } else {
-                // 只有离屏纹理时：直接复制已处理的黑白离屏纹理
-                if let blitEncoder = commandBuffer.makeBlitCommandEncoder() {
-                    blitEncoder.copy(from: tempOffscreenTexture, to: outTexture)
-                    blitEncoder.endEncoding()
-                }
-            }
+            // 将视频纹理转换为灰度图像
+            let videoGrayscale = MPSImageConversion(device: device, srcAlpha: .nonPremultiplied, destAlpha: .nonPremultiplied, backgroundColor: nil, conversionInfo: nil)
+            videoGrayscale.encode(commandBuffer: commandBuffer, sourceTexture: videoTexture, destinationTexture: tempVideoTexture)
+            
+            // 将两个二值化图像相加
+            let add = MPSImageAdd(device: device)
+            add.encode(commandBuffer: commandBuffer, primaryTexture: tempVideoTexture, secondaryTexture: tempOffscreenTexture, destinationTexture: outputTexture)
+        } else {
+            copyTexture(from: tempOffscreenTexture, to: outputTexture, commandBuffer: commandBuffer)
+        }
+    }
+    
+    /// 处理灰度混合红色通道模式
+    private func processGrayMixRed(videoTexture: (any MTLTexture)?, offscreenTexture: MTLTexture, outputTexture: MTLTexture, commandBuffer: MTLCommandBuffer, device: MTLDevice) {
+        guard let videoTexture = videoTexture,
+              let pipelineState = grayMixRedPipelineState else {
+            // 没有视频纹理或管线状态，回退到复制离屏纹理
+            copyTexture(from: offscreenTexture, to: outputTexture, commandBuffer: commandBuffer)
+            return
         }
         
-        // The usual Metal enqueue process.
-        commandBuffer.commit()
-        commandBuffer.waitUntilCompleted()
+        guard let computeEncoder = commandBuffer.makeComputeCommandEncoder() else {
+            print("Failed to create compute encoder")
+            copyTexture(from: offscreenTexture, to: outputTexture, commandBuffer: commandBuffer)
+            return
+        }
+        
+        computeEncoder.setComputePipelineState(pipelineState)
+        computeEncoder.setTexture(videoTexture, index: 0)    // 视频纹理
+        computeEncoder.setTexture(offscreenTexture, index: 1) // 离屏纹理
+        computeEncoder.setTexture(outputTexture, index: 2)    // 输出纹理
+        
+        let threadgroupSize = MTLSize(width: 8, height: 8, depth: 1)
+        let threadgroupCount = MTLSize(
+            width: (outputTexture.width + threadgroupSize.width - 1) / threadgroupSize.width,
+            height: (outputTexture.height + threadgroupSize.height - 1) / threadgroupSize.height,
+            depth: 1
+        )
+        
+        computeEncoder.dispatchThreadgroups(threadgroupCount, threadsPerThreadgroup: threadgroupSize)
+        computeEncoder.endEncoding()
+    }
+    
+    // MARK: - Helper Methods
+    
+    /// 创建临时纹理描述符
+    private func createTempTextureDescriptor(from texture: MTLTexture) -> MTLTextureDescriptor {
+        let descriptor = MTLTextureDescriptor.texture2DDescriptor(
+            pixelFormat: texture.pixelFormat,
+            width: texture.width,
+            height: texture.height,
+            mipmapped: false
+        )
+        descriptor.usage = [.shaderRead, .shaderWrite]
+        return descriptor
+    }
+    
+    /// 复制纹理的辅助方法
+    private func copyTexture(from sourceTexture: MTLTexture, to destinationTexture: MTLTexture, commandBuffer: MTLCommandBuffer) {
+        guard let blitEncoder = commandBuffer.makeBlitCommandEncoder() else {
+            print("Failed to create blit encoder")
+            return
+        }
+        blitEncoder.copy(from: sourceTexture, to: destinationTexture)
+        blitEncoder.endEncoding()
     }
 }
