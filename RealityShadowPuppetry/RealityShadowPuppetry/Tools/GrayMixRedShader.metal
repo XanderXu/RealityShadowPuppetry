@@ -2,7 +2,7 @@
 //  GrayMixRedShader.metal
 //  RealityShadowPuppetry
 //
-//  Created by AI Assistant on 2025/9/11.
+//  Created by 许 on 2025/9/11.
 //
 
 #include <metal_stdlib>
