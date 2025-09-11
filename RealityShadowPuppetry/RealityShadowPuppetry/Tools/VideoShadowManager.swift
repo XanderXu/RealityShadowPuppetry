@@ -12,10 +12,18 @@ import MetalPerformanceShaders
 
 @MainActor
 final class VideoShadowManager {
+    enum ShadowMixStyle: String, CaseIterable {
+        case GrayShadow
+        case ColorAdd
+    }
     let mtlDevice = MTLCreateSystemDefaultDevice()!
     
     let originalEntity = ModelEntity()
     let shadowEntity = ModelEntity()
+    var shadowStyle = ShadowMixStyle.GrayShadow
+    
+    
+    
     private(set) var videoSize: CGSize?
     private(set) var player: AVPlayer?
     private(set) var offscreenRenderer: OffscreenRenderer?
@@ -124,6 +132,7 @@ final class VideoShadowManager {
     }
     
     public func clean() {
+        shadowStyle = .GrayShadow
         removePlayerObservers()
         originalEntity.removeFromParent()
         shadowEntity.removeFromParent()
@@ -185,18 +194,73 @@ final class VideoShadowManager {
             return
         }
         let outTexture = lowLevelTexture.replace(using: commandBuffer)
-        if let videoTexture = videoTexture {
-            // Create a MPS filter with dynamic blur radius
-            let add = MPSImageAdd(device: device)
-            // set input output
-            add.encode(commandBuffer: commandBuffer, primaryTexture: videoTexture, secondaryTexture: offscreenTexture, destinationTexture: outTexture)
+        
+        if shadowStyle == .ColorAdd {
+            if let videoTexture = videoTexture {
+                // Create a MPS filter for color addition
+                let add = MPSImageAdd(device: device)
+                // set input output
+                add.encode(commandBuffer: commandBuffer, primaryTexture: videoTexture, secondaryTexture: offscreenTexture, destinationTexture: outTexture)
+            } else {
+                // 创建一个blit编码器将结果复制到RealityKit纹理
+                if let blitEncoder = commandBuffer.makeBlitCommandEncoder() {
+                    blitEncoder.copy(from: offscreenTexture, to: outTexture)
+                    blitEncoder.endEncoding()
+                }
+            }
         } else {
-            // 创建一个blit编码器将结果复制到RealityKit纹理
-            if let blitEncoder = commandBuffer.makeBlitCommandEncoder() {
-                blitEncoder.copy(from: offscreenTexture, to: outTexture)
-                blitEncoder.endEncoding()
+            // GrayShadow mode: 将两个纹理转换为黑白图像后相加
+            // 创建临时纹理用于存储黑白处理结果
+            let tempTextureDesc = MTLTextureDescriptor.texture2DDescriptor(
+                pixelFormat: offscreenTexture.pixelFormat,
+                width: offscreenTexture.width,
+                height: offscreenTexture.height,
+                mipmapped: false
+            )
+            tempTextureDesc.usage = [.shaderRead, .shaderWrite]
+            
+            guard let tempOffscreenTexture = device.makeTexture(descriptor: tempTextureDesc) else {
+                print("Failed to create temporary offscreen texture")
+                // 回退方案：直接复制离屏纹理
+                if let blitEncoder = commandBuffer.makeBlitCommandEncoder() {
+                    blitEncoder.copy(from: offscreenTexture, to: outTexture)
+                    blitEncoder.endEncoding()
+                }
+                return
+            }
+            
+            // 先将离屏纹理转换为黑白图像
+            let offscreenThreshold = MPSImageThresholdBinary(device: device, thresholdValue: 0.1, maximumValue: 0.6, linearGrayColorTransform: nil)
+            offscreenThreshold.encode(commandBuffer: commandBuffer, sourceTexture: offscreenTexture, destinationTexture: tempOffscreenTexture)
+            
+            if let videoTexture = videoTexture {
+                // 有视频纹理时：创建临时视频纹理并转换为黑白图像
+                guard let tempVideoTexture = device.makeTexture(descriptor: tempTextureDesc) else {
+                    print("Failed to create temporary video texture")
+                    // 回退方案：直接复制已处理的离屏纹理
+                    if let blitEncoder = commandBuffer.makeBlitCommandEncoder() {
+                        blitEncoder.copy(from: tempOffscreenTexture, to: outTexture)
+                        blitEncoder.endEncoding()
+                    }
+                    return
+                }
+                
+                // 将视频纹理转换为黑白图像
+                let videoThreshold = MPSImageThresholdBinary(device: device, thresholdValue: 0.1, maximumValue: 0.6, linearGrayColorTransform: nil)
+                videoThreshold.encode(commandBuffer: commandBuffer, sourceTexture: videoTexture, destinationTexture: tempVideoTexture)
+                
+                // 将两个黑白图像相加
+                let add = MPSImageAdd(device: device)
+                add.encode(commandBuffer: commandBuffer, primaryTexture: tempVideoTexture, secondaryTexture: tempOffscreenTexture, destinationTexture: outTexture)
+            } else {
+                // 只有离屏纹理时：直接复制已处理的黑白离屏纹理
+                if let blitEncoder = commandBuffer.makeBlitCommandEncoder() {
+                    blitEncoder.copy(from: tempOffscreenTexture, to: outTexture)
+                    blitEncoder.endEncoding()
+                }
             }
         }
+        
         // The usual Metal enqueue process.
         commandBuffer.commit()
         commandBuffer.waitUntilCompleted()

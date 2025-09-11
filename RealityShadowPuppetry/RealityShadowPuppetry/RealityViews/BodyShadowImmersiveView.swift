@@ -22,11 +22,7 @@ struct BodyShadowImmersiveView: View {
             
 
         }
-        .onChange(of: model.shadowStyle) { oldValue, newValue in
-//            guard model.lowLevelTexture != nil else {
-//                return
-//            }
-        }
+        
         
     }
 }

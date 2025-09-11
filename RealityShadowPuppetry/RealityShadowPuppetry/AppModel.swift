@@ -14,16 +14,13 @@ import AVFoundation
 @MainActor
 @Observable
 class AppModel {
-    enum ShadowStyle: String, CaseIterable {
-        case Gray
-        case Color
-    }
+    
     var rootEntity: Entity?
     var videoShadowManager: VideoShadowManager?
-    
+    var shadowStyle = VideoShadowManager.ShadowMixStyle.GrayShadow
     let handEntityManager = HandEntityManager()
     var turnOnImmersiveSpace = false
-    var shadowStyle = ShadowStyle.Gray
+    
     var showVideo = false
     var isPlaying = false {
         didSet {
@@ -67,7 +64,6 @@ class AppModel {
     func reset() {
         debugPrint(#function)
         
-        shadowStyle = ShadowStyle.Gray
         clear()
     }
     

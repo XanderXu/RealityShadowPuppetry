@@ -21,7 +21,7 @@ struct DetailView: View {
             }
             
             Picker(selection: $model.shadowStyle, label: Text("Shadow Style")) {
-                ForEach(AppModel.ShadowStyle.allCases, id: \.self) { type in
+                ForEach(VideoShadowManager.ShadowMixStyle.allCases, id: \.self) { type in
                     Text(type.rawValue)
                 }
             }

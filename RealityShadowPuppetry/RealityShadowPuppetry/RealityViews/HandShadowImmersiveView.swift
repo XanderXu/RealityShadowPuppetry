@@ -43,7 +43,7 @@ struct HandShadowImmersiveView: View {
             
         }
         .onChange(of: model.shadowStyle) { oldValue, newValue in
-            
+            model.videoShadowManager?.shadowStyle = newValue
         }
         .onChange(of: model.showVideo) { oldValue, newValue in
             let videoEntity = model.videoShadowManager?.originalEntity
