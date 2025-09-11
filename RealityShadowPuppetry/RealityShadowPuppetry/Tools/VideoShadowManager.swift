@@ -253,7 +253,7 @@ final class VideoShadowManager {
         }
         
         // 将离屏纹理转换为二值化图像
-        let offscreenThreshold = MPSImageThresholdBinary(device: device, thresholdValue: 0.001, maximumValue: 0.8, linearGrayColorTransform: nil)
+        let offscreenThreshold = MPSImageThresholdBinary(device: device, thresholdValue: 0, maximumValue: 0.8, linearGrayColorTransform: nil)
         offscreenThreshold.encode(commandBuffer: commandBuffer, sourceTexture: offscreenTexture, destinationTexture: tempOffscreenTexture)
         
         if let videoTexture = videoTexture {
@@ -264,10 +264,9 @@ final class VideoShadowManager {
             }
             
             
-            // 将视频纹理转换为灰度图像
-            let videoGrayscale = MPSImageConversion(device: device, srcAlpha: .nonPremultiplied, destAlpha: .nonPremultiplied, backgroundColor: nil, conversionInfo: nil)
-            videoGrayscale.encode(commandBuffer: commandBuffer, sourceTexture: videoTexture, destinationTexture: tempVideoTexture)
-            
+            // 使用非常低的阈值和线性灰度转换
+            let threshold = MPSImageThresholdToZero(device: device, thresholdValue: 0, linearGrayColorTransform: nil)
+            threshold.encode(commandBuffer: commandBuffer, sourceTexture: videoTexture, destinationTexture: tempVideoTexture)
             // 将两个二值化图像相加
             let add = MPSImageAdd(device: device)
             add.encode(commandBuffer: commandBuffer, primaryTexture: tempVideoTexture, secondaryTexture: tempOffscreenTexture, destinationTexture: outputTexture)
