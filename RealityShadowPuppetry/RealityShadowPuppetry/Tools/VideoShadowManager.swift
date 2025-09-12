@@ -61,7 +61,8 @@ final class VideoShadowManager {
         // Create a TextureResource from the LowLevelTexture.
         let resource = try await TextureResource(from: llt)
         // Create a material that uses the texture.
-        let material = UnlitMaterial(texture: resource)
+        var material = UnlitMaterial(texture: resource)
+        material.opacityThreshold = 0.01
         shadowEntity.model = .init(mesh: .generatePlane(width: 1, height: Float(size.height/size.width)), materials: [material])
         shadowEntity.name = "MixedTexture"
         shadowEntity.position = SIMD3(x: 1.2, y: 1, z: -2)

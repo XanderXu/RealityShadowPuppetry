@@ -43,7 +43,7 @@ kernel void grayMixRedKernel(texture2d<float, access::read> videoTexture [[textu
     } else {
         // 至少有一个灰度值为0：显示较大值作为灰度图
         float maxGray = max(videoGray, offscreenGray);
-        outputColor = float4(maxGray, maxGray, maxGray, 1.0);
+        outputColor = float4(maxGray, maxGray, maxGray, videoColor.a);
     }
     
     outputTexture.write(outputColor, gid);
