@@ -17,20 +17,30 @@ class AppModel {
     
     var rootEntity: Entity?
     var videoShadowManager: VideoShadowManager?
-    var shadowStyle = VideoShadowManager.ShadowMixStyle.GrayAdd
-    let handEntityManager = HandEntityManager()
-    var turnOnImmersiveSpace = false
-    
-    var showVideo = false
-    var isPlaying = false {
+    var shadowStyle: VideoShadowManager.ShadowMixStyle {
+        get {
+            videoShadowManager?.shadowStyle ?? .GrayAdd
+        }
+        set {
+            videoShadowManager?.shadowStyle = newValue
+        }
+    }
+    var isVideoPlaying = false {
         didSet {
-            if isPlaying {
+            if isVideoPlaying {
                 videoShadowManager?.player?.play()
             } else {
                 videoShadowManager?.player?.pause()
             }
         }
     }
+    var showOriginalVideo: Bool = false {
+        didSet {
+            videoShadowManager?.originalEntity.isEnabled = showOriginalVideo
+        }
+    }
+    let handEntityManager = HandEntityManager()
+    var turnOnImmersiveSpace = false
     
     
     private let session = ARKitSession()
@@ -43,11 +53,11 @@ class AppModel {
     func setup(asset: AVAsset) async throws {
         videoShadowManager = try await VideoShadowManager(asset: asset)
 //        videoShadowManager?.playerStatusDidChange = { [weak self] status in
-//            self?.isPlaying = status == .playing
+//            self?.isVideoPlaying = status == .playing
 //        }
         videoShadowManager?.playbackDidFinish = { [weak self] in
             self?.videoShadowManager?.player?.seek(to: .zero)
-            self?.isPlaying = false
+            self?.isVideoPlaying = false
         }
     }
     func clear() {

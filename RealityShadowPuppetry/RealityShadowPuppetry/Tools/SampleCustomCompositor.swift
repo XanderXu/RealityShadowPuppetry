@@ -50,11 +50,11 @@ class SampleCustomCompositor: NSObject, AVVideoCompositing {
     func startRequest(_ request: AVAsynchronousVideoCompositionRequest) {
         self.request = request
         isCancelled = false  // 重置取消状态
-        guard let outputPixelBuffer = request.renderContext.newPixelBuffer() else {
-            print("No valid pixel buffer found. Returning.")
-            request.finish(with: CustomCompositorError.ciFilterFailedToProduceOutputImage)
-            return
-        }
+//        guard let outputPixelBuffer = request.renderContext.newPixelBuffer() else {
+//            print("No valid pixel buffer found. Returning.")
+//            request.finish(with: CustomCompositorError.ciFilterFailedToProduceOutputImage)
+//            return
+//        }
         
         guard let requiredTrackIDs = request.videoCompositionInstruction.requiredSourceTrackIDs, !requiredTrackIDs.isEmpty else {
             print("No valid track IDs found in composition instruction.")
@@ -71,14 +71,14 @@ class SampleCustomCompositor: NSObject, AVVideoCompositing {
         if sourceCount == 1 {
             let sourceID = requiredTrackIDs[0]
             let sourceBuffer = request.sourceFrame(byTrackID: sourceID.value(of: Int32.self)!)!
+            request.finish(withComposedVideoFrame: sourceBuffer)
             Task {@MainActor in
                 self.lastestPixel = self.convertToMetalTexture(sourceBuffer)
                 self.videoPixelUpdate?()
             }
-            request.finish(withComposedVideoFrame: sourceBuffer)
         }
         
-        request.finish(withComposedVideoFrame: outputPixelBuffer)
+//        request.finish(withComposedVideoFrame: outputPixelBuffer)
     }
     func convertToMetalTexture(_ pixelBuffer: CVPixelBuffer) -> MTLTexture? {
         guard let device = MTLCreateSystemDefaultDevice() else {

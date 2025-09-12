@@ -30,12 +30,12 @@ struct DetailView: View {
             .frame(width: 400)
             
             HStack(spacing: 20) {
-                Toggle("Play Video", isOn: $model.isPlaying)
+                Toggle("Play Video", isOn: $model.isVideoPlaying)
                     .disabled(!model.turnOnImmersiveSpace)
                     .toggleStyle(ButtonToggleStyle())
                     .padding(.bottom, 40)
                 
-                Toggle("Show Video", isOn: $model.showVideo)
+                Toggle("Show Original Video", isOn: $model.showOriginalVideo)
                     .disabled(!model.turnOnImmersiveSpace)
                     .toggleStyle(ButtonToggleStyle())
                     .padding(.bottom, 40)
@@ -56,7 +56,7 @@ struct DetailView: View {
             return
         }
         
-        if model.isPlaying {
+        if model.isVideoPlaying {
             // 当前正在播放，点击暂停
             videoShadowCenter.player?.pause()
             print("用户暂停视频")
@@ -66,9 +66,9 @@ struct DetailView: View {
             print("用户开始播放视频")
         }
         
-        // 注意：不需要手动设置 model.isPlaying
+        // 注意：不需要手动设置 model.isVideoPlaying
         // 因为 AppModel.setup() 中已经设置了播放状态监听
-        // videoShadowManager.playerStatusDidChange 会自动更新 model.isPlaying
+        // videoShadowManager.playerStatusDidChange 会自动更新 model.isVideoPlaying
     }
 }
 
