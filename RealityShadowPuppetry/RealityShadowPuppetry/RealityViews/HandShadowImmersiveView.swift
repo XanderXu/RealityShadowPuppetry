@@ -37,22 +37,17 @@ struct HandShadowImmersiveView: View {
                 entity.addChild(originalEntity)
                 entity.addChild(shadowEntity)
                 originalEntity.isEnabled = model.showOriginalVideo
+                
+                await model.startHandTracking()
             } catch {
                 print(error)
             }
             
         }
         .upperLimbVisibility(.hidden)
-//        .onChange(of: model.shadowStyle) { oldValue, newValue in
-//            model.videoShadowManager?.shadowStyle = newValue
-//        }
-//        .onChange(of: model.showOriginalVideo) { oldValue, newValue in
-//            let videoEntity = model.videoShadowManager?.originalEntity
-//            videoEntity?.isEnabled = newValue
-//        }
-        
+
         .task {
-            await model.startHandTracking()
+            
         }
         .task {
             await model.publishHandTrackingUpdates()

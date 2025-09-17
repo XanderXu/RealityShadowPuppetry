@@ -90,19 +90,19 @@ class AppModel {
             print("ARKitSession error:", error)
         }
         videoShadowManager?.offscreenRenderer?.addEntity(handEntityManager.rootEntity)
-        videoShadowManager?.offscreenRenderer?.cameraLook(at: SIMD3<Float>(0, 1.4, 0), from: SIMD3<Float>(0, 1.4, 20))
+        videoShadowManager?.offscreenRenderer?.cameraLook(at: SIMD3<Float>(0, 1.0, 0), from: SIMD3<Float>(0, 1.0, 20))
     }
     func publishHandTrackingUpdates() async {
         for await update in handTracking.anchorUpdates {
             switch update.event {
             case .added, .updated:
                 let anchor = update.anchor
+                print(anchor.chirality)
                 await handEntityManager.updateHand(from: anchor)
             case .removed:
                 let anchor = update.anchor
                 handEntityManager.removeHand(from: anchor)
             }
-            
             try? videoShadowManager?.offscreenRenderer?.render()
         }
     }

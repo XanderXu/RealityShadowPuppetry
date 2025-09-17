@@ -40,7 +40,7 @@ final class HandEntityManager {
         
         for positionInfo in handAnchor.handSkeleton?.allJoints ?? [] {
             let modelEntity = ModelEntity(mesh: .generateBox(width: 0.015, height: 0.015, depth: 0.015, splitFaces: true), materials: colorsM)//[+z, +y, -z, -y, +x, -x]
-            modelEntity.transform.matrix = positionInfo.parentFromJointTransform
+            modelEntity.transform.matrix = positionInfo.anchorFromJointTransform
             modelEntity.name = positionInfo.name.description + "-model"
             hand.addChild(modelEntity)
         }
