@@ -42,6 +42,7 @@ struct HandShadowImmersiveView: View {
             }
             
         }
+        .upperLimbVisibility(.hidden)
 //        .onChange(of: model.shadowStyle) { oldValue, newValue in
 //            model.videoShadowManager?.shadowStyle = newValue
 //        }

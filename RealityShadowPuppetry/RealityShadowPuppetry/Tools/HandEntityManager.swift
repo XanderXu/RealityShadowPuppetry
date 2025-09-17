@@ -71,7 +71,7 @@ final class HandEntityManager {
         inEntiy.transform.matrix = handAnchor.originFromAnchorTransform
         for positionInfo in handAnchor.handSkeleton?.allJoints ?? [] {
             let modelEntity = inEntiy.findEntity(named: positionInfo.name.description + "-model")
-            modelEntity?.transform.matrix = positionInfo.parentFromJointTransform
+            modelEntity?.transform.matrix = positionInfo.anchorFromJointTransform
         }
     }
     

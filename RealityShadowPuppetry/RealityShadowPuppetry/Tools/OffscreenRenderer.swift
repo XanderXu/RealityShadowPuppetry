@@ -33,7 +33,7 @@ final class OffscreenRenderer {
         var orthComponent = OrthographicCameraComponent()
         orthComponent.near = 0.1
         orthComponent.far = 100
-        orthComponent.scale = 0.5
+        orthComponent.scale = 0.2
         
         camera.components.set(orthComponent)
 //        camera.position = [0, 0, 20]
