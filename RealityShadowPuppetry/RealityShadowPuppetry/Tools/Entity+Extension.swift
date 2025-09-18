@@ -55,4 +55,97 @@ extension Entity {
             child.printHierarchy(level: level + 1)
         }
     }
+    
+    // MARK: - Component Search Methods
+    
+    /// 使用深度优先搜索查找包含特定 Component 类型的第一个 Entity
+    /// - Parameter componentType: 要查找的组件类型
+    /// - Returns: 包含指定组件的第一个 Entity，如果未找到则返回 nil
+    func findFirstEntity<T: Component>(with componentType: T.Type) -> Entity? {
+        // 首先检查当前 Entity 是否包含指定组件
+        if self.components.has(componentType) {
+            return self
+        }
+        
+        // 深度优先搜索子元素
+        for child in self.children {
+            if let found = child.findFirstEntity(with: componentType) {
+                return found
+            }
+        }
+        
+        return nil
+    }
+    
+    /// 使用深度优先搜索查找所有包含特定 Component 类型的 Entity
+    /// - Parameter componentType: 要查找的组件类型
+    /// - Returns: 包含指定组件的所有 Entity 数组
+    func findAllEntities<T: Component>(with componentType: T.Type) -> [Entity] {
+        var results: [Entity] = []
+        
+        // 检查当前 Entity 是否包含指定组件
+        if self.components.has(componentType) {
+            results.append(self)
+        }
+        
+        // 深度优先搜索子元素
+        for child in self.children {
+            results.append(contentsOf: child.findAllEntities(with: componentType))
+        }
+        
+        return results
+    }
+    
+    
+    
+    
+    // MARK: - BoundingBox Methods
+    
+    /// 获取当前 Entity 及其所有子元素的综合边界框
+    /// - Parameter includeInactive: 是否包含未启用的 Entity（默认为 false）
+    /// - Returns: 包含所有子元素的边界框，如果没有可视元素则返回 nil
+    func getAllChildrenBoundingBox(includeInactive: Bool = false) -> BoundingBox? {
+        var allBounds: [BoundingBox] = []
+        collectBounds(from: self, into: &allBounds, includeInactive: includeInactive)
+        
+        guard let first = allBounds.first else { return nil }
+        return allBounds.dropFirst().reduce(first) { $0.union($1) }
+    }
+    
+    /// 获取当前 Entity 下所有子元素的边界框详细信息
+    /// - Parameter includeInactive: 是否包含未启用的 Entity（默认为 false）
+    /// - Returns: 包含每个子元素边界框信息的数组
+    func getChildrenBoundingBoxDetails(includeInactive: Bool = false) -> [(entity: Entity, boundingBox: BoundingBox, path: String)] {
+        var results: [(entity: Entity, boundingBox: BoundingBox, path: String)] = []
+        let rootName = self.name.isEmpty ? "<root>" : self.name
+        collectBoundsDetails(from: self, into: &results, path: rootName, includeInactive: includeInactive)
+        return results
+    }
+    
+    /// 递归收集边界框
+    private func collectBounds(from entity: Entity, into bounds: inout [BoundingBox], includeInactive: Bool) {
+        if (includeInactive || entity.isEnabled), 
+           let modelComponent = entity.components[ModelComponent.self] {
+            let worldBounds = modelComponent.mesh.bounds.transformed(by: entity.transform.matrix)
+            bounds.append(worldBounds)
+        }
+        
+        entity.children.forEach { collectBounds(from: $0, into: &bounds, includeInactive: includeInactive) }
+    }
+    
+    /// 递归收集边界框详细信息
+    private func collectBoundsDetails(from entity: Entity, into results: inout [(entity: Entity, boundingBox: BoundingBox, path: String)], path: String, includeInactive: Bool) {
+        if (includeInactive || entity.isEnabled),
+           let modelComponent = entity.components[ModelComponent.self] {
+            let worldBounds = modelComponent.mesh.bounds.transformed(by: entity.transform.matrix)
+            results.append((entity: entity, boundingBox: worldBounds, path: path))
+        }
+        
+        for child in entity.children {
+            let childName = child.name.isEmpty ? "<unnamed>" : child.name
+            collectBoundsDetails(from: child, into: &results, path: "\(path)/\(childName)", includeInactive: includeInactive)
+        }
+    }
+    
+    
 }
