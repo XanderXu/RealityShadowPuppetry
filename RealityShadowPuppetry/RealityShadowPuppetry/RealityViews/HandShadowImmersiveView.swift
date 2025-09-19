@@ -21,14 +21,6 @@ struct HandShadowImmersiveView: View {
             model.rootEntity = entity
             content.add(entity)
             
-//            let hand = try? await Entity(named: "Low-Poly_Hand_With_Animation")
-//            hand?.printHierarchy()
-//            hand?.printChildrenInfo()
-//            let p = hand?.findEntity(named: "skin0")
-//            let pose = p?.components[SkeletalPosesComponent.self]
-//            pose?.poses.forEach { sp in
-//                print(sp.id,sp.jointNames)
-//            }
             do {
                 try await model.setup(asset: asset)
                 guard let originalEntity = model.videoShadowManager?.originalEntity, let shadowEntity = model.videoShadowManager?.shadowEntity else {
@@ -38,7 +30,6 @@ struct HandShadowImmersiveView: View {
                 entity.addChild(shadowEntity)
                 originalEntity.isEnabled = model.showOriginalVideo
                 
-                await model.startHandTracking()
             } catch {
                 print(error)
             }
@@ -47,7 +38,7 @@ struct HandShadowImmersiveView: View {
         .upperLimbVisibility(.hidden)
 
         .task {
-            
+            await model.startHandTracking()
         }
         .task {
             await model.publishHandTrackingUpdates()

@@ -59,6 +59,10 @@ class AppModel {
             self?.videoShadowManager?.player?.seek(to: .zero)
             self?.isVideoPlaying = false
         }
+        
+        videoShadowManager?.offscreenRenderer?.addEntity(handEntityManager.rootEntity)
+//        videoShadowManager?.offscreenRenderer?.cameraLook(at: SIMD3<Float>(0, 1.0, 0), from: SIMD3<Float>(0, 1.0, 20))
+        videoShadowManager?.offscreenRenderer?.cameraAutoLookBoundingBoxCenter()
     }
     func clear() {
         stopHandTracking()
@@ -89,8 +93,6 @@ class AppModel {
         } catch {
             print("ARKitSession error:", error)
         }
-        videoShadowManager?.offscreenRenderer?.addEntity(handEntityManager.rootEntity)
-        videoShadowManager?.offscreenRenderer?.cameraLook(at: SIMD3<Float>(0, 1.0, 0), from: SIMD3<Float>(0, 1.0, 20))
     }
     func publishHandTrackingUpdates() async {
         for await update in handTracking.anchorUpdates {

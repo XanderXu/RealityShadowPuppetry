@@ -11,7 +11,7 @@ extension Entity {
     
     /// 打印当前 Entity 的子元素信息并递归遍历
     /// - Parameter level: 递归层级，用于缩进显示
-    func printChildrenInfo(level: Int = 0) {
+    func printHierarchyDetails(level: Int = 0) {
         let indent = String(repeating: "  ", count: level)
         
         // 打印当前 Entity 的基本信息
@@ -33,7 +33,7 @@ extension Entity {
                 
                 // 递归处理子元素的子元素
                 print("\(childIndent)    Recursive children:")
-                child.printChildrenInfo(level: level + 2)
+                child.printHierarchyDetails(level: level + 2)
                 
                 // 在每个子元素之间添加分隔线
                 if index < self.children.count - 1 {
@@ -94,57 +94,6 @@ extension Entity {
         }
         
         return results
-    }
-    
-    
-    
-    
-    // MARK: - BoundingBox Methods
-    
-    /// 获取当前 Entity 及其所有子元素的综合边界框
-    /// - Parameter includeInactive: 是否包含未启用的 Entity（默认为 false）
-    /// - Returns: 包含所有子元素的边界框，如果没有可视元素则返回 nil
-    func getAllChildrenBoundingBox(includeInactive: Bool = false) -> BoundingBox? {
-        var allBounds: [BoundingBox] = []
-        collectBounds(from: self, into: &allBounds, includeInactive: includeInactive)
-        
-        guard let first = allBounds.first else { return nil }
-        return allBounds.dropFirst().reduce(first) { $0.union($1) }
-    }
-    
-    /// 获取当前 Entity 下所有子元素的边界框详细信息
-    /// - Parameter includeInactive: 是否包含未启用的 Entity（默认为 false）
-    /// - Returns: 包含每个子元素边界框信息的数组
-    func getChildrenBoundingBoxDetails(includeInactive: Bool = false) -> [(entity: Entity, boundingBox: BoundingBox, path: String)] {
-        var results: [(entity: Entity, boundingBox: BoundingBox, path: String)] = []
-        let rootName = self.name.isEmpty ? "<root>" : self.name
-        collectBoundsDetails(from: self, into: &results, path: rootName, includeInactive: includeInactive)
-        return results
-    }
-    
-    /// 递归收集边界框
-    private func collectBounds(from entity: Entity, into bounds: inout [BoundingBox], includeInactive: Bool) {
-        if (includeInactive || entity.isEnabled), 
-           let modelComponent = entity.components[ModelComponent.self] {
-            let worldBounds = modelComponent.mesh.bounds.transformed(by: entity.transform.matrix)
-            bounds.append(worldBounds)
-        }
-        
-        entity.children.forEach { collectBounds(from: $0, into: &bounds, includeInactive: includeInactive) }
-    }
-    
-    /// 递归收集边界框详细信息
-    private func collectBoundsDetails(from entity: Entity, into results: inout [(entity: Entity, boundingBox: BoundingBox, path: String)], path: String, includeInactive: Bool) {
-        if (includeInactive || entity.isEnabled),
-           let modelComponent = entity.components[ModelComponent.self] {
-            let worldBounds = modelComponent.mesh.bounds.transformed(by: entity.transform.matrix)
-            results.append((entity: entity, boundingBox: worldBounds, path: path))
-        }
-        
-        for child in entity.children {
-            let childName = child.name.isEmpty ? "<unnamed>" : child.name
-            collectBoundsDetails(from: child, into: &results, path: "\(path)/\(childName)", includeInactive: includeInactive)
-        }
     }
     
     

@@ -32,6 +32,14 @@ final class HandEntityManager {
         left = nil
         right = nil
     }
+    public func setupHandModelEntity() async {
+        let hand = try? await Entity(named: "HandBone")
+//            hand?.printHierarchyDetails()
+        let p = hand?.findFirstEntity(with: SkeletalPosesComponent.self)
+        let bounds = p?.components[SkeletalPosesComponent.self]
+        print(bounds?.poses.first?.jointNames)
+        
+    }
     @MainActor
     public func generateHandEntity(from handAnchor: HandAnchor, filter: CollisionFilter = .default) -> Entity {
         let hand = Entity()

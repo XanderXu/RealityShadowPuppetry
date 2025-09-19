@@ -52,6 +52,11 @@ final class OffscreenRenderer {
     func cameraLook(at position: SIMD3<Float>, from: SIMD3<Float>, relativeTo: Entity? = nil) {
         camera.look(at: position, from: from, relativeTo: relativeTo)
     }
+    func cameraAutoLookBoundingBoxCenter() {
+        guard !renderer.entities.isEmpty else { return }
+        let boundingBox = renderer.entities.reduce(renderer.entities.first!.visualBounds(relativeTo: nil)) { $0.union($1.visualBounds(relativeTo: nil)) }
+        camera.look(at: boundingBox.center, from: boundingBox.center + SIMD3<Float>(0, 0, 20), relativeTo: nil)
+    }
     func addEntity(_ scene: Entity) {
         renderer.entities.append(scene)
     }
