@@ -19,12 +19,15 @@ final class HandEntityManager {
         let bnm = UnlitMaterial(color: .init(red: 0, green: 0, blue: 0.5, alpha: 1))
         return [bm, gm, bnm, gnm, rm, rnm]
     }()
+    private var leftModel: Entity?
+    private var rightModel: Entity?
     
     
     let rootEntity = Entity()
     
     var left: Entity?
     var right: Entity?
+    
     
     func clean() {
         rootEntity.removeFromParent()
@@ -33,12 +36,26 @@ final class HandEntityManager {
         right = nil
     }
     public func setupHandModelEntity() async {
-        let hand = try? await Entity(named: "HandBone")
-//            hand?.printHierarchyDetails()
-        let p = hand?.findFirstEntity(with: SkeletalPosesComponent.self)
-        let bounds = p?.components[SkeletalPosesComponent.self]
-        print(bounds?.poses.first?.jointNames)
-        
+        left = try? await Entity(named: "HandBone")
+//        await left?.printHierarchy()
+        leftModel = await left?.findFirstEntity(with: SkeletalPosesComponent.self)
+        let poses = await leftModel?.components[SkeletalPosesComponent.self]
+        print(poses?.poses.first?.jointNames, poses?.poses.first?.jointTransforms)
+        /*
+        ["n9", "n9/n10", "n9/n10/n11",
+         "n9/n10/n11/n12", "n9/n10/n11/n12/n13", "n9/n10/n11/n12/n13/n14", "n9/n10/n11/n12/n13/n14/n15",
+         "n9/n10/n11/n16", "n9/n10/n11/n16/n17", "n9/n10/n11/n16/n17/n18", "n9/n10/n11/n16/n17/n18/n19",
+         "n9/n10/n11/n20", "n9/n10/n11/n20/n21", "n9/n10/n11/n20/n21/n22", "n9/n10/n11/n20/n21/n22/n23",
+         "n9/n10/n11/n24", "n9/n10/n11/n24/n25", "n9/n10/n11/n24/n25/n26", "n9/n10/n11/n24/n25/n26/n27",
+         "n9/n10/n28", "n9/n10/n28/n29", "n9/n10/n28/n29/n30"]
+         */
+    }
+    public func updateHandModel(from handAnchor: HandAnchor) {
+        if handAnchor.chirality == .left {
+            left?.transform.matrix = handAnchor.originFromAnchorTransform
+            let poses = leftModel?.components[SkeletalPosesComponent.self]
+            
+        }
     }
     @MainActor
     public func generateHandEntity(from handAnchor: HandAnchor, filter: CollisionFilter = .default) -> Entity {

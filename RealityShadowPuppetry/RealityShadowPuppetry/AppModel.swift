@@ -63,6 +63,7 @@ class AppModel {
         videoShadowManager?.offscreenRenderer?.addEntity(handEntityManager.rootEntity)
 //        videoShadowManager?.offscreenRenderer?.cameraLook(at: SIMD3<Float>(0, 1.0, 0), from: SIMD3<Float>(0, 1.0, 20))
         videoShadowManager?.offscreenRenderer?.cameraAutoLookBoundingBoxCenter()
+        await handEntityManager.setupHandModelEntity()
     }
     func clear() {
         stopHandTracking()
