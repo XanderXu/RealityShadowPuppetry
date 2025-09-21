@@ -35,12 +35,14 @@ final class HandEntityManager {
         left = nil
         right = nil
     }
+    @MainActor
     public func setupHandModelEntity() async {
+//        return
         left = try? await Entity(named: "HandBone")
 //        await left?.printHierarchy()
-        leftModel = await left?.findFirstEntity(with: SkeletalPosesComponent.self)
-        let poses = await leftModel?.components[SkeletalPosesComponent.self]
-        print(poses?.poses.first?.jointNames, poses?.poses.first?.jointTransforms)
+        leftModel = left?.findFirstEntity(with: SkeletalPosesComponent.self)
+        let poses = leftModel?.components[SkeletalPosesComponent.self]
+//        print(poses?.poses.first?.jointNames, poses?.poses.first?.jointTransforms)
         /*
         ["n9", "n9/n10", "n9/n10/n11",
          "n9/n10/n11/n12", "n9/n10/n11/n12/n13", "n9/n10/n11/n12/n13/n14", "n9/n10/n11/n12/n13/n14/n15",
@@ -49,6 +51,8 @@ final class HandEntityManager {
          "n9/n10/n11/n24", "n9/n10/n11/n24/n25", "n9/n10/n11/n24/n25/n26", "n9/n10/n11/n24/n25/n26/n27",
          "n9/n10/n28", "n9/n10/n28/n29", "n9/n10/n28/n29/n30"]
          */
+        left?.position = simd_float3(0, 0.8, -0.3)
+        rootEntity.addChild(left!)
     }
     public func updateHandModel(from handAnchor: HandAnchor) {
         if handAnchor.chirality == .left {

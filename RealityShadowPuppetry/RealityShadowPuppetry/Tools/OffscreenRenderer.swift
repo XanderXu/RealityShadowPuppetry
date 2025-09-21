@@ -36,7 +36,7 @@ final class OffscreenRenderer {
         orthComponent.scale = 0.5
         
         camera.components.set(orthComponent)
-        camera.position = [0, 0.7, 20]
+        camera.position = [0, 0, 20]
         camera.name = "Camera"
         renderer.activeCamera = camera
         renderer.entities.append(camera)

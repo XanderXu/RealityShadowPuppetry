@@ -45,7 +45,7 @@ class AppModel {
     
     private let session = ARKitSession()
 //    private let worldTracking = WorldTrackingProvider()
-    private let handTracking = HandTrackingProvider()
+    private var handTracking = HandTrackingProvider()
     private let simHandProvider = SimulatorHandTrackingProvider()
     init() {
         
@@ -61,9 +61,9 @@ class AppModel {
         }
         
         videoShadowManager?.offscreenRenderer?.addEntity(handEntityManager.rootEntity)
-//        videoShadowManager?.offscreenRenderer?.cameraLook(at: SIMD3<Float>(0, 1.0, 0), from: SIMD3<Float>(0, 1.0, 20))
-        videoShadowManager?.offscreenRenderer?.cameraAutoLookBoundingBoxCenter()
-        await handEntityManager.setupHandModelEntity()
+        videoShadowManager?.offscreenRenderer?.cameraLook(at: SIMD3<Float>(0, 1.0, 0), from: SIMD3<Float>(0, 1.0, 20))
+//        await handEntityManager.setupHandModelEntity()
+//        videoShadowManager?.offscreenRenderer?.cameraAutoLookBoundingBoxCenter()
     }
     func clear() {
         stopHandTracking()
@@ -89,6 +89,8 @@ class AppModel {
         do {
             if HandTrackingProvider.isSupported {
                 print("ARKitSession starting.")
+                
+                handTracking = HandTrackingProvider()
                 try await session.run([handTracking])
             }
         } catch {
@@ -100,8 +102,11 @@ class AppModel {
             switch update.event {
             case .added, .updated:
                 let anchor = update.anchor
-                print(anchor.chirality)
+                print(anchor.chirality, update.event.description)
                 await handEntityManager.updateHand(from: anchor)
+                if update.event == .added {
+                    videoShadowManager?.offscreenRenderer?.cameraAutoLookBoundingBoxCenter()
+                }
             case .removed:
                 let anchor = update.anchor
                 handEntityManager.removeHand(from: anchor)
