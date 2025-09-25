@@ -1,11 +1,11 @@
 import Foundation
-
+nonisolated
 class ProgressWatcher: NSObject {
 
     enum ObservationKeyPath: String {
         case fractionCompleted
     }
-
+    
     var progressHandler: ((Double) -> Void)?
 
     let progress: Progress
@@ -25,26 +25,25 @@ class ProgressWatcher: NSObject {
                                      forKeyPath: "fractionCompleted", 
                                      context: &self.kvoContext)
     }
-    nonisolated
     override func observeValue(forKeyPath keyPath: String?,
                                of object: Any?,
                                change: [NSKeyValueChangeKey : Any]?,
                                context: UnsafeMutableRawPointer?) {
-        self.observationQueue.async {
-            if context == &self.kvoContext {
-                switch keyPath {
-                case ObservationKeyPath.fractionCompleted.rawValue:
-                    if let progress = object as? Progress {
-                        self.progressHandler?(progress.fractionCompleted)
+        if context == &self.kvoContext {
+            switch keyPath {
+            case ObservationKeyPath.fractionCompleted.rawValue:
+                if let progress = object as? Progress {
+                    self.observationQueue.async {[weak self] in
+                        self?.progressHandler?(progress.fractionCompleted)
                     }
-                default: break
                 }
-            } else {
-                super.observeValue(forKeyPath: keyPath,
-                                   of: object,
-                                   change: change,
-                                   context: context)
+            default: break
             }
+        } else {
+            super.observeValue(forKeyPath: keyPath,
+                               of: object,
+                               change: change,
+                               context: context)
         }
     }
 }
