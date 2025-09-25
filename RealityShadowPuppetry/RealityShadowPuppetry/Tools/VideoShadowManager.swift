@@ -7,9 +7,10 @@
 
 import RealityKit
 import MetalKit
-import AVFoundation
+@preconcurrency import AVFoundation
 import MetalPerformanceShaders
 
+@MainActor
 final class VideoShadowManager {
     enum ShadowMixStyle: String, CaseIterable {
         case ColorAdd
@@ -142,7 +143,6 @@ final class VideoShadowManager {
         customCompositor?.lastestPixel = nil
         customCompositor?.videoPixelUpdate = nil
     }
-    
     
     
     private func createPlayerAndSizeWithAsset(asset: AVAsset) async throws -> (AVPlayer, CGSize) {

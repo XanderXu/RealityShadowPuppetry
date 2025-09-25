@@ -341,7 +341,10 @@ public class SimulatorHandTrackingProvider {
             ///  配置一个终止回调，以了解你的流的生命周期。
             continuation.onTermination = {@Sendable [weak self] status in
                 print("Stream terminated with status \(status)")
-                self?.bonjour.stop()
+                Task {@MainActor in
+                    self?.bonjour.stop()
+                }
+                
             }
             bonjour.start()
             bonjour.onReceive = { data, peer in

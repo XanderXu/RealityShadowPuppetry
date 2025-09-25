@@ -7,6 +7,7 @@
 @preconcurrency import RealityKit
 import MetalKit
 
+@MainActor
 final class OffscreenRenderer {
     private let renderer: RealityRenderer
     let colorTexture: MTLTexture
@@ -71,7 +72,9 @@ final class OffscreenRenderer {
 //        let c = colorTexture
 //        try renderer.updateAndRender(deltaTime: 0, cameraOutput: cameraOutput)
         try renderer.updateAndRender(deltaTime: 0, cameraOutput: cameraOutput) {[weak self] render in
-            self?.rendererUpdate?()
+            Task {@MainActor in
+                self?.rendererUpdate?()
+            }
         }
     }
 }

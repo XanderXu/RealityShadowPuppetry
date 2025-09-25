@@ -8,6 +8,7 @@
 import RealityKit
 import ARKit
 
+@MainActor
 final class HandEntityManager {
     private let wm = UnlitMaterial(color: .white)
     private lazy var colorsM: [UnlitMaterial] = {

@@ -1,5 +1,5 @@
 import Foundation
-import MultipeerConnectivity
+@preconcurrency import MultipeerConnectivity
 import os.log
 
 public typealias InvitationCompletionHandler = (_ result: Result<Peer, Error>) -> Void
@@ -104,7 +104,12 @@ final public class BonjourSession: NSObject {
             guard self.availablePeers != oldValue
             else { return }
             self.sessionQueue.async {
-                self.onAvailablePeersDidChange?(Array(self.availablePeers))
+                Task { @MainActor in
+//                    await MainActor.run {
+                        self.onAvailablePeersDidChange?(Array(self.availablePeers))
+//                    }
+                }
+//                self.onAvailablePeersDidChange?(Array(self.availablePeers))
             }
         }
     }

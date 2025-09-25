@@ -24,7 +24,7 @@ enum CustomCompositorError: Int, Error, LocalizedError {
     }
 }
 
-class SampleCustomCompositor: NSObject, AVVideoCompositing {
+final class SampleCustomCompositor: NSObject, AVVideoCompositing {
     var videoPixelUpdate: (() -> Void)?
     var lastestPixel: (any MTLTexture)?
     
