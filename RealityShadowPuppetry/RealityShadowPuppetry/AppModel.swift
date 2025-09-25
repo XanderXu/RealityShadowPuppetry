@@ -78,7 +78,8 @@ class AppModel {
     /// Resets game state information.
     func reset() {
         debugPrint(#function)
-        
+        isVideoPlaying = false
+        showOriginalVideo = false
         clear()
     }
     

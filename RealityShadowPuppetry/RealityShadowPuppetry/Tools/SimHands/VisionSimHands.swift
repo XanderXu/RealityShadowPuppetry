@@ -328,7 +328,7 @@ public struct SimHand: Codable {
 @available(macOS, unavailable)
 @available(iOS, unavailable)
 @Observable
-public class SimulatorHandTrackingProvider {
+public final class SimulatorHandTrackingProvider: @unchecked Sendable {
     private let bonjour = BonjourSession(configuration: .default)
     private var task: Task<(), Error>?
     public var simdHandHandler: ((SimHand) -> Void)?
@@ -342,7 +342,7 @@ public class SimulatorHandTrackingProvider {
             continuation.onTermination = {@Sendable [weak self] status in
                 print("Stream terminated with status \(status)")
                 Task {@MainActor in
-                    self?.bonjour.stop()
+                    self?.stop()
                 }
                 
             }

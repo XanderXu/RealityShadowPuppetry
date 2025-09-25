@@ -23,9 +23,11 @@ enum CustomCompositorError: Int, Error, LocalizedError {
         }
     }
 }
-
-final class SampleCustomCompositor: NSObject, AVVideoCompositing {
+nonisolated
+final class SampleCustomCompositor: NSObject, AVVideoCompositing, @unchecked Sendable {
+    
     var videoPixelUpdate: (() -> Void)?
+    
     var lastestPixel: (any MTLTexture)?
     
     private var isCancelled = false
@@ -72,7 +74,7 @@ final class SampleCustomCompositor: NSObject, AVVideoCompositing {
             let sourceID = requiredTrackIDs[0]
             let sourceBuffer = request.sourceFrame(byTrackID: sourceID.value(of: Int32.self)!)!
             request.finish(withComposedVideoFrame: sourceBuffer)
-            Task {@MainActor in
+            Task {
                 self.lastestPixel = await self.convertToMetalTexture(sourceBuffer)
                 self.videoPixelUpdate?()
             }

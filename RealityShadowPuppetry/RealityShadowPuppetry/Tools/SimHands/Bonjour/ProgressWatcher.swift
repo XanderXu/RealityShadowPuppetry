@@ -25,7 +25,7 @@ class ProgressWatcher: NSObject {
                                      forKeyPath: "fractionCompleted", 
                                      context: &self.kvoContext)
     }
-
+    nonisolated
     override func observeValue(forKeyPath keyPath: String?,
                                of object: Any?,
                                change: [NSKeyValueChangeKey : Any]?,

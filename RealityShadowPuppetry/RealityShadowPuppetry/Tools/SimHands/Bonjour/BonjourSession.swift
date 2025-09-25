@@ -4,7 +4,7 @@ import os.log
 
 public typealias InvitationCompletionHandler = (_ result: Result<Peer, Error>) -> Void
 
-final public class BonjourSession: NSObject {
+final public class BonjourSession: NSObject, Sendable {
 
     // MARK: - Type Definitions
 
@@ -105,9 +105,7 @@ final public class BonjourSession: NSObject {
             else { return }
             self.sessionQueue.async {
                 Task { @MainActor in
-//                    await MainActor.run {
-                        self.onAvailablePeersDidChange?(Array(self.availablePeers))
-//                    }
+                    self.onAvailablePeersDidChange?(Array(self.availablePeers))
                 }
 //                self.onAvailablePeersDidChange?(Array(self.availablePeers))
             }
@@ -356,22 +354,24 @@ extension BonjourSession: MCSessionDelegate {
         guard let peer = self.availablePeers.first(where: { $0.peerID == peerID })
         else { return }
 
-        let handler = self.invitationCompletionHandlers[peerID]
 
         self.sessionQueue.async {
-            switch state {
-            case .connected:
-                handler?(.success(peer))
-                self.invitationCompletionHandlers[peerID] = nil
-                self.handlePeerConnected(peer)
-            case .notConnected:
-                handler?(.failure(BonjourSessionError.connectionToPeerfailed))
-                self.invitationCompletionHandlers[peerID] = nil
-                self.handlePeerDisconnected(peer)
-            case .connecting:
-                break
-            @unknown default:
-                break
+            Task { @MainActor in
+                let handler = self.invitationCompletionHandlers[peerID]
+                switch state {
+                case .connected:
+                    handler?(.success(peer))
+                    self.invitationCompletionHandlers[peerID] = nil
+                    self.handlePeerConnected(peer)
+                case .notConnected:
+                    handler?(.failure(BonjourSessionError.connectionToPeerfailed))
+                    self.invitationCompletionHandlers[peerID] = nil
+                    self.handlePeerDisconnected(peer)
+                case .connecting:
+                    break
+                @unknown default:
+                    break
+                }
             }
         }
     }

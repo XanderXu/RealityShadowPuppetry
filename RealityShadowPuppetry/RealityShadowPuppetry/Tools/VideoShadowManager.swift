@@ -75,7 +75,9 @@ final class VideoShadowManager {
         }
         
         customCompositor?.videoPixelUpdate = { [weak self, weak customCompositor] in
-            self?.populateMPS(videoTexture: customCompositor?.lastestPixel, offscreenTexture: self?.offscreenRenderer?.colorTexture, lowLevelTexture: llt, device: self?.mtlDevice)
+            Task { @MainActor in
+                self?.populateMPS(videoTexture: customCompositor?.lastestPixel, offscreenTexture: self?.offscreenRenderer?.colorTexture, lowLevelTexture: llt, device: self?.mtlDevice)
+            }
         }
     }
     
