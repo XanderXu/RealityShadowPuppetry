@@ -54,6 +54,7 @@ final class HandEntityManager {
         left?.position = simd_float3(0, 0.8, -0.3)
         rootEntity.addChild(left!)
     }
+    
     public func updateHandModel(from handAnchor: HandAnchor) {
         if handAnchor.chirality == .left {
             left?.transform.matrix = handAnchor.originFromAnchorTransform
