@@ -7,6 +7,7 @@
 
 import RealityKit
 import ARKit
+import RealityKitContent
 
 @MainActor
 final class HandEntityManager {
@@ -37,12 +38,16 @@ final class HandEntityManager {
         right = nil
     }
     
-    public func loadHandModelEntity() async {
-        left = try? await Entity(named: "HandBone")
-//        await left?.printHierarchy()
-        leftModel = left?.findFirstEntity(with: SkeletalPosesComponent.self)
+    public func loadHandModelEntity() async throws {
+        // 尝试加载Hand3模型，如果失败则尝试Hand4
+        left = try await Entity(named: "HandBone",in: realityKitContentBundle)
+//        let modelEntity = ModelEntity(mesh: .generateBox(width: 250, height: 250, depth: 2), materials: [UnlitMaterial(color: .red)])
+//        modelEntity.position = simd_float3(0, 0, 0)
+//        left?.addChild(modelEntity)
         
+        leftModel = left?.findFirstEntity(with: SkeletalPosesComponent.self)
         left?.position = simd_float3(0, 0.8, -1)
+        left?.scale = simd_float3(0.002, 0.002, 0.002)
         rootEntity.addChild(left!)
     }
     

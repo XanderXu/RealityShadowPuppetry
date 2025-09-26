@@ -38,7 +38,7 @@ final class OffscreenRenderer {
         camera.components.set(orthComponent)
         camera.position = [0, 0, 20]
         camera.name = "Camera"
-        camera.components.set(ModelComponent(mesh: .generateBox(size: 0.1), materials: [UnlitMaterial(color: .white)]))
+//        camera.components.set(ModelComponent(mesh: .generateBox(size: 0.1), materials: [UnlitMaterial(color: .white)]))
         renderer.activeCamera = camera
         renderer.entities.append(camera)
         
