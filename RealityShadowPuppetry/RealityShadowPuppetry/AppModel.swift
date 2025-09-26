@@ -16,7 +16,6 @@ import AVFoundation
 class AppModel {
     
     var rootEntity: Entity?
-    var rootEntity2: Entity?
     var videoShadowManager: VideoShadowManager?
     var shadowStyle: VideoShadowManager.ShadowMixStyle {
         get {
@@ -62,22 +61,13 @@ class AppModel {
         }
         
     }
-    func loadModel() async throws {
+    func prepareHandModel() async throws {
         try await handEntityManager.loadHandModelEntity()
         
-        // 先清理之前的实体
-        videoShadowManager?.offscreenRenderer?.removeAllEntities()
-        
-        // 直接添加手部实体到离屏渲染器
         videoShadowManager?.offscreenRenderer?.addEntity(handEntityManager.rootEntity)
-        
-        // 设置相机位置和视角
-        videoShadowManager?.offscreenRenderer?.cameraLook(at: SIMD3<Float>(0, 0.8, 0), from: SIMD3<Float>(0, 0.8, 1))
-        
+        videoShadowManager?.offscreenRenderer?.cameraAutoLookBoundingBoxCenter()
         // 执行初始渲染
         try videoShadowManager?.offscreenRenderer?.render()
-        
-//        rootEntity?.addChild(handEntityManager.rootEntity)
     }
     func clear() {
         stopHandTracking()

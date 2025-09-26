@@ -141,6 +141,7 @@ final class VideoShadowManager {
         offscreenRenderer?.rendererUpdate = nil
         
         player?.pause()
+        player?.seek(to: .zero)
         customCompositor?.cancelAllPendingVideoCompositionRequests()
         customCompositor?.lastestPixel = nil
         customCompositor?.videoPixelUpdate = nil
