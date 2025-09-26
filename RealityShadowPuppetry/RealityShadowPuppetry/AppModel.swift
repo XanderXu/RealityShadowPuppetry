@@ -60,9 +60,13 @@ class AppModel {
             self?.isVideoPlaying = false
         }
         
+        await handEntityManager.loadHandModelEntity()
         videoShadowManager?.offscreenRenderer?.addEntity(handEntityManager.rootEntity)
-        videoShadowManager?.offscreenRenderer?.cameraLook(at: SIMD3<Float>(0, 1.0, 0), from: SIMD3<Float>(0, 1.0, 20))
-//        await handEntityManager.setupHandModelEntity()
+        videoShadowManager?.offscreenRenderer?.cameraLook(at: SIMD3<Float>(0, 1.0, 0), from: SIMD3<Float>(0, 0.7, 1))
+//        rootEntity?.addChild(handEntityManager.rootEntity)
+//        if let camera = videoShadowManager?.offscreenRenderer?.camera {
+//            rootEntity?.addChild(camera)
+//        }
 //        videoShadowManager?.offscreenRenderer?.cameraAutoLookBoundingBoxCenter()
     }
     func clear() {
