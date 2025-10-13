@@ -40,11 +40,17 @@ final class HandEntityManager {
     
     public func loadHandModelEntity() async throws {
         left = try await Entity(named: "HandBone",in: realityKitContentBundle)
-//        let modelEntity = ModelEntity(mesh: .generateBox(width: 250, height: 250, depth: 2), materials: [UnlitMaterial(color: .red)])
-//        modelEntity.position = simd_float3(0, 0, 0)
-//        left?.addChild(modelEntity)
-        
         leftModel = left?.findFirstEntity(with: SkeletalPosesComponent.self)
+        //        print(poses?.poses.first?.id, poses?.poses.first?.jointNames, poses?.poses.first?.jointTransforms)
+                /*
+                 "/root/scene/skin0/skeleton/skeleton",
+                ["n9", "n9/n10", "n9/n10/n11",
+                 "n9/n10/n11/n12", "n9/n10/n11/n12/n13", "n9/n10/n11/n12/n13/n14", "n9/n10/n11/n12/n13/n14/n15",
+                 "n9/n10/n11/n16", "n9/n10/n11/n16/n17", "n9/n10/n11/n16/n17/n18", "n9/n10/n11/n16/n17/n18/n19",
+                 "n9/n10/n11/n20", "n9/n10/n11/n20/n21", "n9/n10/n11/n20/n21/n22", "n9/n10/n11/n20/n21/n22/n23",
+                 "n9/n10/n11/n24", "n9/n10/n11/n24/n25", "n9/n10/n11/n24/n25/n26", "n9/n10/n11/n24/n25/n26/n27",
+                 "n9/n10/n28", "n9/n10/n28/n29", "n9/n10/n28/n29/n30"]
+                 */
         left?.position = simd_float3(0, 0.8, -1)
         left?.scale = simd_float3(0.002, 0.002, 0.002)
         if let left {
@@ -55,19 +61,27 @@ final class HandEntityManager {
     public func updateHandModel(from handAnchor: HandAnchor) {
         if handAnchor.chirality == .left {
             left?.transform.matrix = handAnchor.originFromAnchorTransform
-            let poses = leftModel?.components[SkeletalPosesComponent.self]
-    //        print(poses?.poses.first?.jointNames, poses?.poses.first?.jointTransforms)
-            /*
-            ["n9", "n9/n10", "n9/n10/n11",
-             "n9/n10/n11/n12", "n9/n10/n11/n12/n13", "n9/n10/n11/n12/n13/n14", "n9/n10/n11/n12/n13/n14/n15",
-             "n9/n10/n11/n16", "n9/n10/n11/n16/n17", "n9/n10/n11/n16/n17/n18", "n9/n10/n11/n16/n17/n18/n19",
-             "n9/n10/n11/n20", "n9/n10/n11/n20/n21", "n9/n10/n11/n20/n21/n22", "n9/n10/n11/n20/n21/n22/n23",
-             "n9/n10/n11/n24", "n9/n10/n11/n24/n25", "n9/n10/n11/n24/n25/n26", "n9/n10/n11/n24/n25/n26/n27",
-             "n9/n10/n28", "n9/n10/n28/n29", "n9/n10/n28/n29/n30"]
-             */
+            var poses = leftModel?.components[SkeletalPosesComponent.self]
+    
+            if let handSkeleton = handAnchor.handSkeleton {
+                poses?.poses.set(.init(id: "/root/scene/skin0/skeleton/skeleton", joints: [
+                    ("n9", Transform(matrix: handSkeleton.joint(.wrist).parentFromJointTransform)),
+//                    ("n9/n10", Transform(matrix: handSkeleton.joint(.thumbKnuckle).parentFromJointTransform)),
+                    ("n9/n10/n28", Transform(matrix: handSkeleton.joint(.thumbIntermediateBase).parentFromJointTransform)),
+                    ("n9/n10/n28/n29", Transform(matrix: handSkeleton.joint(.thumbIntermediateTip).parentFromJointTransform)),
+                    ("n9/n10/n28/n29/n30", Transform(matrix: handSkeleton.joint(.thumbTip).parentFromJointTransform)),
+                    
+                    
+                    ("n9/n10/n11", Transform(matrix: handSkeleton.joint(.indexFingerKnuckle).parentFromJointTransform)),
+                    ("n9/n10/n11/n12", Transform(matrix: handSkeleton.joint(.indexFingerIntermediateBase).parentFromJointTransform)),
+                    ("n9/n10/n11/n12/n13", Transform(matrix: handSkeleton.joint(.indexFingerIntermediateTip).parentFromJointTransform)),
+                    ("n9/n10/n11/n12/n13/n14", Transform(matrix: handSkeleton.joint(.indexFingerTip).parentFromJointTransform)),
+                    
+                ]))
+            }
         }
     }
-    @MainActor
+
     public func generateHandEntity(from handAnchor: HandAnchor, filter: CollisionFilter = .default) -> Entity {
         let hand = Entity()
         hand.name = handAnchor.chirality == .left ? "leftHand" : "rightHand"
@@ -81,7 +95,7 @@ final class HandEntityManager {
         }
         return hand
     }
-    @MainActor
+    
     public func updateHand(from handAnchor: HandAnchor, filter: CollisionFilter = .default) async {
         if handAnchor.chirality == .left {
             if left == nil {
@@ -124,7 +138,6 @@ final class HandEntityManager {
     
     public var simHandOffset = simd_float3(0, 1.4, -0.2)
     
-    @MainActor
     public func updateHand(from simHand: SimHand, filter: CollisionFilter = .default) async {
         let handVectors = simHand.convertToHandVector(offset: simHandOffset)
         if let leftHandVector = handVectors.left {
@@ -154,7 +167,6 @@ final class HandEntityManager {
         }
     }
     
-    @MainActor
     private func generateHandRootEntity(from handVector: simd_float4x4, filter: CollisionFilter = .default) -> Entity {
         let modelEntity = ModelEntity(mesh: .generateBox(width: 0.15, height: 0.15, depth: 0.15, splitFaces: true), materials: colorsM)
         modelEntity.transform.matrix = handVector

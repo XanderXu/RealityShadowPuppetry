@@ -23,6 +23,7 @@ enum CustomCompositorError: Int, Error, LocalizedError {
         }
     }
 }
+
 nonisolated
 final class SampleCustomCompositor: NSObject, AVVideoCompositing, @unchecked Sendable {
     

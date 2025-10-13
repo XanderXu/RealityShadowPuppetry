@@ -10,7 +10,6 @@ import MetalKit
 @preconcurrency import AVFoundation
 import MetalPerformanceShaders
 
-@MainActor
 final class VideoShadowManager {
     enum ShadowMixStyle: String, CaseIterable {
         case ColorAdd

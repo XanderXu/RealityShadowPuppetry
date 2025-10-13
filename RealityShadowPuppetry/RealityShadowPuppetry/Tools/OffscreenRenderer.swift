@@ -7,7 +7,6 @@
 @preconcurrency import RealityKit
 import MetalKit
 
-@MainActor
 final class OffscreenRenderer {
     private let renderer: RealityRenderer
     let colorTexture: MTLTexture
@@ -24,7 +23,6 @@ final class OffscreenRenderer {
             }
         }
     }
-    
     var rendererUpdate: (() -> Void)?
     
     init(device: MTLDevice, textureSize: CGSize) throws {
@@ -41,6 +39,7 @@ final class OffscreenRenderer {
 //        camera.components.set(ModelComponent(mesh: .generateBox(size: 0.1), materials: [UnlitMaterial(color: .white)]))
         renderer.activeCamera = camera
         renderer.entities.append(camera)
+        useDefaultLight = true
         
         let textureDesc = MTLTextureDescriptor()
         textureDesc.pixelFormat = .rgba8Unorm

@@ -328,7 +328,7 @@ public struct SimHand: Codable {
 @available(macOS, unavailable)
 @available(iOS, unavailable)
 @Observable
-public final class SimulatorHandTrackingProvider: @unchecked Sendable {
+public final class SimulatorHandTrackingProvider: Sendable {
     private let bonjour = BonjourSession(configuration: .default)
     private var task: Task<(), Error>?
     public var simdHandHandler: ((SimHand) -> Void)?

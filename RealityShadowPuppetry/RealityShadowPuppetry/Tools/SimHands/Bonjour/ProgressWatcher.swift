@@ -1,5 +1,5 @@
 import Foundation
-nonisolated
+//nonisolated
 class ProgressWatcher: NSObject {
 
     enum ObservationKeyPath: String {
