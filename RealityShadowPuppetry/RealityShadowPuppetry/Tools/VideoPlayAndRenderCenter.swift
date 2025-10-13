@@ -1,5 +1,5 @@
 //
-//  VideoPlayerManager.swift
+//  VideoPlayAndRenderCenter.swift
 //  RealityShadowPuppetry
 //
 //  Created by 许M4 on 2025/10/13.
@@ -9,17 +9,22 @@ import MetalKit
 @preconcurrency import AVFoundation
 
 
-final class VideoPlayerManager {
-    // MARK: - Initialization
+final class VideoPlayAndRenderCenter {
     var playerStatusDidChange: ((AVPlayer.TimeControlStatus) -> Void)?
     var playerItemStatusDidChange: ((AVPlayerItem.Status) -> Void)?
     var playbackDidFinish: (() -> Void)?
     
+    var videoPixelUpdate: (() -> Void)?
+    var lastestPixel: MTLTexture? {
+        return customCompositor?.lastestPixel
+    }
     
     private(set) var videoSize: CGSize?
     private(set) var player: AVPlayer?
+    
+    
     // MARK: - Private Properties
-    private var customCompositor: SampleCustomCompositor?
+    private var customCompositor: VideoCustomCompositor?
     private var timeControlStatusObserver: NSKeyValueObservation?
     private var playerItemStatusObserver: NSKeyValueObservation?
     private var playbackFinishedObserver: NSObjectProtocol?
@@ -30,9 +35,34 @@ final class VideoPlayerManager {
         let (player, size) = try await createPlayerAndSizeWithAsset(asset: asset)
         self.player = player
         self.videoSize = size
-        self.customCompositor = player.currentItem?.customVideoCompositor as? SampleCustomCompositor
+        self.customCompositor = player.currentItem?.customVideoCompositor as? VideoCustomCompositor
         
+        self.customCompositor?.videoPixelUpdate = { [weak self] in
+            self?.videoPixelUpdate?()
+        }
         setupPlayerObservers()
+    }
+    
+    
+    
+    public func play() {
+        player?.play()
+    }
+    public func pause() {
+        player?.pause()
+    }
+    
+    public func seek(to time: CMTime) {
+        player?.seek(to: time)
+    }
+    public func clean() {
+        removePlayerObservers()
+        
+        player?.pause()
+        player?.seek(to: .zero)
+        customCompositor?.cancelAllPendingVideoCompositionRequests()
+        customCompositor?.lastestPixel = nil
+        customCompositor?.videoPixelUpdate = nil
     }
     
     private func setupPlayerObservers() {
@@ -62,10 +92,8 @@ final class VideoPlayerManager {
             object: player.currentItem,
             queue: .main
         ) { [weak self] notification in
-            DispatchQueue.main.async {
-                self?.playbackDidFinish?()
-                print("Playback finished")
-            }
+            self?.playbackDidFinish?()
+            print("Playback finished")
         }
     }
     
@@ -86,22 +114,10 @@ final class VideoPlayerManager {
         playerItemStatusDidChange = nil
         playbackDidFinish = nil
     }
-    
-    public func clean() {
-        removePlayerObservers()
-        
-        player?.pause()
-        player?.seek(to: .zero)
-        customCompositor?.cancelAllPendingVideoCompositionRequests()
-        customCompositor?.lastestPixel = nil
-        customCompositor?.videoPixelUpdate = nil
-    }
-    
-    
     private func createPlayerAndSizeWithAsset(asset: AVAsset) async throws -> (AVPlayer, CGSize) {
         // Create a video composition with CustomCompositor
         let composition = try await AVMutableVideoComposition.videoComposition(withPropertiesOf: asset)
-        composition.customVideoCompositorClass = SampleCustomCompositor.self
+        composition.customVideoCompositorClass = VideoCustomCompositor.self
         let playerItem = AVPlayerItem(asset: asset)
         playerItem.videoComposition = composition
         let player = AVPlayer(playerItem: playerItem)

@@ -1,5 +1,5 @@
 //
-//  SampleCustomCompositor.swift
+//  VideoCustomCompositor.swift
 //  MPSAndCIFilterOnVisionOS
 //
 //  Created by 许M4 on 2025/6/25.
@@ -25,7 +25,7 @@ enum CustomCompositorError: Int, Error, LocalizedError {
 }
 
 nonisolated
-final class SampleCustomCompositor: NSObject, AVVideoCompositing, @unchecked Sendable {
+final class VideoCustomCompositor: NSObject, AVVideoCompositing, @unchecked Sendable {
     
     var videoPixelUpdate: (() -> Void)?
     

@@ -21,7 +21,7 @@ struct DetailView: View {
             }
             
             Picker(selection: $model.shadowStyle, label: Text("Shadow Style")) {
-                ForEach(VideoShadowManager.ShadowMixStyle.allCases, id: \.self) { type in
+                ForEach(ShadowMixManager.ShadowMixStyle.allCases, id: \.self) { type in
                     Text(type.rawValue)
                 }
             }
@@ -51,24 +51,24 @@ struct DetailView: View {
             return
         }
         
-        guard let videoShadowCenter = model.videoShadowManager else {
-            print("VideoShadowManager 不可用")
+        guard let videoShadowCenter = model.shadowMixManager else {
+            print("ShadowMixManager 不可用")
             return
         }
         
         if model.isVideoPlaying {
             // 当前正在播放，点击暂停
-            videoShadowCenter.player?.pause()
+            videoShadowCenter.videoPlayAndRenderCenter?.pause()
             print("用户暂停视频")
         } else {
             // 当前已暂停，点击播放
-            videoShadowCenter.player?.play()
+            videoShadowCenter.videoPlayAndRenderCenter?.play()
             print("用户开始播放视频")
         }
         
         // 注意：不需要手动设置 model.isVideoPlaying
         // 因为 AppModel.setup() 中已经设置了播放状态监听
-        // videoShadowManager.playerStatusDidChange 会自动更新 model.isVideoPlaying
+        // shadowMixManager.playerStatusDidChange 会自动更新 model.isVideoPlaying
     }
 }
 

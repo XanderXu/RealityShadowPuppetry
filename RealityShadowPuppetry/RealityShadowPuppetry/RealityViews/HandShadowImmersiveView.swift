@@ -23,7 +23,7 @@ struct HandShadowImmersiveView: View {
             
             do {
                 try await model.setup(asset: asset)
-                guard let originalEntity = model.videoShadowManager?.originalEntity, let shadowEntity = model.videoShadowManager?.shadowEntity else {
+                guard let originalEntity = model.shadowMixManager?.originalEntity, let shadowEntity = model.shadowMixManager?.shadowEntity else {
                     return
                 }
                 entity.addChild(originalEntity)

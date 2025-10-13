@@ -16,27 +16,27 @@ import AVFoundation
 class AppModel {
     
     var rootEntity: Entity?
-    var videoShadowManager: VideoShadowManager?
-    var shadowStyle: VideoShadowManager.ShadowMixStyle {
+    var shadowMixManager: ShadowMixManager?
+    var shadowStyle: ShadowMixManager.ShadowMixStyle {
         get {
-            videoShadowManager?.shadowStyle ?? .GrayAdd
+            shadowMixManager?.shadowStyle ?? .GrayAdd
         }
         set {
-            videoShadowManager?.shadowStyle = newValue
+            shadowMixManager?.shadowStyle = newValue
         }
     }
     var isVideoPlaying = false {
         didSet {
             if isVideoPlaying {
-                videoShadowManager?.player?.play()
+                shadowMixManager?.videoPlayAndRenderCenter?.play()
             } else {
-                videoShadowManager?.player?.pause()
+                shadowMixManager?.videoPlayAndRenderCenter?.pause()
             }
         }
     }
     var showOriginalVideo: Bool = false {
         didSet {
-            videoShadowManager?.originalEntity.isEnabled = showOriginalVideo
+            shadowMixManager?.originalEntity.isEnabled = showOriginalVideo
         }
     }
     let handEntityManager = HandEntityManager()
@@ -51,12 +51,9 @@ class AppModel {
         
     }
     func setup(asset: AVAsset) async throws {
-        videoShadowManager = try await VideoShadowManager(asset: asset)
-//        videoShadowManager?.playerStatusDidChange = { [weak self] status in
-//            self?.isVideoPlaying = status == .playing
-//        }
-        videoShadowManager?.playbackDidFinish = { [weak self] in
-            self?.videoShadowManager?.player?.seek(to: .zero)
+        shadowMixManager = try await ShadowMixManager(asset: asset)
+        shadowMixManager?.videoPlayAndRenderCenter?.playbackDidFinish = { [weak self] in
+            self?.shadowMixManager?.videoPlayAndRenderCenter?.seek(to: .zero)
             self?.isVideoPlaying = false
         }
         
@@ -64,16 +61,16 @@ class AppModel {
     func prepareHandModel() async throws {
         try await handEntityManager.loadHandModelEntity()
         
-        videoShadowManager?.offscreenRenderer?.addEntity(handEntityManager.rootEntity)
-        videoShadowManager?.offscreenRenderer?.cameraAutoLookBoundingBoxCenter()
+        shadowMixManager?.offscreenRenderer?.addEntity(handEntityManager.rootEntity)
+        shadowMixManager?.offscreenRenderer?.cameraAutoLookBoundingBoxCenter()
         // 执行初始渲染
-        try videoShadowManager?.offscreenRenderer?.render()
+        try shadowMixManager?.offscreenRenderer?.render()
     }
     func clear() {
         stopHandTracking()
         handEntityManager.clean()
-        videoShadowManager?.clean()
-        videoShadowManager = nil
+        shadowMixManager?.clean()
+        shadowMixManager = nil
         
         rootEntity?.children.removeAll()
         rootEntity?.removeFromParent()
@@ -111,13 +108,13 @@ class AppModel {
                 await handEntityManager.updateHand(from: anchor)
                 handEntityManager.updateHandModel(from: anchor)
                 if update.event == .added {
-                    videoShadowManager?.offscreenRenderer?.cameraAutoLookBoundingBoxCenter()
+                    shadowMixManager?.offscreenRenderer?.cameraAutoLookBoundingBoxCenter()
                 }
             case .removed:
                 let anchor = update.anchor
                 handEntityManager.removeHand(from: anchor)
             }
-            try? videoShadowManager?.offscreenRenderer?.render()
+            try? shadowMixManager?.offscreenRenderer?.render()
         }
     }
     func monitorSessionEvents() async {
@@ -139,9 +136,9 @@ class AppModel {
             if simHand.landmarks.isEmpty { continue }
             await handEntityManager.updateHand(from: simHand)
             
-            videoShadowManager?.offscreenRenderer?.addEntity(handEntityManager.rootEntity)
-            videoShadowManager?.offscreenRenderer?.cameraLook(at: SIMD3<Float>(0, 1.4, 0), from: SIMD3<Float>(0, 1.4, 20))
-            try? videoShadowManager?.offscreenRenderer?.render()
+            shadowMixManager?.offscreenRenderer?.addEntity(handEntityManager.rootEntity)
+            shadowMixManager?.offscreenRenderer?.cameraLook(at: SIMD3<Float>(0, 1.4, 0), from: SIMD3<Float>(0, 1.4, 20))
+            try? shadowMixManager?.offscreenRenderer?.render()
         }
     }
 }
