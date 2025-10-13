@@ -7,7 +7,7 @@
 @preconcurrency import RealityKit
 import MetalKit
 
-final class OffscreenRenderer {
+final class OffscreenRenderer: Sendable {
     private let renderer: RealityRenderer
     let colorTexture: MTLTexture
     let camera = Entity()
@@ -74,6 +74,18 @@ final class OffscreenRenderer {
         try renderer.updateAndRender(deltaTime: 0, cameraOutput: cameraOutput) {[weak self] render in
             Task {@MainActor in
                 self?.rendererUpdate?()
+            }
+        }
+    }
+    func renderAsync() async throws {
+        let cameraOutput = try RealityRenderer.CameraOutput(.singleProjection(colorTexture: colorTexture))
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try renderer.updateAndRender(deltaTime: 0, cameraOutput: cameraOutput) { render in
+                    continuation.resume()
+                }
+            } catch {
+                continuation.resume(throwing: error)
             }
         }
     }

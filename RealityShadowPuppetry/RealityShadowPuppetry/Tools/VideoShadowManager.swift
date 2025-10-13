@@ -162,7 +162,7 @@ final class VideoShadowManager {
     }
     
     
-
+    nonisolated
     private func createTextureDescriptor(width: Int, height: Int) -> LowLevelTexture.Descriptor {
         var desc = LowLevelTexture.Descriptor()
 
@@ -184,6 +184,7 @@ final class VideoShadowManager {
     // MARK: - Metal Shader Setup
     
     /// 创建灰度混合红色通道的计算管线状态
+    nonisolated
     private static func createGrayMixRedComputePipelineState(device: MTLDevice) -> MTLComputePipelineState? {
         guard let defaultLibrary = device.makeDefaultLibrary(),
               let kernelFunction = defaultLibrary.makeFunction(name: "grayMixRedKernel") else {
@@ -200,8 +201,6 @@ final class VideoShadowManager {
     }
     
     // MARK: - Texture Processing
-    
-    @MainActor
     func populateMPS(videoTexture: (any MTLTexture)?, offscreenTexture: (any MTLTexture)?, lowLevelTexture: LowLevelTexture?, device: MTLDevice?) {
         
         guard let lowLevelTexture = lowLevelTexture, 
@@ -235,6 +234,7 @@ final class VideoShadowManager {
     // MARK: - Processing Methods
     
     /// 处理颜色相加模式
+    nonisolated
     private func processColorAdd(videoTexture: (any MTLTexture)?, offscreenTexture: MTLTexture, outputTexture: MTLTexture, commandBuffer: MTLCommandBuffer, device: MTLDevice) {
         if let videoTexture = videoTexture {
             let add = MPSImageAdd(device: device)
@@ -245,6 +245,7 @@ final class VideoShadowManager {
     }
     
     /// 处理灰度相加模式
+    nonisolated
     private func processGrayAdd(videoTexture: (any MTLTexture)?, offscreenTexture: MTLTexture, outputTexture: MTLTexture, commandBuffer: MTLCommandBuffer, device: MTLDevice) {
         let tempTextureDesc = createTempTextureDescriptor(from: offscreenTexture)
         
@@ -311,6 +312,7 @@ final class VideoShadowManager {
     // MARK: - Helper Methods
     
     /// 创建临时纹理描述符
+    nonisolated
     private func createTempTextureDescriptor(from texture: MTLTexture) -> MTLTextureDescriptor {
         let descriptor = MTLTextureDescriptor.texture2DDescriptor(
             pixelFormat: texture.pixelFormat,
@@ -323,6 +325,7 @@ final class VideoShadowManager {
     }
     
     /// 复制纹理的辅助方法
+    nonisolated
     private func copyTexture(from sourceTexture: MTLTexture, to destinationTexture: MTLTexture, commandBuffer: MTLCommandBuffer) {
         guard let blitEncoder = commandBuffer.makeBlitCommandEncoder() else {
             print("Failed to create blit encoder")
