@@ -20,13 +20,12 @@ final class HandEntityManager {
         let bnm = UnlitMaterial(color: .init(red: 0, green: 0, blue: 0.5, alpha: 1))
         return [bm, gm, bnm, gnm, rm, rnm]
     }()
+    
+    private let rootEntity = Entity()
+    private var left: Entity?
+    private var right: Entity?
     private var leftModel: Entity?
     private var rightModel: Entity?
-    
-    
-    let rootEntity = Entity()
-    var left: Entity?
-    var right: Entity?
     
     private let offscreenRenderer: OffscreenRenderer?
     var rendererUpdate: (() -> Void)?  {
@@ -50,13 +49,16 @@ final class HandEntityManager {
     func render() throws {
         try offscreenRenderer?.render()
     }
+    func renderAsync() async throws {
+        try await offscreenRenderer?.renderAsync()
+    }
     
     func clean() {
         rootEntity.children.removeAll()
         left = nil
         right = nil
         
-        offscreenRenderer?.rendererUpdate = nil
+        rendererUpdate = nil
     }
     
     public func loadHandModelEntity() async throws {

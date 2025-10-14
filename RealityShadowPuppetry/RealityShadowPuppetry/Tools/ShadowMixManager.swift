@@ -18,36 +18,13 @@ final class ShadowMixManager {
     }
     let mtlDevice = MTLCreateSystemDefaultDevice()!
     
-    let originalEntity = ModelEntity()
-    let shadowEntity = ModelEntity()
+    let originalVideoEntity = ModelEntity()
+    let mixedTextureEntity = ModelEntity()
     var shadowStyle = ShadowMixStyle.GrayAdd
     
     // 将 videoPlayAndRenderCenter 完全设为私有
-    private var videoPlayAndRenderCenter: VideoPlayAndRenderCenter?
+    private(set) var videoPlayAndRenderCenter: VideoPlayAndRenderCenter?
     let handEntityManager: HandEntityManager
-
-    var playbackDidFinish: (() -> Void)? {
-        didSet {
-            videoPlayAndRenderCenter?.playbackDidFinish = playbackDidFinish
-        }
-    }
-    
-    // MARK: - Public Interface to Replace Direct Access to videoPlayAndRenderCenter
-    
-    /// 播放视频
-    public func play() {
-        videoPlayAndRenderCenter?.player?.play()
-    }
-    
-    /// 暂停视频
-    public func pause() {
-        videoPlayAndRenderCenter?.player?.pause()
-    }
-    
-    /// 跳转到指定时间
-    public func seek(to time: CMTime) {
-        videoPlayAndRenderCenter?.player?.seek(to: time)
-    }
     
     // MARK: - Private Properties
     private var grayMixRedPipelineState: MTLComputePipelineState?
@@ -69,9 +46,9 @@ final class ShadowMixManager {
         
         let videoMaterial = VideoMaterial(avPlayer: player)
         // Return an entity of a plane which uses the VideoMaterial.
-        originalEntity.model = .init(mesh: .generatePlane(width: 1, height: Float(naturalSize.height/naturalSize.width)), materials: [videoMaterial])
-        originalEntity.name = "OriginalVideo"
-        originalEntity.position = SIMD3(x: 0, y: 1, z: -2)
+        originalVideoEntity.model = .init(mesh: .generatePlane(width: 1, height: Float(naturalSize.height/naturalSize.width)), materials: [videoMaterial])
+        originalVideoEntity.name = "OriginalVideo"
+        originalVideoEntity.position = SIMD3(x: 1.2, y: 1, z: -2)
         
         let textureDescriptor = createTextureDescriptor(width: Int(naturalSize.width), height: Int(naturalSize.height))
         let llt = try LowLevelTexture(descriptor: textureDescriptor)
@@ -80,9 +57,9 @@ final class ShadowMixManager {
         // Create a material that uses the texture.
         var material = UnlitMaterial(texture: resource)
         material.opacityThreshold = 0.01
-        shadowEntity.model = .init(mesh: .generatePlane(width: 1, height: Float(naturalSize.height/naturalSize.width)), materials: [material])
-        shadowEntity.name = "MixedTexture"
-        shadowEntity.position = SIMD3(x: 1.2, y: 1, z: -2)
+        mixedTextureEntity.model = .init(mesh: .generatePlane(width: 1, height: Float(naturalSize.height/naturalSize.width)), materials: [material])
+        mixedTextureEntity.name = "MixedTexture"
+        mixedTextureEntity.position = SIMD3(x: 0, y: 1, z: -2)
         
         handEntityManager.rendererUpdate = { [weak self, weak videoPlayAndRenderCenter] in
             if player.timeControlStatus != .playing {
@@ -100,11 +77,8 @@ final class ShadowMixManager {
     public func clean() {
         handEntityManager.clean()
         videoPlayAndRenderCenter?.clean()
-        originalEntity.removeFromParent()
-        shadowEntity.removeFromParent()
-        
-        // 清理闭包引用
-        playbackDidFinish = nil
+        originalVideoEntity.removeFromParent()
+        mixedTextureEntity.removeFromParent()
     }
     
     

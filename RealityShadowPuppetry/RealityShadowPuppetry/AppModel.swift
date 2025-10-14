@@ -28,15 +28,15 @@ class AppModel {
     var isVideoPlaying = false {
         didSet {
             if isVideoPlaying {
-                shadowMixManager?.play()
+                shadowMixManager?.videoPlayAndRenderCenter?.play()
             } else {
-                shadowMixManager?.pause()
+                shadowMixManager?.videoPlayAndRenderCenter?.pause()
             }
         }
     }
     var showOriginalVideo: Bool = false {
         didSet {
-            shadowMixManager?.originalEntity.isEnabled = showOriginalVideo
+            shadowMixManager?.originalVideoEntity.isEnabled = showOriginalVideo
         }
     }
     
@@ -54,8 +54,8 @@ class AppModel {
         shadowMixManager = try await ShadowMixManager(asset: asset)
         
         // 设置播放完成回调
-        shadowMixManager?.playbackDidFinish = { [weak self] in
-            self?.shadowMixManager?.seek(to: .zero)
+        shadowMixManager?.videoPlayAndRenderCenter?.playbackDidFinish = { [weak self] in
+            self?.shadowMixManager?.videoPlayAndRenderCenter?.seek(to: .zero)
             self?.isVideoPlaying = false
         }
         
@@ -65,6 +65,7 @@ class AppModel {
         shadowMixManager?.handEntityManager.renderAutoLookCenter()
         try shadowMixManager?.handEntityManager.render()
     }
+    
     func clear() {
         stopHandTracking()
         

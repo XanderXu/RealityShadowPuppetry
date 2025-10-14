@@ -39,6 +39,22 @@ final class VideoPlayAndRenderCenter {
         setupPlayerObservers()
     }
     
+    // MARK: - Public Interface to Replace Direct Access to videoPlayAndRenderCenter
+    
+    /// 播放视频
+    public func play() {
+        player?.play()
+    }
+    
+    /// 暂停视频
+    public func pause() {
+        player?.pause()
+    }
+    
+    /// 跳转到指定时间
+    public func seek(to time: CMTime) {
+        player?.seek(to: time)
+    }
 
     public func clean() {
         removePlayerObservers()
