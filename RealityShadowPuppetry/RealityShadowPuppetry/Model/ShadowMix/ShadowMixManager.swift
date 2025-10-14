@@ -22,7 +22,7 @@ final class ShadowMixManager {
     let mixedTextureEntity = ModelEntity()
     var shadowStyle = ShadowMixStyle.GrayAdd
     
-    // 将 videoPlayAndRenderCenter 完全设为私有
+    
     private(set) var videoPlayAndRenderCenter: VideoPlayAndRenderCenter?
     let handEntityManager: HandEntityManager
     
