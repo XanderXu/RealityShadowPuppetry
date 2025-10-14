@@ -28,9 +28,9 @@ class AppModel {
     var isVideoPlaying = false {
         didSet {
             if isVideoPlaying {
-                shadowMixManager?.videoPlayAndRenderCenter?.play()
+                shadowMixManager?.play()
             } else {
-                shadowMixManager?.videoPlayAndRenderCenter?.pause()
+                shadowMixManager?.pause()
             }
         }
     }
@@ -52,8 +52,10 @@ class AppModel {
     }
     func setup(asset: AVAsset) async throws {
         shadowMixManager = try await ShadowMixManager(asset: asset)
-        shadowMixManager?.videoPlayAndRenderCenter?.playbackDidFinish = { [weak self] in
-            self?.shadowMixManager?.videoPlayAndRenderCenter?.seek(to: .zero)
+        
+        // 设置播放完成回调
+        shadowMixManager?.playbackDidFinish = { [weak self] in
+            self?.shadowMixManager?.seek(to: .zero)
             self?.isVideoPlaying = false
         }
         

@@ -22,9 +22,33 @@ final class ShadowMixManager {
     let shadowEntity = ModelEntity()
     var shadowStyle = ShadowMixStyle.GrayAdd
     
-    private(set) var videoPlayAndRenderCenter: VideoPlayAndRenderCenter?
+    // 将 videoPlayAndRenderCenter 完全设为私有
+    private var videoPlayAndRenderCenter: VideoPlayAndRenderCenter?
     private(set) var offscreenRenderer: OffscreenRenderer?
     
+
+    var playbackDidFinish: (() -> Void)? {
+        didSet {
+            videoPlayAndRenderCenter?.playbackDidFinish = playbackDidFinish
+        }
+    }
+    
+    // MARK: - Public Interface to Replace Direct Access to videoPlayAndRenderCenter
+    
+    /// 播放视频
+    public func play() {
+        videoPlayAndRenderCenter?.player?.play()
+    }
+    
+    /// 暂停视频
+    public func pause() {
+        videoPlayAndRenderCenter?.player?.pause()
+    }
+    
+    /// 跳转到指定时间
+    public func seek(to time: CMTime) {
+        videoPlayAndRenderCenter?.player?.seek(to: time)
+    }
     
     // MARK: - Private Properties
     private var grayMixRedPipelineState: MTLComputePipelineState?
@@ -75,6 +99,9 @@ final class ShadowMixManager {
         shadowEntity.removeFromParent()
         offscreenRenderer?.removeAllEntities()
         offscreenRenderer?.rendererUpdate = nil
+        
+        // 清理闭包引用
+        playbackDidFinish = nil
     }
     
     
@@ -117,7 +144,7 @@ final class ShadowMixManager {
     }
     
     // MARK: - Texture Processing
-    func populateMPS(videoTexture: (any MTLTexture)?, offscreenTexture: (any MTLTexture)?, lowLevelTexture: LowLevelTexture?, device: MTLDevice?) {
+    private func populateMPS(videoTexture: (any MTLTexture)?, offscreenTexture: (any MTLTexture)?, lowLevelTexture: LowLevelTexture?, device: MTLDevice?) {
         
         guard let lowLevelTexture = lowLevelTexture, 
               let device = device, 

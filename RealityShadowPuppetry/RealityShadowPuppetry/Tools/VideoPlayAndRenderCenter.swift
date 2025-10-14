@@ -30,8 +30,6 @@ final class VideoPlayAndRenderCenter {
     private var playbackFinishedObserver: NSObjectProtocol?
     
     init(asset: AVAsset) async throws {
-        // 初始化计算管线状态
-        
         let (player, size) = try await createPlayerAndSizeWithAsset(asset: asset)
         self.player = player
         self.videoSize = size
@@ -43,18 +41,7 @@ final class VideoPlayAndRenderCenter {
         setupPlayerObservers()
     }
     
-    
-    
-    public func play() {
-        player?.play()
-    }
-    public func pause() {
-        player?.pause()
-    }
-    
-    public func seek(to time: CMTime) {
-        player?.seek(to: time)
-    }
+
     public func clean() {
         removePlayerObservers()
         

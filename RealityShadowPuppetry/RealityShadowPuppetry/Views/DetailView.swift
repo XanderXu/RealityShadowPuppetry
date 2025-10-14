@@ -58,11 +58,11 @@ struct DetailView: View {
         
         if model.isVideoPlaying {
             // 当前正在播放，点击暂停
-            videoShadowCenter.videoPlayAndRenderCenter?.pause()
+            videoShadowCenter.pause()
             print("用户暂停视频")
         } else {
             // 当前已暂停，点击播放
-            videoShadowCenter.videoPlayAndRenderCenter?.play()
+            videoShadowCenter.play()
             print("用户开始播放视频")
         }
         
