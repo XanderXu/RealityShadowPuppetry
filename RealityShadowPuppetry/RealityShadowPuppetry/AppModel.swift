@@ -39,7 +39,7 @@ class AppModel {
             shadowMixManager?.originalEntity.isEnabled = showOriginalVideo
         }
     }
-    let handEntityManager = HandEntityManager()
+    
     var turnOnImmersiveSpace = false
     
     
@@ -61,16 +61,13 @@ class AppModel {
         
     }
     func prepareHandModel() async throws {
-        try await handEntityManager.loadHandModelEntity()
-        
-        shadowMixManager?.offscreenRenderer?.addEntity(handEntityManager.rootEntity)
-        shadowMixManager?.offscreenRenderer?.cameraAutoLookBoundingBoxCenter()
-        // 执行初始渲染
-        try shadowMixManager?.offscreenRenderer?.render()
+        try await shadowMixManager?.handEntityManager.loadHandModelEntity()
+        shadowMixManager?.handEntityManager.renderAutoLookCenter()
+        try shadowMixManager?.handEntityManager.render()
     }
     func clear() {
         stopHandTracking()
-        handEntityManager.clean()
+        
         shadowMixManager?.clean()
         shadowMixManager = nil
         
@@ -107,16 +104,16 @@ class AppModel {
             case .added, .updated:
                 let anchor = update.anchor
                 print(anchor.chirality, update.event.description)
-                await handEntityManager.updateHand(from: anchor)
-                handEntityManager.updateHandModel(from: anchor)
+                await shadowMixManager?.handEntityManager.updateHand(from: anchor)
+//                shadowMixManager?.handEntityManager.updateHandModel(from: anchor)
                 if update.event == .added {
-                    shadowMixManager?.offscreenRenderer?.cameraAutoLookBoundingBoxCenter()
+                    shadowMixManager?.handEntityManager.renderAutoLookCenter()
                 }
             case .removed:
                 let anchor = update.anchor
-                handEntityManager.removeHand(from: anchor)
+                shadowMixManager?.handEntityManager.removeHand(from: anchor)
             }
-            try? shadowMixManager?.offscreenRenderer?.render()
+            try? shadowMixManager?.handEntityManager.render()
         }
     }
     func monitorSessionEvents() async {
@@ -136,11 +133,9 @@ class AppModel {
     func publishSimHandTrackingUpdates() async {
         for await simHand in simHandProvider.simHands {
             if simHand.landmarks.isEmpty { continue }
-            await handEntityManager.updateHand(from: simHand)
+            await shadowMixManager?.handEntityManager.updateHand(from: simHand)
+            try? shadowMixManager?.handEntityManager.renderSimHand()
             
-            shadowMixManager?.offscreenRenderer?.addEntity(handEntityManager.rootEntity)
-            shadowMixManager?.offscreenRenderer?.cameraLook(at: SIMD3<Float>(0, 1.4, 0), from: SIMD3<Float>(0, 1.4, 20))
-            try? shadowMixManager?.offscreenRenderer?.render()
         }
     }
 }

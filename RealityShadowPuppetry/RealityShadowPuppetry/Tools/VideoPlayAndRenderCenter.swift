@@ -19,7 +19,6 @@ final class VideoPlayAndRenderCenter {
         return customCompositor?.lastestPixel
     }
     
-    private(set) var videoSize: CGSize?
     private(set) var player: AVPlayer?
     
     
@@ -30,9 +29,8 @@ final class VideoPlayAndRenderCenter {
     private var playbackFinishedObserver: NSObjectProtocol?
     
     init(asset: AVAsset) async throws {
-        let (player, size) = try await createPlayerAndSizeWithAsset(asset: asset)
+        let player = try await createPlayer(asset: asset)
         self.player = player
-        self.videoSize = size
         self.customCompositor = player.currentItem?.customVideoCompositor as? VideoCustomCompositor
         
         self.customCompositor?.videoPixelUpdate = { [weak self] in
@@ -101,7 +99,7 @@ final class VideoPlayAndRenderCenter {
         playerItemStatusDidChange = nil
         playbackDidFinish = nil
     }
-    private func createPlayerAndSizeWithAsset(asset: AVAsset) async throws -> (AVPlayer, CGSize) {
+    private func createPlayer(asset: AVAsset) async throws -> AVPlayer {
         // Create a video composition with CustomCompositor
         let composition = try await AVMutableVideoComposition.videoComposition(withPropertiesOf: asset)
         composition.customVideoCompositorClass = VideoCustomCompositor.self
@@ -109,10 +107,7 @@ final class VideoPlayAndRenderCenter {
         playerItem.videoComposition = composition
         let player = AVPlayer(playerItem: playerItem)
         
-        let videoTrack = try await asset.loadTracks(withMediaType: .video).first!
-        let naturalSize = try await videoTrack.load(.naturalSize)
-        
-        return (player, naturalSize)
+        return player
     }
     
     

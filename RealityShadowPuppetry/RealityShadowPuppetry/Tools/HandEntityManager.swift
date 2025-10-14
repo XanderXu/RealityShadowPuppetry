@@ -25,16 +25,38 @@ final class HandEntityManager {
     
     
     let rootEntity = Entity()
-    
     var left: Entity?
     var right: Entity?
     
+    private let offscreenRenderer: OffscreenRenderer?
+    var rendererUpdate: (() -> Void)?  {
+        didSet {
+            offscreenRenderer?.rendererUpdate = rendererUpdate
+        }
+    }
+    var colorTexture: MTLTexture? {
+        return offscreenRenderer?.colorTexture
+    }
+    
+    init(mtlDevice: MTLDevice, size: CGSize) throws {
+        offscreenRenderer = try OffscreenRenderer(device: mtlDevice, textureSize: size)
+        offscreenRenderer?.addEntity(rootEntity)
+    }
+    
+    func renderAutoLookCenter() {
+        offscreenRenderer?.cameraAutoLookBoundingBoxCenter()
+    }
+    
+    func render() throws {
+        try offscreenRenderer?.render()
+    }
     
     func clean() {
-        rootEntity.removeFromParent()
         rootEntity.children.removeAll()
         left = nil
         right = nil
+        
+        offscreenRenderer?.rendererUpdate = nil
     }
     
     public func loadHandModelEntity() async throws {
@@ -170,5 +192,11 @@ final class HandEntityManager {
         let modelEntity = ModelEntity(mesh: .generateBox(width: 0.15, height: 0.15, depth: 0.15, splitFaces: true), materials: colorsM)
         modelEntity.transform.matrix = handVector
         return modelEntity
+    }
+    
+    public func renderSimHand() throws {
+        offscreenRenderer?.addEntity(rootEntity)
+        offscreenRenderer?.cameraLook(at: SIMD3<Float>(0, 1.4, 0), from: SIMD3<Float>(0, 1.4, 20))
+        try offscreenRenderer?.render()
     }
 }

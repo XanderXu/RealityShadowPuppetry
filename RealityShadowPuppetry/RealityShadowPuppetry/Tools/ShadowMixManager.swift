@@ -24,8 +24,7 @@ final class ShadowMixManager {
     
     // 将 videoPlayAndRenderCenter 完全设为私有
     private var videoPlayAndRenderCenter: VideoPlayAndRenderCenter?
-    private(set) var offscreenRenderer: OffscreenRenderer?
-    
+    let handEntityManager: HandEntityManager
 
     var playbackDidFinish: (() -> Void)? {
         didSet {
@@ -58,47 +57,51 @@ final class ShadowMixManager {
         // 初始化计算管线状态
         grayMixRedPipelineState = Self.createGrayMixRedComputePipelineState(device: mtlDevice)
         
-        videoPlayAndRenderCenter = try await VideoPlayAndRenderCenter(asset: asset)
+        let videoTrack = try await asset.loadTracks(withMediaType: .video).first!
+        let naturalSize = try await videoTrack.load(.naturalSize)
         
-        guard let size = videoPlayAndRenderCenter?.videoSize, let player = videoPlayAndRenderCenter?.player else { return }
+        videoPlayAndRenderCenter = try await VideoPlayAndRenderCenter(asset: asset)
+        handEntityManager = try HandEntityManager(mtlDevice: mtlDevice, size: naturalSize)
+        
+        
+        guard let player = videoPlayAndRenderCenter?.player else { return }
+        
         
         let videoMaterial = VideoMaterial(avPlayer: player)
         // Return an entity of a plane which uses the VideoMaterial.
-        originalEntity.model = .init(mesh: .generatePlane(width: 1, height: Float(size.height/size.width)), materials: [videoMaterial])
+        originalEntity.model = .init(mesh: .generatePlane(width: 1, height: Float(naturalSize.height/naturalSize.width)), materials: [videoMaterial])
         originalEntity.name = "OriginalVideo"
         originalEntity.position = SIMD3(x: 0, y: 1, z: -2)
         
-        let textureDescriptor = createTextureDescriptor(width: Int(size.width), height: Int(size.height))
+        let textureDescriptor = createTextureDescriptor(width: Int(naturalSize.width), height: Int(naturalSize.height))
         let llt = try LowLevelTexture(descriptor: textureDescriptor)
         // Create a TextureResource from the LowLevelTexture.
         let resource = try await TextureResource(from: llt)
         // Create a material that uses the texture.
         var material = UnlitMaterial(texture: resource)
         material.opacityThreshold = 0.01
-        shadowEntity.model = .init(mesh: .generatePlane(width: 1, height: Float(size.height/size.width)), materials: [material])
+        shadowEntity.model = .init(mesh: .generatePlane(width: 1, height: Float(naturalSize.height/naturalSize.width)), materials: [material])
         shadowEntity.name = "MixedTexture"
         shadowEntity.position = SIMD3(x: 1.2, y: 1, z: -2)
         
-        offscreenRenderer = try OffscreenRenderer(device: mtlDevice, textureSize: size)
-        offscreenRenderer?.rendererUpdate = { [weak self, weak videoPlayAndRenderCenter] in
+        handEntityManager.rendererUpdate = { [weak self, weak videoPlayAndRenderCenter] in
             if player.timeControlStatus != .playing {
-                self?.populateMPS(videoTexture: videoPlayAndRenderCenter?.lastestPixel, offscreenTexture: self?.offscreenRenderer?.colorTexture, lowLevelTexture: llt, device: self?.mtlDevice)
+                self?.populateMPS(videoTexture: videoPlayAndRenderCenter?.lastestPixel, offscreenTexture: self?.handEntityManager.colorTexture, lowLevelTexture: llt, device: self?.mtlDevice)
             }
         }
         
         videoPlayAndRenderCenter?.videoPixelUpdate = { [weak self, weak videoPlayAndRenderCenter] in
             Task { @MainActor in
-                self?.populateMPS(videoTexture: videoPlayAndRenderCenter?.lastestPixel, offscreenTexture: self?.offscreenRenderer?.colorTexture, lowLevelTexture: llt, device: self?.mtlDevice)
+                self?.populateMPS(videoTexture: videoPlayAndRenderCenter?.lastestPixel, offscreenTexture: self?.handEntityManager.colorTexture, lowLevelTexture: llt, device: self?.mtlDevice)
             }
         }
     }
     
     public func clean() {
+        handEntityManager.clean()
         videoPlayAndRenderCenter?.clean()
         originalEntity.removeFromParent()
         shadowEntity.removeFromParent()
-        offscreenRenderer?.removeAllEntities()
-        offscreenRenderer?.rendererUpdate = nil
         
         // 清理闭包引用
         playbackDidFinish = nil
