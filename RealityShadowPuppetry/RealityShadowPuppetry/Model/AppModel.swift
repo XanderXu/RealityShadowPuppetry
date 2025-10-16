@@ -106,7 +106,7 @@ class AppModel {
                 let anchor = update.anchor
                 print(anchor.chirality, update.event.description)
                 await shadowMixManager?.handEntityManager.updateHand(from: anchor)
-//                shadowMixManager?.handEntityManager.updateHandModel(from: anchor)
+                shadowMixManager?.handEntityManager.updateHandModel(from: anchor)
                 if update.event == .added {
                     shadowMixManager?.handEntityManager.renderAutoLookCenter()
                 }
