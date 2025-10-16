@@ -2,7 +2,7 @@
 //  VideoPlayAndRenderCenter.swift
 //  RealityShadowPuppetry
 //
-//  Created by 许M4 on 2025/10/13.
+//  Created by 许 on 2025/10/13.
 //
 
 import MetalKit
@@ -40,18 +40,14 @@ final class VideoPlayAndRenderCenter {
     }
     
     // MARK: - Public Interface to Replace Direct Access to videoPlayAndRenderCenter
-    
-    /// 播放视频
     public func play() {
         player?.play()
     }
     
-    /// 暂停视频
     public func pause() {
         player?.pause()
     }
     
-    /// 跳转到指定时间
     public func seek(to time: CMTime) {
         player?.seek(to: time)
     }
@@ -69,7 +65,7 @@ final class VideoPlayAndRenderCenter {
     private func setupPlayerObservers() {
         guard let player = player else { return }
         
-        // 监听播放控制状态变化 (playing, paused, waitingToPlayAtSpecifiedRate)
+        // Monitor playback control status changes (playing, paused, waitingToPlayAtSpecifiedRate)
         timeControlStatusObserver = player.observe(\.timeControlStatus, options: [.new, .old]) { [weak self] player, change in
             DispatchQueue.main.async {
                 self?.playerStatusDidChange?(player.timeControlStatus)
@@ -77,7 +73,7 @@ final class VideoPlayAndRenderCenter {
             }
         }
         
-        // 监听播放项状态变化 (unknown, readyToPlay, failed)
+        // Monitor player item status changes (unknown, readyToPlay, failed)
         if let playerItem = player.currentItem {
             playerItemStatusObserver = playerItem.observe(\.status, options: [.new, .old]) { [weak self] playerItem, change in
                 DispatchQueue.main.async {
@@ -87,7 +83,7 @@ final class VideoPlayAndRenderCenter {
             }
         }
         
-        // 监听播放完成通知
+        // Listen for playback completion notification
         playbackFinishedObserver = NotificationCenter.default.addObserver(
             forName: .AVPlayerItemDidPlayToEndTime,
             object: player.currentItem,
@@ -110,7 +106,7 @@ final class VideoPlayAndRenderCenter {
             self.playbackFinishedObserver = nil
         }
         
-        // 清理闭包引用
+        // Clean up closure references
         playerStatusDidChange = nil
         playerItemStatusDidChange = nil
         playbackDidFinish = nil

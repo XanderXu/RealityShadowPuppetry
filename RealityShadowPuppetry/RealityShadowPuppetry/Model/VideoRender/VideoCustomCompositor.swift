@@ -2,7 +2,7 @@
 //  VideoCustomCompositor.swift
 //  MPSAndCIFilterOnVisionOS
 //
-//  Created by 许M4 on 2025/6/25.
+//  Created by 许 on 2025/6/25.
 //
 
 import Foundation
@@ -52,7 +52,7 @@ final class VideoCustomCompositor: NSObject, AVVideoCompositing, @unchecked Send
     }
     func startRequest(_ request: AVAsynchronousVideoCompositionRequest) {
         self.request = request
-        isCancelled = false  // 重置取消状态
+        isCancelled = false  // Reset cancellation status
 //        guard let outputPixelBuffer = request.renderContext.newPixelBuffer() else {
 //            print("No valid pixel buffer found. Returning.")
 //            request.finish(with: CustomCompositorError.ciFilterFailedToProduceOutputImage)
@@ -99,7 +99,7 @@ final class VideoCustomCompositor: NSObject, AVVideoCompositing, @unchecked Send
             print("Failed to create Metal texture cache")
             return nil
         }
-        // 确保在函数结束时清理缓存
+        // Ensure cache is cleaned up at the end of the function
         defer {
             CVMetalTextureCacheFlush(textureCache, 0)
         }

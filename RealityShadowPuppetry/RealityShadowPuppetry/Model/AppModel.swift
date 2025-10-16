@@ -2,7 +2,7 @@
 //  AppModel.swift
 //  RealityShadowPuppetry
 //
-//  Created by 许M4 on 2025/6/16.
+//  Created by 许 on 2025/6/16.
 //
 
 import SwiftUI
@@ -53,7 +53,7 @@ class AppModel {
     func setup(asset: AVAsset) async throws {
         shadowMixManager = try await ShadowMixManager(asset: asset)
         
-        // 设置播放完成回调
+        // Set up playback completion callback
         shadowMixManager?.videoPlayAndRenderCenter?.playbackDidFinish = { [weak self] in
             self?.shadowMixManager?.videoPlayAndRenderCenter?.seek(to: .zero)
             self?.isVideoPlaying = false

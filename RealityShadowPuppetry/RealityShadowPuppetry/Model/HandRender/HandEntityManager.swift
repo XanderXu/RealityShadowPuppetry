@@ -2,7 +2,7 @@
 //  HandEntityManager.swift
 //  RealityShadowPuppetry
 //
-//  Created by 许M4 on 2025/9/4.
+//  Created by 许 on 2025/9/4.
 //
 
 import RealityKit

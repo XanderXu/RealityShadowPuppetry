@@ -2,7 +2,7 @@
 //  ContentView.swift
 //  RealityShadowPuppetry
 //
-//  Created by 许M4 on 2025/6/16.
+//  Created by 许 on 2025/6/16.
 //
 
 import SwiftUI

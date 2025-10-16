@@ -2,7 +2,7 @@
 //  DetailView.swift
 //  RealityShadowPuppetry
 //
-//  Created by 许M4 on 2025/6/18.
+//  Created by 许 on 2025/6/18.
 //
 
 import SwiftUI
@@ -44,22 +44,22 @@ struct DetailView: View {
         }
     }
 
-    /// 切换播放/暂停状态
+    /// Toggle play/pause state
     private func togglePlayback() {
         guard model.turnOnImmersiveSpace else {
-            print("沉浸式空间未开启")
+            print("Immersive space not turned on")
             return
         }
         
         
         if model.isVideoPlaying {
-            // 当前正在播放，点击暂停
+            // Currently playing, click to pause
             model.shadowMixManager?.videoPlayAndRenderCenter?.pause()
-            print("用户暂停视频")
+            print("User paused video")
         } else {
-            // 当前已暂停，点击播放
+            // Currently paused, click to play
             model.shadowMixManager?.videoPlayAndRenderCenter?.play()
-            print("用户开始播放视频")
+            print("User started playing video")
         }
     }
 }

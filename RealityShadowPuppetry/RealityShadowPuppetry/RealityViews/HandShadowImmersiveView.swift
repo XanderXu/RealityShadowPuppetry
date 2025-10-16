@@ -2,7 +2,7 @@
 //  HandShadowImmersiveView.swift
 //  RealityShadowPuppetry
 //
-//  Created by 许M4 on 2025/6/18.
+//  Created by 许 on 2025/6/18.
 //
 
 import SwiftUI

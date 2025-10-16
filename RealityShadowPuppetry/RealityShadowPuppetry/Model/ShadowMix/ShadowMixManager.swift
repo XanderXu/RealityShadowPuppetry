@@ -2,7 +2,7 @@
 //  ShadowMixManager.swift
 //  RealityShadowPuppetry
 //
-//  Created by 许M4 on 2025/9/2.
+//  Created by 许 on 2025/9/2.
 //
 
 import RealityKit
@@ -31,7 +31,7 @@ final class ShadowMixManager {
     
     
     init(asset: AVAsset) async throws {
-        // 初始化计算管线状态
+        // Initialize compute pipeline state
         grayMixRedPipelineState = Self.createGrayMixRedComputePipelineState(device: mtlDevice)
         
         let videoTrack = try await asset.loadTracks(withMediaType: .video).first!
@@ -43,18 +43,16 @@ final class ShadowMixManager {
         
         guard let player = videoPlayAndRenderCenter?.player else { return }
         
-        
+        //An entity of a plane which uses the VideoMaterial.
         let videoMaterial = VideoMaterial(avPlayer: player)
-        // Return an entity of a plane which uses the VideoMaterial.
         originalVideoEntity.model = .init(mesh: .generatePlane(width: 1, height: Float(naturalSize.height/naturalSize.width)), materials: [videoMaterial])
         originalVideoEntity.name = "OriginalVideo"
         originalVideoEntity.position = SIMD3(x: 1.2, y: 1, z: -2)
         
+        //An entity of a plane which uses the LowLevelTexture from mixedTexture.
         let textureDescriptor = createTextureDescriptor(width: Int(naturalSize.width), height: Int(naturalSize.height))
         let llt = try LowLevelTexture(descriptor: textureDescriptor)
-        // Create a TextureResource from the LowLevelTexture.
         let resource = try await TextureResource(from: llt)
-        // Create a material that uses the texture.
         var material = UnlitMaterial(texture: resource)
         material.opacityThreshold = 0.01
         mixedTextureEntity.model = .init(mesh: .generatePlane(width: 1, height: Float(naturalSize.height/naturalSize.width)), materials: [material])
@@ -102,8 +100,6 @@ final class ShadowMixManager {
     }
     
     // MARK: - Metal Shader Setup
-    
-    /// 创建灰度混合红色通道的计算管线状态
     nonisolated
     private static func createGrayMixRedComputePipelineState(device: MTLDevice) -> MTLComputePipelineState? {
         guard let defaultLibrary = device.makeDefaultLibrary(),
@@ -152,8 +148,6 @@ final class ShadowMixManager {
     }
     
     // MARK: - Processing Methods
-    
-    /// 处理颜色相加模式
     nonisolated
     private func processColorAdd(videoTexture: (any MTLTexture)?, offscreenTexture: MTLTexture, outputTexture: MTLTexture, commandBuffer: MTLCommandBuffer, device: MTLDevice) {
         if let videoTexture = videoTexture {
@@ -164,7 +158,6 @@ final class ShadowMixManager {
         }
     }
     
-    /// 处理灰度相加模式
     nonisolated
     private func processGrayAdd(videoTexture: (any MTLTexture)?, offscreenTexture: MTLTexture, outputTexture: MTLTexture, commandBuffer: MTLCommandBuffer, device: MTLDevice) {
         let tempTextureDesc = createTempTextureDescriptor(from: offscreenTexture)
@@ -175,7 +168,7 @@ final class ShadowMixManager {
             return
         }
         
-        // 将离屏纹理转换为二值化图像
+        // Convert offscreen texture to binary image
         let offscreenThreshold = MPSImageThresholdBinary(device: device, thresholdValue: 0, maximumValue: 0.8, linearGrayColorTransform: nil)
         offscreenThreshold.encode(commandBuffer: commandBuffer, sourceTexture: offscreenTexture, destinationTexture: tempOffscreenTexture)
         
@@ -186,11 +179,10 @@ final class ShadowMixManager {
                 return
             }
             
-            
-            // 使用非常低的阈值和线性灰度转换
+            // Use very low threshold and linear grayscale conversion
             let threshold = MPSImageThresholdToZero(device: device, thresholdValue: 0, linearGrayColorTransform: nil)
             threshold.encode(commandBuffer: commandBuffer, sourceTexture: videoTexture, destinationTexture: tempVideoTexture)
-            // 将两个二值化图像相加
+            // Add two binary images
             let add = MPSImageAdd(device: device)
             add.encode(commandBuffer: commandBuffer, primaryTexture: tempVideoTexture, secondaryTexture: tempOffscreenTexture, destinationTexture: outputTexture)
         } else {
@@ -198,11 +190,10 @@ final class ShadowMixManager {
         }
     }
     
-    /// 处理灰度混合红色通道模式
     private func processGrayMixRed(videoTexture: (any MTLTexture)?, offscreenTexture: MTLTexture, outputTexture: MTLTexture, commandBuffer: MTLCommandBuffer, device: MTLDevice) {
         guard let videoTexture = videoTexture,
               let pipelineState = grayMixRedPipelineState else {
-            // 没有视频纹理或管线状态，回退到复制离屏纹理
+            // No video texture or pipeline state, fall back to copying offscreen texture
             copyTexture(from: offscreenTexture, to: outputTexture, commandBuffer: commandBuffer)
             return
         }
@@ -214,9 +205,9 @@ final class ShadowMixManager {
         }
         
         computeEncoder.setComputePipelineState(pipelineState)
-        computeEncoder.setTexture(videoTexture, index: 0)    // 视频纹理
-        computeEncoder.setTexture(offscreenTexture, index: 1) // 离屏纹理
-        computeEncoder.setTexture(outputTexture, index: 2)    // 输出纹理
+        computeEncoder.setTexture(videoTexture, index: 0)    // Video texture
+        computeEncoder.setTexture(offscreenTexture, index: 1) // Offscreen texture
+        computeEncoder.setTexture(outputTexture, index: 2)    // Output texture
         
         let threadgroupSize = MTLSize(width: 8, height: 8, depth: 1)
         let threadgroupCount = MTLSize(
@@ -230,8 +221,6 @@ final class ShadowMixManager {
     }
     
     // MARK: - Helper Methods
-    
-    /// 创建临时纹理描述符
     nonisolated
     private func createTempTextureDescriptor(from texture: MTLTexture) -> MTLTextureDescriptor {
         let descriptor = MTLTextureDescriptor.texture2DDescriptor(
@@ -244,7 +233,6 @@ final class ShadowMixManager {
         return descriptor
     }
     
-    /// 复制纹理的辅助方法
     nonisolated
     private func copyTexture(from sourceTexture: MTLTexture, to destinationTexture: MTLTexture, commandBuffer: MTLCommandBuffer) {
         guard let blitEncoder = commandBuffer.makeBlitCommandEncoder() else {
