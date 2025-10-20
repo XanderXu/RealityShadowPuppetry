@@ -64,42 +64,54 @@ final class HandEntityManager {
     public func loadHandModelEntity() async throws {
         left = try await Entity(named: "HandBone",in: realityKitContentBundle)
         leftModel = left?.findFirstEntity(with: SkeletalPosesComponent.self)
+        var poses = leftModel?.components[SkeletalPosesComponent.self]
         //        print(poses?.poses.first?.id, poses?.poses.first?.jointNames, poses?.poses.first?.jointTransforms)
-                /*
-                 "/root/scene/skin0/skeleton/skeleton",
-                ["n9", "n9/n10", "n9/n10/n11",
-                 "n9/n10/n11/n12", "n9/n10/n11/n12/n13", "n9/n10/n11/n12/n13/n14", "n9/n10/n11/n12/n13/n14/n15",
-                 "n9/n10/n11/n16", "n9/n10/n11/n16/n17", "n9/n10/n11/n16/n17/n18", "n9/n10/n11/n16/n17/n18/n19",
-                 "n9/n10/n11/n20", "n9/n10/n11/n20/n21", "n9/n10/n11/n20/n21/n22", "n9/n10/n11/n20/n21/n22/n23",
-                 "n9/n10/n11/n24", "n9/n10/n11/n24/n25", "n9/n10/n11/n24/n25/n26", "n9/n10/n11/n24/n25/n26/n27",
-                 "n9/n10/n28", "n9/n10/n28/n29", "n9/n10/n28/n29/n30"]
-                 */
+        let lastMatrix = poses?.poses.default?.jointTransforms[20].matrix ?? .init(1)
+        let indexTipsMatrix = poses?.poses.default?.jointTransforms[5].matrix ?? .init(1)
+        poses?.poses.set(.init(id: "/root/scene/skin0/skeleton/skeleton", joints: [
+            ("n9/n10/n28/n29", Transform(matrix:  lastMatrix * scaleMatrix2)),
+            
+            ("n9/n10/n11/n12/n13/n14", Transform(matrix: indexTipsMatrix * scaleMatrix2)),
+            
+        ]))
+        
+        leftModel?.components[SkeletalPosesComponent.self] = poses
+        
+        /*
+         "/root/scene/skin0/skeleton/skeleton",
+         ["n9", "n9/n10", "n9/n10/n11",
+         "n9/n10/n11/n12", "n9/n10/n11/n12/n13", "n9/n10/n11/n12/n13/n14", "n9/n10/n11/n12/n13/n14/n15",
+         "n9/n10/n11/n16", "n9/n10/n11/n16/n17", "n9/n10/n11/n16/n17/n18", "n9/n10/n11/n16/n17/n18/n19",
+         "n9/n10/n11/n20", "n9/n10/n11/n20/n21", "n9/n10/n11/n20/n21/n22", "n9/n10/n11/n20/n21/n22/n23",
+         "n9/n10/n11/n24", "n9/n10/n11/n24/n25", "n9/n10/n11/n24/n25/n26", "n9/n10/n11/n24/n25/n26/n27",
+         "n9/n10/n28", "n9/n10/n28/n29", "n9/n10/n28/n29/n30"]
+         */
         left?.position = simd_float3(0, 0.8, -20)
         left?.scale = simd_float3(0.002, 0.002, 0.002)
         if let left {
             rootEntity.addChild(left)
         }
     }
-    private let scaleMatrix = simd_float4x4.matrix(position: .zero, rotation: .init(angle: .pi/2, axis: [1, 0, 0]), scale: simd_float3(0.002, 0.002, 0.002))
-    private let scaleMatrix2 = simd_float4x4.matrix(position: .zero, rotation: .init(angle: .pi/2, axis: [1, 0, 0]), scale: simd_float3(1, 1, 1))
+    private let scaleMatrix = simd_float4x4.matrix(position: .zero, rotation: .init(angle: 0, axis: [1, 0, 0]), scale: simd_float3(0.002, 0.002, 0.002))
+    private let scaleMatrix2 = simd_float4x4.matrix(position: .zero, rotation: .init(angle: .pi/4, axis: [0, 1, 0]), scale: simd_float3(1, 1, 1))
     public func updateHandModel(from handAnchor: HandAnchor) {
         if handAnchor.chirality == .left {
-            left?.transform.matrix = scaleMatrix * handAnchor.originFromAnchorTransform
+            left?.transform.matrix = handAnchor.originFromAnchorTransform * scaleMatrix
             var poses = leftModel?.components[SkeletalPosesComponent.self]
     
             if let handSkeleton = handAnchor.handSkeleton {
                 poses?.poses.set(.init(id: "/root/scene/skin0/skeleton/skeleton", joints: [
-                    ("n9", Transform(matrix: scaleMatrix2 * handSkeleton.joint(.wrist).parentFromJointTransform)),
+//                    ("n9", Transform(matrix: scaleMatrix2 * handSkeleton.joint(.wrist).parentFromJointTransform)),
 //                    ("n9/n10", Transform(matrix: handSkeleton.joint(.thumbKnuckle).parentFromJointTransform)),
-                    ("n9/n10/n28", Transform(matrix: scaleMatrix2 * handSkeleton.joint(.thumbIntermediateBase).parentFromJointTransform)),
-                    ("n9/n10/n28/n29", Transform(matrix: scaleMatrix2 * handSkeleton.joint(.thumbIntermediateTip).parentFromJointTransform)),
-                    ("n9/n10/n28/n29/n30", Transform(matrix: scaleMatrix2 * handSkeleton.joint(.thumbTip).parentFromJointTransform)),
+//                    ("n9/n10/n28", Transform(matrix: scaleMatrix2 * handSkeleton.joint(.thumbIntermediateBase).parentFromJointTransform)),
+//                    ("n9/n10/n28/n29", Transform(matrix: scaleMatrix2 * handSkeleton.joint(.thumbIntermediateTip).parentFromJointTransform)),
+                    ("n9/n10/n28/n29/n30", Transform(matrix:  handSkeleton.joint(.thumbTip).parentFromJointTransform * scaleMatrix2)),
                     
                     
-                    ("n9/n10/n11", Transform(matrix: scaleMatrix2 * handSkeleton.joint(.indexFingerKnuckle).parentFromJointTransform)),
-                    ("n9/n10/n11/n12", Transform(matrix: scaleMatrix2 * handSkeleton.joint(.indexFingerIntermediateBase).parentFromJointTransform)),
-                    ("n9/n10/n11/n12/n13", Transform(matrix: scaleMatrix2 * handSkeleton.joint(.indexFingerIntermediateTip).parentFromJointTransform)),
-                    ("n9/n10/n11/n12/n13/n14", Transform(matrix: scaleMatrix2 * handSkeleton.joint(.indexFingerTip).parentFromJointTransform)),
+//                    ("n9/n10/n11", Transform(matrix: scaleMatrix2 * handSkeleton.joint(.indexFingerKnuckle).parentFromJointTransform)),
+//                    ("n9/n10/n11/n12", Transform(matrix: scaleMatrix2 * handSkeleton.joint(.indexFingerIntermediateBase).parentFromJointTransform)),
+//                    ("n9/n10/n11/n12/n13", Transform(matrix: scaleMatrix2 * handSkeleton.joint(.indexFingerIntermediateTip).parentFromJointTransform)),
+                    ("n9/n10/n11/n12/n13/n14", Transform(matrix: handSkeleton.joint(.indexFingerTip).parentFromJointTransform * scaleMatrix2)),
                     
                 ]))
                 
