@@ -21,7 +21,7 @@ final class HandEntityManager {
         return [bm, gm, bnm, gnm, rm, rnm]
     }()
     
-    private let rootEntity = Entity()
+    let rootEntity = Entity()
     private var left: Entity?
     private var right: Entity?
     private var leftModel: Entity?
@@ -86,13 +86,14 @@ final class HandEntityManager {
          "n9/n10/n11/n24", "n9/n10/n11/n24/n25", "n9/n10/n11/n24/n25/n26", "n9/n10/n11/n24/n25/n26/n27",
          "n9/n10/n28", "n9/n10/n28/n29", "n9/n10/n28/n29/n30"]
          */
-        left?.position = simd_float3(0, 0.8, -20)
-        left?.scale = simd_float3(0.002, 0.002, 0.002)
+//        left?.position = simd_float3(0, 0.8, -20)
+//        left?.scale = simd_float3(0.002, 0.002, 0.002)
+        left?.transform.matrix = scaleMatrix
         if let left {
             rootEntity.addChild(left)
         }
     }
-    private let scaleMatrix = simd_float4x4.matrix(position: .zero, rotation: .init(angle: 0, axis: [1, 0, 0]), scale: simd_float3(0.002, 0.002, 0.002))
+    private let scaleMatrix = simd_float4x4.matrix(position: .zero, rotation: .init(angle: -.pi/2, axis: [1, 0, 0]) * .init(angle: -.pi/2, axis: [0, 0, 1]), scale: simd_float3(0.002, 0.002, 0.002))
     private let scaleMatrix2 = simd_float4x4.matrix(position: .zero, rotation: .init(angle: .pi/4, axis: [0, 1, 0]), scale: simd_float3(1, 1, 1))
     public func updateHandModel(from handAnchor: HandAnchor) {
         if handAnchor.chirality == .left {
