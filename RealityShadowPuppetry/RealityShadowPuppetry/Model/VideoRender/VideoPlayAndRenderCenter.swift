@@ -39,7 +39,6 @@ final class VideoPlayAndRenderCenter {
         setupPlayerObservers()
     }
     
-    // MARK: - Public Interface to Replace Direct Access to videoPlayAndRenderCenter
     public func play() {
         player?.play()
     }

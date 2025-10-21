@@ -27,45 +27,18 @@ final class HandEntityManager {
     private var leftModel: Entity?
     private var rightModel: Entity?
     
-    private let offscreenRenderer: OffscreenRenderer?
-    var rendererUpdate: (() -> Void)?  {
-        didSet {
-            offscreenRenderer?.rendererUpdate = rendererUpdate
-        }
-    }
-    var colorTexture: MTLTexture? {
-        return offscreenRenderer?.colorTexture
-    }
-    
-    init(mtlDevice: MTLDevice, size: CGSize) throws {
-        offscreenRenderer = try OffscreenRenderer(device: mtlDevice, textureSize: size)
-        offscreenRenderer?.addEntity(rootEntity)
-    }
-    
-    func renderAutoLookCenter() {
-        offscreenRenderer?.cameraAutoLookBoundingBoxCenter()
-    }
-    
-    func render() throws {
-        try offscreenRenderer?.render()
-    }
-    func renderAsync() async throws {
-        try await offscreenRenderer?.renderAsync()
-    }
     
     func clean() {
         rootEntity.children.removeAll()
         left = nil
         right = nil
-        
-        rendererUpdate = nil
     }
     
     public func loadHandModelEntity() async throws {
         left = try await Entity(named: "HandBone",in: realityKitContentBundle)
         leftModel = left?.findFirstEntity(with: SkeletalPosesComponent.self)
         var poses = leftModel?.components[SkeletalPosesComponent.self]
-        print(poses?.poses.first?.id, poses?.poses.first?.jointNames, poses?.poses.first?.jointTransforms)
+//        print(poses?.poses.default?.id, poses?.poses.default?.jointNames, poses?.poses.default?.jointTransforms)
         
         
         let lastMatrix = poses?.poses.default?.jointTransforms[20].matrix ?? .init(1)
@@ -213,11 +186,6 @@ final class HandEntityManager {
         return modelEntity
     }
     
-    public func renderSimHand() throws {
-        offscreenRenderer?.addEntity(rootEntity)
-        offscreenRenderer?.cameraLook(at: SIMD3<Float>(0, 1.4, 0), from: SIMD3<Float>(0, 1.4, 20))
-        try offscreenRenderer?.render()
-    }
 }
 
 fileprivate extension simd_float4x4 {

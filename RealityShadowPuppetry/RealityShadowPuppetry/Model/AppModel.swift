@@ -62,8 +62,8 @@ class AppModel {
     }
     func prepareHandModel() async throws {
         try await shadowMixManager?.handEntityManager.loadHandModelEntity()
-        shadowMixManager?.handEntityManager.renderAutoLookCenter()
-        try shadowMixManager?.handEntityManager.render()
+        shadowMixManager?.cameraAutoLookHandCenter()
+        try await shadowMixManager?.renderHandTextureAsync()
     }
     
     func clear() {
@@ -108,13 +108,13 @@ class AppModel {
                 await shadowMixManager?.handEntityManager.updateHand(from: anchor)
                 shadowMixManager?.handEntityManager.updateHandModel(from: anchor)
                 if update.event == .added {
-                    shadowMixManager?.handEntityManager.renderAutoLookCenter()
+                    shadowMixManager?.cameraAutoLookHandCenter()
                 }
             case .removed:
                 let anchor = update.anchor
                 shadowMixManager?.handEntityManager.removeHand(from: anchor)
             }
-            try? shadowMixManager?.handEntityManager.render()
+            try? await shadowMixManager?.renderHandTextureAsync()
         }
     }
     func monitorSessionEvents() async {
@@ -135,7 +135,7 @@ class AppModel {
         for await simHand in simHandProvider.simHands {
             if simHand.landmarks.isEmpty { continue }
             await shadowMixManager?.handEntityManager.updateHand(from: simHand)
-            try? shadowMixManager?.handEntityManager.renderSimHand()
+            try? await shadowMixManager?.renderSimHandTextureAsync()
             
         }
     }

@@ -23,7 +23,6 @@ final class OffscreenRenderer: Sendable {
             }
         }
     }
-    var rendererUpdate: (() -> Void)?
     
     init(device: MTLDevice, textureSize: CGSize) throws {
         renderer = try RealityRenderer()
@@ -67,14 +66,12 @@ final class OffscreenRenderer: Sendable {
         renderer.entities.removeAll(where: { $0 != renderer.activeCamera})
     }
     
-    func render() throws {
+    func render(onComplete: (@Sendable (RealityRenderer) -> Void)? = nil) throws {
         let cameraOutput = try RealityRenderer.CameraOutput(.singleProjection(colorTexture: colorTexture))
 //        let c = colorTexture
 //        try renderer.updateAndRender(deltaTime: 0, cameraOutput: cameraOutput)
-        try renderer.updateAndRender(deltaTime: 0, cameraOutput: cameraOutput) {[weak self] render in
-            Task {@MainActor in
-                self?.rendererUpdate?()
-            }
+        try renderer.updateAndRender(deltaTime: 0, cameraOutput: cameraOutput) { render in
+            onComplete?(render)
         }
     }
     func renderAsync() async throws {

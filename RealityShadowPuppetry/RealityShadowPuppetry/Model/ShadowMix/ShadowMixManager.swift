@@ -16,14 +16,16 @@ final class ShadowMixManager {
         case GrayAdd
         case GrayMixRed
     }
-    let mtlDevice = MTLCreateSystemDefaultDevice()!
     
     let originalVideoEntity = ModelEntity()
     let mixedTextureEntity = ModelEntity()
     var shadowStyle = ShadowMixStyle.GrayAdd
     
-    
+    private let mtlDevice = MTLCreateSystemDefaultDevice()!
+    private let offscreenRenderer: OffscreenRenderer?
+    private let llt: LowLevelTexture
     private(set) var videoPlayAndRenderCenter: VideoPlayAndRenderCenter?
+    
     let handEntityManager: HandEntityManager
     
     // MARK: - Private Properties
@@ -31,15 +33,21 @@ final class ShadowMixManager {
     
     
     init(asset: AVAsset) async throws {
+        
+        handEntityManager =  HandEntityManager()
         // Initialize compute pipeline state
         grayMixRedPipelineState = Self.createGrayMixRedComputePipelineState(device: mtlDevice)
+        videoPlayAndRenderCenter = try await VideoPlayAndRenderCenter(asset: asset)
         
         let videoTrack = try await asset.loadTracks(withMediaType: .video).first!
         let naturalSize = try await videoTrack.load(.naturalSize)
         
-        videoPlayAndRenderCenter = try await VideoPlayAndRenderCenter(asset: asset)
-        handEntityManager = try HandEntityManager(mtlDevice: mtlDevice, size: naturalSize)
+        offscreenRenderer = try OffscreenRenderer(device: mtlDevice,textureSize: naturalSize)
+        offscreenRenderer?.addEntity(handEntityManager.rootEntity)
         
+        //An entity of a plane which uses the LowLevelTexture from mixedTexture.
+        let textureDescriptor = Self.createTextureDescriptor(width: Int(naturalSize.width), height: Int(naturalSize.height))
+        llt = try LowLevelTexture(descriptor: textureDescriptor)
         
         guard let player = videoPlayAndRenderCenter?.player else { return }
         
@@ -49,9 +57,6 @@ final class ShadowMixManager {
         originalVideoEntity.name = "OriginalVideo"
         originalVideoEntity.position = SIMD3(x: 1.2, y: 1, z: -2)
         
-        //An entity of a plane which uses the LowLevelTexture from mixedTexture.
-        let textureDescriptor = createTextureDescriptor(width: Int(naturalSize.width), height: Int(naturalSize.height))
-        let llt = try LowLevelTexture(descriptor: textureDescriptor)
         let resource = try await TextureResource(from: llt)
         var material = UnlitMaterial(texture: resource)
         material.opacityThreshold = 0.01
@@ -59,15 +64,9 @@ final class ShadowMixManager {
         mixedTextureEntity.name = "MixedTexture"
         mixedTextureEntity.position = SIMD3(x: 0, y: 1, z: -2)
         
-        handEntityManager.rendererUpdate = { [weak self, weak videoPlayAndRenderCenter] in
-            if player.timeControlStatus != .playing {
-                self?.populateMPS(videoTexture: videoPlayAndRenderCenter?.lastestPixel, offscreenTexture: self?.handEntityManager.colorTexture, lowLevelTexture: llt, device: self?.mtlDevice)
-            }
-        }
-        
         videoPlayAndRenderCenter?.videoPixelUpdate = { [weak self, weak videoPlayAndRenderCenter] in
             Task { @MainActor in
-                self?.populateMPS(videoTexture: videoPlayAndRenderCenter?.lastestPixel, offscreenTexture: self?.handEntityManager.colorTexture, lowLevelTexture: llt, device: self?.mtlDevice)
+                self?.populateMPS(videoTexture: videoPlayAndRenderCenter?.lastestPixel, offscreenTexture: self?.offscreenRenderer?.colorTexture, lowLevelTexture: self?.llt, device: self?.mtlDevice)
             }
         }
     }
@@ -78,10 +77,43 @@ final class ShadowMixManager {
         originalVideoEntity.removeFromParent()
         mixedTextureEntity.removeFromParent()
     }
+    public func cameraAutoLookHandCenter() {
+        offscreenRenderer?.cameraAutoLookBoundingBoxCenter()
+    }
+//    public func renderHandTexture() throws {
+//        try offscreenRenderer?.render {[weak self] render in
+//            self?.updateHandShadowIfNeeded()
+//        }
+//    }
+    public func renderHandTextureAsync() async throws {
+        try await offscreenRenderer?.renderAsync()
+        updateHandShadowIfNeeded()
+    }
     
+    public func renderSimHandTextureAsync() async throws {
+        offscreenRenderer?.addEntity(handEntityManager.rootEntity)
+        offscreenRenderer?.cameraLook(at: SIMD3<Float>(0, 1.4, 0), from: SIMD3<Float>(0, 1.4, 20))
+        try await offscreenRenderer?.renderAsync()
+        updateHandShadowIfNeeded()
+    }
+    
+//    public func renderSimHandTexture() throws {
+//        offscreenRenderer?.addEntity(handEntityManager.rootEntity)
+//        offscreenRenderer?.cameraLook(at: SIMD3<Float>(0, 1.4, 0), from: SIMD3<Float>(0, 1.4, 20))
+//        try offscreenRenderer?.render {[weak self] render in
+//            self?.updateHandShadowIfNeeded()
+//        }
+//    }
+    private func updateHandShadowIfNeeded() {
+        Task { @MainActor in
+            if videoPlayAndRenderCenter?.player?.timeControlStatus != .playing {
+                populateMPS(videoTexture: videoPlayAndRenderCenter?.lastestPixel, offscreenTexture: offscreenRenderer?.colorTexture, lowLevelTexture: llt, device: mtlDevice)
+            }
+        }
+    }
     
     nonisolated
-    private func createTextureDescriptor(width: Int, height: Int) -> LowLevelTexture.Descriptor {
+    private static func createTextureDescriptor(width: Int, height: Int) -> LowLevelTexture.Descriptor {
         var desc = LowLevelTexture.Descriptor()
 
         desc.textureType = .type2D
