@@ -80,11 +80,7 @@ final class ShadowMixManager {
     public func cameraAutoLookHandCenter() {
         offscreenRenderer?.cameraAutoLookBoundingBoxCenter()
     }
-//    public func renderHandTexture() throws {
-//        try offscreenRenderer?.render {[weak self] render in
-//            self?.updateHandShadowIfNeeded()
-//        }
-//    }
+
     public func renderHandTextureAsync() async throws {
         try await offscreenRenderer?.renderAsync()
         updateHandShadowIfNeeded()
@@ -97,19 +93,13 @@ final class ShadowMixManager {
         updateHandShadowIfNeeded()
     }
     
-//    public func renderSimHandTexture() throws {
-//        offscreenRenderer?.addEntity(handEntityManager.rootEntity)
-//        offscreenRenderer?.cameraLook(at: SIMD3<Float>(0, 1.4, 0), from: SIMD3<Float>(0, 1.4, 20))
-//        try offscreenRenderer?.render {[weak self] render in
-//            self?.updateHandShadowIfNeeded()
-//        }
-//    }
+
     private func updateHandShadowIfNeeded() {
-        Task { @MainActor in
+//        Task { @MainActor in
             if videoPlayAndRenderCenter?.player?.timeControlStatus != .playing {
                 populateMPS(videoTexture: videoPlayAndRenderCenter?.lastestPixel, offscreenTexture: offscreenRenderer?.colorTexture, lowLevelTexture: llt, device: mtlDevice)
             }
-        }
+//        }
     }
     
     nonisolated

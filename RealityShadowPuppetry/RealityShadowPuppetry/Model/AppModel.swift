@@ -60,9 +60,10 @@ class AppModel {
         }
         
     }
+    nonisolated
     func prepareHandModel() async throws {
         try await shadowMixManager?.handEntityManager.loadHandModelEntity()
-        shadowMixManager?.cameraAutoLookHandCenter()
+        await shadowMixManager?.cameraAutoLookHandCenter()
         try await shadowMixManager?.renderHandTextureAsync()
     }
     
