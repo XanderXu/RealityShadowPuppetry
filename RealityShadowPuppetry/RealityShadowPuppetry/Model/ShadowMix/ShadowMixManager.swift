@@ -95,11 +95,9 @@ final class ShadowMixManager {
     
 
     private func updateHandShadowIfNeeded() {
-//        Task { @MainActor in
-            if videoPlayAndRenderCenter?.player?.timeControlStatus != .playing {
-                populateMPS(videoTexture: videoPlayAndRenderCenter?.lastestPixel, offscreenTexture: offscreenRenderer?.colorTexture, lowLevelTexture: llt, device: mtlDevice)
-            }
-//        }
+        if videoPlayAndRenderCenter?.player?.timeControlStatus != .playing {
+            populateMPS(videoTexture: videoPlayAndRenderCenter?.lastestPixel, offscreenTexture: offscreenRenderer?.colorTexture, lowLevelTexture: llt, device: mtlDevice)
+        }
     }
     
     nonisolated
