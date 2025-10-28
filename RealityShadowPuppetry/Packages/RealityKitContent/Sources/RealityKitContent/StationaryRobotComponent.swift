@@ -29,19 +29,18 @@ public struct StationaryRobotRuntimeComponent: Component {
 
     private var settingsSource: StationaryRobotComponent? = nil
 
+    private let leftHandConstraintName = "left_hand_constraint"
+    private let rightHandConstraintName = "right_hand_constraint"
     private let chestJointName = "root/hips/spine01/spine02/chest"
     private let neckJointName = "root/hips/spine01/spine02/chest/neck"
     private var neckJointIndex: Int = 0
     private var neckForward: SIMD3<Float> = [0, 0, 0]
 
-    // Values to introduce some latency into the robot's reach position.
-    // 'latencyDelay' defines (in seconds) how delayed the robot's reach
-    // position is relative to the true position of the reach object.
-    var previousReachPos: SIMD3<Float>?
-    var currentReachPos: SIMD3<Float>?
-    var latencyCountdown: Float = 0
-    let latencyDelay: Float = 0.333
-
+    
+    public var currentLeftHandPos: SIMD3<Float>?
+    public var currentRightHandPos: SIMD3<Float>?
+    public var lookAtTarget: SIMD3<Float>?
+    
     public init() {
     }
 
@@ -67,6 +66,7 @@ public struct StationaryRobotRuntimeComponent: Component {
                 let hipsJointName = "root/hips"
                 let chestJointName = "root/hips/spine01/spine02/chest"
                 let leftHandJointName = "root/hips/spine01/spine02/chest/L_clavicle/L_arm/L_arm1/L_arm2/L_arm3/L_arm4/L_wrist"
+                let rightHandJointName = "root/hips/spine01/spine02/chest/R_clavicle/R_arm/R_arm1/R_arm2/R_arm3/R_arm4/R_wrist"
 
                 // Define constraints for the rig.
                 rig.constraints = [
@@ -78,8 +78,11 @@ public struct StationaryRobotRuntimeComponent: Component {
                             on: chestJointName,
                             positionWeight: SIMD3(repeating: 12.0),
                             orientationWeight: SIMD3(repeating: 12.0)),
-                    .point(named: "left_hand_constraint",
+                    .point(named: leftHandConstraintName,
                            on: leftHandJointName,
+                           positionWeight: SIMD3(repeating: 1.0)),
+                    .point(named: rightHandConstraintName,
+                           on: rightHandJointName,
                            positionWeight: SIMD3(repeating: 1.0))
                 ]
 
@@ -106,63 +109,37 @@ public struct StationaryRobotRuntimeComponent: Component {
     // Update the robot's IK (reaching) and SkeletalPoses (look-at) values.
     public mutating func processRobotUpdates(entity: Entity,
                                              deltaTime: TimeInterval) {
-        if let sceneRoot = entity.scene {
-            if let butterflyEntity = sceneRoot.findEntity(named: "butterfly_fly_cycle") {
-
-                // Get the position of the butterfly in the robot entity's local space.
-                let butterflyPositionModelSpace = butterflyEntity.position(relativeTo: entity)
-
-                if let modelComponentEntity = findModelComponentEntity(entity: entity) {
-                    // Update the latency countdown time.
-                    var reachPos = butterflyPositionModelSpace + settingsSource!.ikOffset
-
-                    if latencyDelay > 0.0 {
-                        // Compute the robot's reach position to be at a position
-                        // close to where the reach object was 'latencyDelay'
-                        // seconds before.
-                        latencyCountdown -= Float(deltaTime)
-
-                        if latencyCountdown <= 0 {
-                            latencyCountdown = latencyDelay
-                            if previousReachPos == nil {
-                                previousReachPos = reachPos
-                            } else if currentReachPos == nil {
-                                currentReachPos = reachPos
-                            } else {
-                                previousReachPos = currentReachPos
-                                currentReachPos = reachPos
-                            }
-                        }
-
-                        reachPos = previousReachPos!
-                        if previousReachPos != nil && currentReachPos != nil {
-                            // Compute the new reach position at a point between previous and current
-                            // based on the latencyCountdown timer.
-                            let interpolationValue = 1.0 - Float(latencyCountdown / latencyDelay)
-                            reachPos = previousReachPos! + ((currentReachPos! - previousReachPos!) * interpolationValue)
-                        }
-                    }
-
-                    // Update the arm to point at the butterfly.
-                    updateHandIK(entity: modelComponentEntity, ikTarget: reachPos)
-
-                    // Update the head to look at the butterfly.
-                    updateHeadLookAt(entity: modelComponentEntity, lookAtTarget: butterflyPositionModelSpace)
-                }
+        
+        if let modelComponentEntity = findModelComponentEntity(entity: entity) {
+            if let currentLeftHandPos {
+                let leftHandPos = entity.convert(position: currentLeftHandPos, from: nil) + settingsSource!.ikOffset
+                updateHandIK(entity: modelComponentEntity, constraintName: leftHandConstraintName, ikTarget: leftHandPos)
             }
+            if let currentRightHandPos {
+                let rightHandPos = entity.convert(position: currentRightHandPos, from: nil) + settingsSource!.ikOffset
+                updateHandIK(entity: modelComponentEntity, constraintName: rightHandConstraintName, ikTarget: rightHandPos)
+            }
+            
+            if let lookAtTarget {
+                let lookAtTarget = entity.convert(position: lookAtTarget, from: nil)
+                updateHeadLookAt(entity: modelComponentEntity, lookAtTarget: lookAtTarget)
+            }
+            
         }
+        
     }
 
     // Update the target position for the robot's left hand reach.
     private mutating func updateHandIK(entity: Entity,
+                                       constraintName: String,
                                        ikTarget: SIMD3<Float>) {
         // Update the IK target.
         if let ikComponent = entity.components[IKComponent.self] {
 
             // Set the left hand target position.
-            ikComponent.solvers[0].constraints["left_hand_constraint"]!.target.translation
+            ikComponent.solvers[0].constraints[constraintName]!.target.translation
                 = ikTarget
-            ikComponent.solvers[0].constraints["left_hand_constraint"]!.animationOverrideWeight.position
+            ikComponent.solvers[0].constraints[constraintName]!.animationOverrideWeight.position
                 = 1.0
 
             // Commit updated values.

@@ -110,13 +110,13 @@ final class ShadowMixManager {
     }
     
     
-    public func updateEntity(from handAnchor: HandAnchor) async {
+    public func updateEntity(from handAnchor: HandAnchor, deviceMatrix: simd_float4x4?) async {
         switch trackingType {
         case .hand:
-            await handEntityManager.updateHand(from: handAnchor)
+//            await handEntityManager.updateHand(from: handAnchor)
             handEntityManager.updateHandModel(from: handAnchor)
         case .body:
-            await bodyEntityManager.updateBodyModel(from: handAnchor)
+            bodyEntityManager.updateBodyModel(from: handAnchor, deviceMatrix: deviceMatrix)
         }
     }
     

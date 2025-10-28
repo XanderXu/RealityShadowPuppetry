@@ -132,7 +132,8 @@ class AppModel {
             case .added, .updated:
                 let anchor = update.anchor
                 print(anchor.chirality, update.event.description)
-                await shadowMixManager?.updateEntity(from: anchor)
+                let device = worldTracking.queryDeviceAnchor(atTimestamp: anchor.timestamp)
+                await shadowMixManager?.updateEntity(from: anchor, deviceMatrix: device?.originFromAnchorTransform)
                 if update.event == .added {
                     shadowMixManager?.cameraAutoLookHandCenter()
                 }

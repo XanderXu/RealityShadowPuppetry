@@ -13,31 +13,34 @@ final class BodyEntityManager {
     
     
     let rootEntity = Entity()
-    private var left: Entity?
-    private var right: Entity?
-    private var leftModel: Entity?
-    private var rightModel: Entity?
-    
+    private var body: Entity?
+    private var stationaryEntity: Entity?
     
     func clean() {
         rootEntity.children.removeAll()
-        left = nil
-        right = nil
+        body = nil
     }
     
     public func loadBodyModelEntity() async throws {
-        left = try await Entity(named: "BodyScene",in: realityKitContentBundle)
-        leftModel = left?.findFirstEntity(with: SkeletalPosesComponent.self)
-        
-        if let left {
-            rootEntity.addChild(left)
+        body = try await Entity(named: "BodyScene",in: realityKitContentBundle)
+        stationaryEntity = body?.findFirstEntity(with: StationaryRobotRuntimeComponent.self)
+        if let body {
+            rootEntity.addChild(body)
         }
     }
     
-    public func updateBodyModel(from handAnchor: HandAnchor) async {
+    public func updateBodyModel(from handAnchor: HandAnchor, deviceMatrix: simd_float4x4?) {
+        guard let stationaryEntity else { return }
+        
         if handAnchor.chirality == .left {
-            
-            
+            stationaryEntity.components[StationaryRobotRuntimeComponent.self]?.currentLeftHandPos = handAnchor.originFromAnchorTransform.translation
+        } else if handAnchor.chirality == .right {
+            stationaryEntity.components[StationaryRobotRuntimeComponent.self]?.currentRightHandPos = handAnchor.originFromAnchorTransform.translation
+        }
+        
+        if let deviceMatrix {
+            let lookAtPos = deviceMatrix.translation - deviceMatrix.zAxis * 0.2
+            stationaryEntity.components[StationaryRobotRuntimeComponent.self]?.lookAtTarget = lookAtPos
         }
     }
 
