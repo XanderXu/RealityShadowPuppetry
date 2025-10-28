@@ -1,8 +1,7 @@
 {
-  "advancedEditorSelectedIdentifier" : "ShaderGraphEditorPluginID",
+  "advancedEditorSelectedIdentifier" : "ProjectBrowser",
   "openSceneRelativePaths" : [
-    "Immersive.usda",
-    "HandBone.usdc"
+    "RobotScene.usda"
   ],
   "recentIdentifiers" : {
     "AF09ED6F-1707-48FD-8720-65B998362C09" : [
@@ -10,9 +9,36 @@
     ],
     "D30FB9CA-7689-4AEA-BF58-D6EE12DC024F" : [
 
+    ],
+    "D66134B1-3681-4A8E-AFE5-29F257229F3B" : [
+
     ]
   },
   "sceneCameraHistory" : {
+    "7FA5D1DC-B376-42F5-9A2D-F3306C1CE69E" : [
+      {
+        "date" : 783316498.853596,
+        "title" : "Untitled",
+        "transform" : [
+          0.9949328,
+          -1.5018979e-09,
+          -0.10054294,
+          0,
+          -0.03125575,
+          0.9504526,
+          -0.30929434,
+          0,
+          0.0955613,
+          0.3108696,
+          0.9456364,
+          0,
+          0.2471502,
+          0.8040021,
+          2.4456995,
+          1
+        ]
+      }
+    ],
     "B81D02DF-126E-43D3-B7C9-00623708D6EB" : [
       {
         "date" : 780558617.485827,
@@ -171,6 +197,74 @@
         ]
       }
     ],
+    "D66134B1-3681-4A8E-AFE5-29F257229F3B" : [
+      {
+        "date" : 783316266.588416,
+        "title" : "Untitled",
+        "transform" : [
+          -0.6693273,
+          3.2338763e-09,
+          -0.7429677,
+          0,
+          -0.270075,
+          0.93159086,
+          0.24330606,
+          0,
+          0.69214207,
+          0.36350834,
+          -0.62353915,
+          0,
+          1.7900869,
+          0.9401417,
+          -1.6126592,
+          1
+        ]
+      },
+      {
+        "date" : 783316257.155897,
+        "title" : "Untitled",
+        "transform" : [
+          0.89600307,
+          9.1583197e-10,
+          -0.44404784,
+          0,
+          -0.1092075,
+          0.96928596,
+          -0.22035974,
+          0,
+          0.43040934,
+          0.2459363,
+          0.86848325,
+          0,
+          1.1131675,
+          0.6360651,
+          2.2461581,
+          1
+        ]
+      },
+      {
+        "date" : 783316232.095065,
+        "title" : "Untitled",
+        "transform" : [
+          -0.3665605,
+          -3.5043257e-10,
+          -0.9303942,
+          0,
+          -0.2824466,
+          0.9528068,
+          0.11127946,
+          0,
+          0.8864859,
+          0.3035773,
+          -0.34926137,
+          0,
+          2.2927184,
+          0.785142,
+          -0.9032946,
+          1
+        ]
+      }
+    ],
     "E8BE79FE-70AA-4647-AB50-805835A80F78" : [
       {
         "date" : 780558272.524034,
@@ -265,5 +359,5 @@
   "sceneViewportBackgroundColors" : {
 
   },
-  "selectedSceneRelativePath" : "HandBone.usdc"
+  "selectedSceneRelativePath" : "RobotScene.usda"
 }

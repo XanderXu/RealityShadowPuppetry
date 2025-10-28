@@ -1,0 +1,37 @@
+#usda 1.0
+(
+    customLayerData = {
+        string creator = "Reality Composer Pro Version 2.0 (494.8.1)"
+    }
+    defaultPrim = "Root"
+    metersPerUnit = 1
+    upAxis = "Y"
+)
+
+def Xform "Root"
+{
+    def "robot" (
+        active = true
+        prepend references = @robot.usdz@
+    )
+    {
+        float3 xformOp:scale = (0.01, 0.01, 0.01)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+        def RealityKitCustomComponent "RealityKitContent_StationaryRobotComponent"
+        {
+            float3 ikOffset = (0, -7, 0)
+            uniform token info:id = "RealityKitContent.StationaryRobotComponent"
+        }
+
+        over "geo_grp"
+        {
+            over "backpack2_grp" (
+                active = false
+            )
+            {
+            }
+        }
+    }
+}
+

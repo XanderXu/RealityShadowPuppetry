@@ -44,14 +44,14 @@ class AppModel {
     
     
     private let session = ARKitSession()
-//    private let worldTracking = WorldTrackingProvider()
+    private var worldTracking = WorldTrackingProvider()
     private var handTracking = HandTrackingProvider()
     private let simHandProvider = SimulatorHandTrackingProvider()
     init() {
         
     }
-    func setup(asset: AVAsset) async throws {
-        shadowMixManager = try await ShadowMixManager(asset: asset)
+    func setup(asset: AVAsset, trackingType: ShadowMixManager.TrackingType) async throws {
+        shadowMixManager = try await ShadowMixManager(asset: asset, trackingType: trackingType)
         
         // Set up playback completion callback
         shadowMixManager?.videoPlayAndRenderCenter?.playbackDidFinish = { [weak self] in
@@ -62,9 +62,17 @@ class AppModel {
     }
     nonisolated
     func prepareHandModel() async throws {
-        try await shadowMixManager?.handEntityManager.loadHandModelEntity()
+        try await shadowMixManager?.loadModelEntity()
         await shadowMixManager?.cameraAutoLookHandCenter()
-        try await shadowMixManager?.renderHandTextureAsync()
+        try await shadowMixManager?.renderEntityShadowTextureAsync()
+        await shadowMixManager?.populateFinalShadowIfNeeded()
+    }
+    nonisolated
+    func prepareBodyModel() async throws {
+        try await shadowMixManager?.loadModelEntity()
+        await shadowMixManager?.cameraAutoLookHandCenter()
+        try await shadowMixManager?.renderEntityShadowTextureAsync()
+        await shadowMixManager?.populateFinalShadowIfNeeded()
     }
     
     func clear() {
@@ -100,22 +108,41 @@ class AppModel {
             print("ARKitSession error:", error)
         }
     }
+    func startHandAndDeviceTracking() async {
+        do {
+            if HandTrackingProvider.isSupported {
+                print("ARKitSession starting.")
+                if WorldTrackingProvider.isSupported {
+                    worldTracking = WorldTrackingProvider()
+                    handTracking = HandTrackingProvider()
+                    try await session.run([worldTracking, handTracking])
+                } else {
+                    handTracking = HandTrackingProvider()
+                    try await session.run([handTracking])
+                }
+                
+            }
+        } catch {
+            print("ARKitSession error:", error)
+        }
+    }
     func publishHandTrackingUpdates() async {
         for await update in handTracking.anchorUpdates {
             switch update.event {
             case .added, .updated:
                 let anchor = update.anchor
                 print(anchor.chirality, update.event.description)
-                await shadowMixManager?.handEntityManager.updateHand(from: anchor)
-                shadowMixManager?.handEntityManager.updateHandModel(from: anchor)
+                await shadowMixManager?.updateEntity(from: anchor)
                 if update.event == .added {
                     shadowMixManager?.cameraAutoLookHandCenter()
                 }
             case .removed:
                 let anchor = update.anchor
-                shadowMixManager?.handEntityManager.removeHand(from: anchor)
+                shadowMixManager?.removeEntity(from: anchor)
+                
             }
-            try? await shadowMixManager?.renderHandTextureAsync()
+            try? await shadowMixManager?.renderEntityShadowTextureAsync()
+            shadowMixManager?.populateFinalShadowIfNeeded()
         }
     }
     func monitorSessionEvents() async {
@@ -135,9 +162,9 @@ class AppModel {
     func publishSimHandTrackingUpdates() async {
         for await simHand in simHandProvider.simHands {
             if simHand.landmarks.isEmpty { continue }
-            await shadowMixManager?.handEntityManager.updateHand(from: simHand)
+            await shadowMixManager?.updateHand(from: simHand)
             try? await shadowMixManager?.renderSimHandTextureAsync()
-            
+            shadowMixManager?.populateFinalShadowIfNeeded()
         }
     }
 }
