@@ -41,7 +41,7 @@
         "7FA5D1DC-B376-42F5-9A2D-F3306C1CE69E",
         "Root",
         "robot",
-        "mtl"
+        "Materials"
       ],
       {
         "isExpanded" : true,
@@ -51,24 +51,7 @@
         "7FA5D1DC-B376-42F5-9A2D-F3306C1CE69E",
         "Root",
         "robot",
-        "rig_grp"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "7FA5D1DC-B376-42F5-9A2D-F3306C1CE69E",
-        "Root"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "7FA5D1DC-B376-42F5-9A2D-F3306C1CE69E",
-        "Root",
-        "robot"
+        "mtl"
       ],
       {
         "isExpanded" : true,
@@ -90,7 +73,7 @@
         "7FA5D1DC-B376-42F5-9A2D-F3306C1CE69E",
         "Root",
         "robot",
-        "Materials"
+        "geo_grp"
       ],
       {
         "isExpanded" : true,
@@ -111,7 +94,24 @@
         "7FA5D1DC-B376-42F5-9A2D-F3306C1CE69E",
         "Root",
         "robot",
-        "geo_grp"
+        "rig_grp"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "7FA5D1DC-B376-42F5-9A2D-F3306C1CE69E",
+        "Root",
+        "robot"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "7FA5D1DC-B376-42F5-9A2D-F3306C1CE69E",
+        "Root"
       ],
       {
         "isExpanded" : true,
@@ -134,30 +134,7 @@
     "objectMetadataList" : [
       [
         "AF09ED6F-1707-48FD-8720-65B998362C09",
-        "Root",
-        "Sphere_Right"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "AF09ED6F-1707-48FD-8720-65B998362C09",
-        "Root",
-        "Hand4",
-        "root",
-        "Cube"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "AF09ED6F-1707-48FD-8720-65B998362C09",
-        "Root",
-        "Hand3",
-        "______",
-        "Cube"
+        "Root"
       ],
       {
         "isExpanded" : true,
@@ -175,7 +152,10 @@
       },
       [
         "AF09ED6F-1707-48FD-8720-65B998362C09",
-        "Root"
+        "Root",
+        "Hand3",
+        "______",
+        "Cube"
       ],
       {
         "isExpanded" : true,
@@ -213,16 +193,6 @@
       [
         "AF09ED6F-1707-48FD-8720-65B998362C09",
         "Root",
-        "Hand3",
-        "______"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "AF09ED6F-1707-48FD-8720-65B998362C09",
-        "Root",
         "Hand4"
       ],
       {
@@ -235,6 +205,36 @@
         "Hand4",
         "root",
         "skelenton"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "AF09ED6F-1707-48FD-8720-65B998362C09",
+        "Root",
+        "Hand4",
+        "root",
+        "Cube"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "AF09ED6F-1707-48FD-8720-65B998362C09",
+        "Root",
+        "Hand3",
+        "______"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "AF09ED6F-1707-48FD-8720-65B998362C09",
+        "Root",
+        "Sphere_Right"
       ],
       {
         "isExpanded" : true,
@@ -287,8 +287,7 @@
     "objectMetadataList" : [
       [
         "CB766F92-EE55-4A63-9401-E7B8C009764D",
-        "Root",
-        "GridMaterial"
+        "Root"
       ],
       {
         "isExpanded" : true,
@@ -296,7 +295,8 @@
       },
       [
         "CB766F92-EE55-4A63-9401-E7B8C009764D",
-        "Root"
+        "Root",
+        "GridMaterial"
       ],
       {
         "isExpanded" : true,
@@ -321,7 +321,8 @@
         "root",
         "scene",
         "skin0",
-        "skeleton"
+        "HandToMaya_BASE_0_lambert1_0",
+        "HandToMaya_BASE_0_lambert1_0"
       ],
       {
         "isExpanded" : true,
@@ -333,15 +334,6 @@
         "scene",
         "skin0",
         "HandToMaya_BASE_0_lambert1_0"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "D30FB9CA-7689-4AEA-BF58-D6EE12DC024F",
-        "root",
-        "Material"
       ],
       {
         "isExpanded" : true,
@@ -360,8 +352,16 @@
         "root",
         "scene",
         "skin0",
-        "HandToMaya_BASE_0_lambert1_0",
-        "HandToMaya_BASE_0_lambert1_0"
+        "skeleton"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "D30FB9CA-7689-4AEA-BF58-D6EE12DC024F",
+        "root",
+        "Material"
       ],
       {
         "isExpanded" : true,
@@ -389,7 +389,8 @@
         "D66134B1-3681-4A8E-AFE5-29F257229F3B",
         "Root",
         "robot",
-        "mtl"
+        "rig_grp",
+        "root"
       ],
       {
         "isExpanded" : true,
@@ -400,6 +401,34 @@
         "Root",
         "GridMaterial",
         "GridMaterial"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "D66134B1-3681-4A8E-AFE5-29F257229F3B",
+        "Root",
+        "robot",
+        "geo_grp"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "D66134B1-3681-4A8E-AFE5-29F257229F3B",
+        "Root"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "D66134B1-3681-4A8E-AFE5-29F257229F3B",
+        "Root",
+        "robot",
+        "mtl"
       ],
       {
         "isExpanded" : true,
@@ -426,35 +455,6 @@
         "disallowsFraming" : false,
         "isExpanded" : true,
         "isLocked" : false
-      },
-      [
-        "D66134B1-3681-4A8E-AFE5-29F257229F3B",
-        "Root",
-        "robot",
-        "rig_grp",
-        "root"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "D66134B1-3681-4A8E-AFE5-29F257229F3B",
-        "Root",
-        "robot",
-        "geo_grp"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "D66134B1-3681-4A8E-AFE5-29F257229F3B",
-        "Root"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
       }
     ]
   },
@@ -462,7 +462,9 @@
     "objectMetadataList" : [
       [
         "E8BE79FE-70AA-4647-AB50-805835A80F78",
-        "Root"
+        "Root",
+        "HandBone",
+        "_materials"
       ],
       {
         "isExpanded" : true,
@@ -470,9 +472,7 @@
       },
       [
         "E8BE79FE-70AA-4647-AB50-805835A80F78",
-        "Root",
-        "HandBone",
-        "_materials"
+        "Root"
       ],
       {
         "isExpanded" : true,

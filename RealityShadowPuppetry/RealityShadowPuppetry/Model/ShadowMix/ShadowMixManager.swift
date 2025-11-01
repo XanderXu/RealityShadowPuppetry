@@ -51,6 +51,7 @@ final class ShadowMixManager {
     init(asset: AVAsset, trackingType: TrackingType) async throws {
         bodyEntityManager = BodyEntityManager()
         handEntityManager =  HandEntityManager()
+        self.trackingType = trackingType
         
         // Initialize compute pipeline state
         grayMixRedPipelineState = Self.createGrayMixRedComputePipelineState(device: mtlDevice)

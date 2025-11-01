@@ -22,7 +22,7 @@ final class BodyEntityManager {
     }
     
     public func loadBodyModelEntity() async throws {
-        body = try await Entity(named: "BodyScene",in: realityKitContentBundle)
+        body = try await Entity(named: "RobotScene",in: realityKitContentBundle)
         stationaryEntity = body?.findFirstEntity(with: StationaryRobotRuntimeComponent.self)
         if let body {
             rootEntity.addChild(body)

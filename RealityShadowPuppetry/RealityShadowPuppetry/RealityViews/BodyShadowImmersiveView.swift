@@ -34,7 +34,7 @@ struct BodyShadowImmersiveView: View {
                 originalEntity.isEnabled = model.showOriginalVideo
                 
                 try await model.prepareBodyModel()
-                entity.addChild(model.shadowMixManager?.rootEntity ?? Entity())
+//                entity.addChild(model.shadowMixManager?.rootEntity ?? Entity())
                 
             } catch {
                 print(error)
