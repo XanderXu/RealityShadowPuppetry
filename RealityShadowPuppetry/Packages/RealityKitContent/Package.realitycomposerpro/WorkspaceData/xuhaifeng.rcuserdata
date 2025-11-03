@@ -1,5 +1,5 @@
 {
-  "advancedEditorSelectedIdentifier" : "ProjectBrowser",
+  "advancedEditorSelectedIdentifier" : "ShaderGraphEditorPluginID",
   "openSceneRelativePaths" : [
     "RobotScene.usda"
   ],
@@ -16,6 +16,50 @@
   },
   "sceneCameraHistory" : {
     "7FA5D1DC-B376-42F5-9A2D-F3306C1CE69E" : [
+      {
+        "date" : 783829694.412947,
+        "title" : "Untitled",
+        "transform" : [
+          0.99892646,
+          -1.021202e-08,
+          0.04632641,
+          0,
+          0.015929379,
+          0.9390244,
+          -0.3434817,
+          0,
+          -0.04350161,
+          0.34385088,
+          0.9380161,
+          0,
+          -0.024222286,
+          1.002318,
+          2.7644253,
+          1
+        ]
+      },
+      {
+        "date" : 783829522.365589,
+        "title" : "Untitled",
+        "transform" : [
+          0.9949328,
+          -1.0236553e-08,
+          -0.10054292,
+          0,
+          -0.031255726,
+          0.9504526,
+          -0.3092943,
+          0,
+          0.09556128,
+          0.3108696,
+          0.9456364,
+          0,
+          0.3844489,
+          0.9052939,
+          2.7712662,
+          1
+        ]
+      },
       {
         "date" : 783326734.68642,
         "title" : "Untitled",

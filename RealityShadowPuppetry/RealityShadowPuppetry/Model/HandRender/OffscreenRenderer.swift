@@ -11,18 +11,9 @@ final class OffscreenRenderer: Sendable {
     private let renderer: RealityRenderer
     let colorTexture: MTLTexture
     let camera = Entity()
-    var useDefaultLight: Bool = true {
-        didSet {
-            if useDefaultLight {
-                var lc = DirectionalLightComponent()
-                lc.intensity = 5000
-                lc.color = .white
-                camera.components.set(lc)
-            } else {
-                camera.components.remove(DirectionalLightComponent.self)
-            }
-        }
-    }
+    let light = DirectionalLight()
+    
+    var isRendering: Bool = false
     
     init(device: MTLDevice, textureSize: CGSize) throws {
         renderer = try RealityRenderer()
@@ -35,10 +26,12 @@ final class OffscreenRenderer: Sendable {
         camera.components.set(orthComponent)
         camera.position = [0, 0, 20]
         camera.name = "Camera"
-//        camera.components.set(ModelComponent(mesh: .generateBox(size: 0.1), materials: [UnlitMaterial(color: .white)]))
         renderer.activeCamera = camera
         renderer.entities.append(camera)
-        useDefaultLight = true
+        
+        light.light.intensity = 5000
+        light.light.color = .white
+        renderer.entities.append(light)
         
         let textureDesc = MTLTextureDescriptor()
         textureDesc.pixelFormat = .rgba8Unorm
@@ -54,7 +47,7 @@ final class OffscreenRenderer: Sendable {
     func cameraAutoLookBoundingBoxCenter() {
         guard !renderer.entities.isEmpty else { return }
         let boundingBox = renderer.entities.reduce(renderer.entities.first!.visualBounds(relativeTo: nil)) { $0.union($1.visualBounds(relativeTo: nil)) }
-        camera.look(at: boundingBox.center, from: boundingBox.center + SIMD3<Float>(0, 0, 20), relativeTo: nil)
+        camera.look(at: boundingBox.center, from: boundingBox.center + SIMD3<Float>(0, 0, 50), relativeTo: nil)
     }
     func addEntity(_ scene: Entity) {
         renderer.entities.append(scene)
@@ -76,12 +69,15 @@ final class OffscreenRenderer: Sendable {
     }
     func renderAsync() async throws {
         let cameraOutput = try RealityRenderer.CameraOutput(.singleProjection(colorTexture: colorTexture))
+        isRendering = true
         try await withCheckedThrowingContinuation { continuation in
             do {
                 try renderer.updateAndRender(deltaTime: 0, cameraOutput: cameraOutput) { render in
+                    self.isRendering = false
                     continuation.resume()
                 }
             } catch {
+                isRendering = false
                 continuation.resume(throwing: error)
             }
         }

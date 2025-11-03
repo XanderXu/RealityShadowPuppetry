@@ -46,7 +46,7 @@ final class ShadowMixManager {
     
     // MARK: - Private Properties
     private var grayMixRedPipelineState: MTLComputePipelineState?
-    
+    private var isProcessing: Bool = false
     
     init(asset: AVAsset, trackingType: TrackingType) async throws {
         bodyEntityManager = BodyEntityManager()
@@ -193,8 +193,8 @@ final class ShadowMixManager {
     
     // MARK: - Texture Processing
     private func populateMPS(videoTexture: (any MTLTexture)?, offscreenTexture: (any MTLTexture)?, lowLevelTexture: LowLevelTexture?, device: MTLDevice?) {
-        
-        guard let lowLevelTexture = lowLevelTexture, 
+        if isProcessing { return }
+        guard let lowLevelTexture = lowLevelTexture,
               let device = device, 
               let offscreenTexture = offscreenTexture else { return }
         
@@ -204,6 +204,7 @@ final class ShadowMixManager {
             return
         }
         
+        isProcessing = true
         let outTexture = lowLevelTexture.replace(using: commandBuffer)
         
         switch shadowStyle {
@@ -217,9 +218,15 @@ final class ShadowMixManager {
             processGrayMixRed(videoTexture: videoTexture, offscreenTexture: offscreenTexture, outputTexture: outTexture, commandBuffer: commandBuffer, device: device)
         }
         
-        // Commit and wait for completion
+        commandBuffer.addCompletedHandler { cmdBuffer in
+            let start = commandBuffer.gpuStartTime
+            let end = commandBuffer.gpuEndTime
+            let gpuRuntimeDuration = end - start
+            print("GPU Runtime Duration: \(gpuRuntimeDuration)")
+            
+            self.isProcessing = false
+        }
         commandBuffer.commit()
-        commandBuffer.waitUntilCompleted()
     }
     
     // MARK: - Processing Methods
