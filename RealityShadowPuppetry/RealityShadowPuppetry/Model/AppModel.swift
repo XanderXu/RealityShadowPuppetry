@@ -127,6 +127,7 @@ class AppModel {
         }
     }
     func publishHandTrackingUpdates() async {
+        var count = 0
         for await update in handTracking.anchorUpdates {
             switch update.event {
             case .added, .updated:
@@ -140,10 +141,13 @@ class AppModel {
             case .removed:
                 let anchor = update.anchor
                 shadowMixManager?.removeEntity(from: anchor)
-                
             }
-            try? await shadowMixManager?.renderEntityShadowTextureAsync()
-            shadowMixManager?.populateFinalShadowIfNeeded()
+            count += 1
+            if count % 5 == 0 {
+                try? await shadowMixManager?.renderEntityShadowTextureAsync()
+                shadowMixManager?.populateFinalShadowIfNeeded()
+                count = 0
+            }
         }
     }
     func monitorSessionEvents() async {

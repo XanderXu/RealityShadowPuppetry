@@ -31,7 +31,8 @@ final class OffscreenRenderer: Sendable {
         
         light.light.intensity = 5000
         light.light.color = .white
-        renderer.entities.append(light)
+//        renderer.entities.append(light)
+        camera.addChild(light)
         
         let textureDesc = MTLTextureDescriptor()
         textureDesc.pixelFormat = .rgba8Unorm

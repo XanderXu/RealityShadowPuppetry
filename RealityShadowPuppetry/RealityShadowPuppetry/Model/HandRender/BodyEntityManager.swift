@@ -10,8 +10,6 @@ import ARKit
 import RealityKitContent
 
 final class BodyEntityManager {
-    
-    
     let rootEntity = Entity()
     private var body: Entity?
     private var stationaryEntity: Entity?
@@ -19,6 +17,7 @@ final class BodyEntityManager {
     func clean() {
         rootEntity.children.removeAll()
         body = nil
+        stationaryEntity = nil
     }
     
     public func loadBodyModelEntity() async throws {
