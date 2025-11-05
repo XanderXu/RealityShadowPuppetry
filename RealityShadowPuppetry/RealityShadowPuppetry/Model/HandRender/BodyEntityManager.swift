@@ -40,7 +40,7 @@ final class BodyEntityManager {
         }
         
         if let deviceMatrix {
-            let lookAtPos = deviceMatrix.translation - deviceMatrix.zAxis * 0.2
+            let lookAtPos = deviceMatrix.translation - deviceMatrix.zAxis * 0.2 - deviceMatrix.yAxis * 0.2
             stationaryEntity?.components[StationaryRobotRuntimeComponent.self]?.lookAtTarget = lookAtPos
         }
     }

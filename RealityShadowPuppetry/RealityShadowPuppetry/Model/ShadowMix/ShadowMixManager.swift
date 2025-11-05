@@ -107,7 +107,7 @@ final class ShadowMixManager {
             offscreenRenderer?.cameraScale = 0.5
             try await handEntityManager.loadHandModelEntity()
         case .body:
-            offscreenRenderer?.cameraScale = 1
+            offscreenRenderer?.cameraScale = 1.5
             try await bodyEntityManager.loadBodyModelEntity()
         }
     }

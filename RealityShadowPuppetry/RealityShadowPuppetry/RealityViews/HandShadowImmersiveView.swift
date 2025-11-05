@@ -31,7 +31,7 @@ struct HandShadowImmersiveView: View {
                 originalEntity.isEnabled = model.showOriginalVideo
                 
                 try await model.prepareHandModel()
-                entity.addChild(model.shadowMixManager?.rootEntity ?? Entity())
+//                entity.addChild(model.shadowMixManager?.rootEntity ?? Entity())
                 
             } catch {
                 print(error)
