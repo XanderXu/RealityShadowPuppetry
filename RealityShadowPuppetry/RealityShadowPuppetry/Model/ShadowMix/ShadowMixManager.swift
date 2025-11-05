@@ -104,8 +104,10 @@ final class ShadowMixManager {
     public func loadModelEntity() async throws {
         switch trackingType {
         case .hand:
+            offscreenRenderer?.cameraScale = 0.5
             try await handEntityManager.loadHandModelEntity()
         case .body:
+            offscreenRenderer?.cameraScale = 1
             try await bodyEntityManager.loadBodyModelEntity()
         }
     }

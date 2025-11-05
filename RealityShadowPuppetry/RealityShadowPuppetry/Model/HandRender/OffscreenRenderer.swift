@@ -13,6 +13,15 @@ final class OffscreenRenderer: Sendable {
     let camera = Entity()
     let light = DirectionalLight()
     
+    var cameraScale: Float = 0.5 {
+        didSet {
+            var orthComponent = OrthographicCameraComponent()
+            orthComponent.near = 0.1
+            orthComponent.far = 100
+            orthComponent.scale = cameraScale
+            camera.components.set(orthComponent)
+        }
+    }
     var isRendering: Bool = false
     
     init(device: MTLDevice, textureSize: CGSize) throws {

@@ -29,17 +29,19 @@ final class BodyEntityManager {
     }
     
     public func updateBodyModel(from handAnchor: HandAnchor, deviceMatrix: simd_float4x4?) {
-        guard let stationaryEntity else { return }
+        if stationaryEntity == nil {
+            stationaryEntity = body?.findFirstEntity(with: StationaryRobotRuntimeComponent.self)
+        }
         
         if handAnchor.chirality == .left {
-            stationaryEntity.components[StationaryRobotRuntimeComponent.self]?.currentLeftHandPos = handAnchor.originFromAnchorTransform.translation
+            stationaryEntity?.components[StationaryRobotRuntimeComponent.self]?.currentLeftHandPos = handAnchor.originFromAnchorTransform.translation
         } else if handAnchor.chirality == .right {
-            stationaryEntity.components[StationaryRobotRuntimeComponent.self]?.currentRightHandPos = handAnchor.originFromAnchorTransform.translation
+            stationaryEntity?.components[StationaryRobotRuntimeComponent.self]?.currentRightHandPos = handAnchor.originFromAnchorTransform.translation
         }
         
         if let deviceMatrix {
             let lookAtPos = deviceMatrix.translation - deviceMatrix.zAxis * 0.2
-            stationaryEntity.components[StationaryRobotRuntimeComponent.self]?.lookAtTarget = lookAtPos
+            stationaryEntity?.components[StationaryRobotRuntimeComponent.self]?.lookAtTarget = lookAtPos
         }
     }
 
