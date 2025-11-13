@@ -1,16 +1,24 @@
 {
   "advancedEditorSelectedIdentifier" : "ProjectBrowser",
   "openSceneRelativePaths" : [
-    "RobotScene.usda"
+    "RobotScene.usda",
+    "LeftHand10.usdc",
+    "LeftHand12.usdc"
   ],
   "recentIdentifiers" : {
     "AF09ED6F-1707-48FD-8720-65B998362C09" : [
+
+    ],
+    "C5C4AA83-D5BB-4A4A-A903-24DE7D1F578E" : [
 
     ],
     "D30FB9CA-7689-4AEA-BF58-D6EE12DC024F" : [
 
     ],
     "D66134B1-3681-4A8E-AFE5-29F257229F3B" : [
+
+    ],
+    "FE0E2D27-D8A1-4A07-A386-BCCDB870E9C9" : [
 
     ]
   },
@@ -349,6 +357,52 @@
         ]
       }
     ],
+    "C5C4AA83-D5BB-4A4A-A903-24DE7D1F578E" : [
+      {
+        "date" : 784626463.640963,
+        "title" : "Untitled",
+        "transform" : [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0.7071069,
+          -0.70710677,
+          0,
+          0,
+          0.70710677,
+          0.7071069,
+          0,
+          0.04557036,
+          0.2639256,
+          0.2200174,
+          1
+        ]
+      },
+      {
+        "date" : 784624570.799787,
+        "title" : "Untitled",
+        "transform" : [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0.7071069,
+          -0.70710677,
+          0,
+          0,
+          0.70710677,
+          0.7071069,
+          0,
+          0.0352664,
+          0.25200307,
+          0.23193996,
+          1
+        ]
+      }
+    ],
     "D30FB9CA-7689-4AEA-BF58-D6EE12DC024F" : [
       {
         "date" : 780558707.739258,
@@ -535,5 +589,5 @@
   "sceneViewportBackgroundColors" : {
 
   },
-  "selectedSceneRelativePath" : "RobotScene.usda"
+  "selectedSceneRelativePath" : "LeftHand12.usdc"
 }

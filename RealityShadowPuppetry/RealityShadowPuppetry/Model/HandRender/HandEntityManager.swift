@@ -35,10 +35,12 @@ final class HandEntityManager {
     }
     
     public func loadHandModelEntity() async throws {
-        left = try await Entity(named: "HandBone",in: realityKitContentBundle)
+//        left = try await Entity(named: "HandBone",in: realityKitContentBundle)
+        left = try await Entity(named: "LeftHand12",in: realityKitContentBundle)
+        left?.printHierarchyDetails()
         leftModel = left?.findFirstEntity(with: SkeletalPosesComponent.self)
         var poses = leftModel?.components[SkeletalPosesComponent.self]
-//        print(poses?.poses.default?.id, poses?.poses.default?.jointNames, poses?.poses.default?.jointTransforms)
+        print(poses?.poses.default?.id, poses?.poses.default?.jointNames, poses?.poses.default?.jointTransforms)
         
         
         let lastMatrix = poses?.poses.default?.jointTransforms[20].matrix ?? .init(1)
