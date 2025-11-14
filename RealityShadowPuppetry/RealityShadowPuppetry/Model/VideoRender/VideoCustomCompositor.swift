@@ -75,16 +75,16 @@ final class VideoCustomCompositor: NSObject, AVVideoCompositing, @unchecked Send
             let sourceID = requiredTrackIDs[0]
             let sourceBuffer = request.sourceFrame(byTrackID: sourceID.value(of: Int32.self)!)!
             request.finish(withComposedVideoFrame: sourceBuffer)
+            self.lastestPixel = self.convertToMetalTexture(sourceBuffer)
             Task {
-                self.lastestPixel = await self.convertToMetalTexture(sourceBuffer)
                 self.videoPixelUpdate?()
             }
         }
         
 //        request.finish(withComposedVideoFrame: outputPixelBuffer)
     }
-    @concurrent
-    func convertToMetalTexture(_ pixelBuffer: CVPixelBuffer) async -> MTLTexture? {
+//    @concurrent
+    func convertToMetalTexture(_ pixelBuffer: CVPixelBuffer) -> MTLTexture? {
         guard let device = MTLCreateSystemDefaultDevice() else {
             print("Failed to create Metal device")
             return nil

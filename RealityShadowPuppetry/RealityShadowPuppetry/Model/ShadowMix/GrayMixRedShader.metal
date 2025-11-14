@@ -37,8 +37,8 @@ kernel void grayMixRedKernel(texture2d<float, access::read> videoTexture [[textu
         outputColor = float4(combinedGray, 0.0, 0.0, 1.0);
     } else {
         // At least one grayscale value is 0: display the larger value as grayscale image
-        float maxGray = max(videoGray, offscreenGray);
-        outputColor = float4(maxGray, maxGray, maxGray, videoColor.a);
+//        float maxGray = max(videoGray, offscreenGray);
+        outputColor = float4(1, 1, 1, videoColor.a + offscreenColor.a);
     }
     
     outputTexture.write(outputColor, gid);

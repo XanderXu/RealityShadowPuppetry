@@ -263,7 +263,8 @@ final class ShadowMixManager {
             }
             
             // Use very low threshold and linear grayscale conversion
-            let threshold = MPSImageThresholdToZero(device: device, thresholdValue: 0, linearGrayColorTransform: nil)
+//            let threshold = MPSImageThresholdToZero(device: device, thresholdValue: 0, linearGrayColorTransform: nil)
+            let threshold = MPSImageThresholdBinary(device: device, thresholdValue: 0, maximumValue: 0.8, linearGrayColorTransform: nil)
             threshold.encode(commandBuffer: commandBuffer, sourceTexture: videoTexture, destinationTexture: tempVideoTexture)
             // Add two binary images
             let add = MPSImageAdd(device: device)

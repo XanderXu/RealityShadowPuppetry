@@ -12,7 +12,7 @@ import AVFoundation
 
 struct BodyShadowImmersiveView: View {
     @Environment(AppModel.self) private var model
-    let asset = AVURLAsset(url: Bundle.main.url(forResource: "HDRMovie", withExtension: "mov")!)
+    let asset = AVURLAsset(url: Bundle.main.url(forResource: "Body", withExtension: "mov")!)
     var body: some View {
         RealityView { content in
             StationaryRobotComponent.registerComponent()
