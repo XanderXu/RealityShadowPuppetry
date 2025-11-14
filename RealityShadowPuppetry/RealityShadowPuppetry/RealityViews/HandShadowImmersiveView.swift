@@ -11,7 +11,7 @@ import AVFoundation
 
 struct HandShadowImmersiveView: View {
     @Environment(AppModel.self) private var model
-    let asset = AVURLAsset(url: Bundle.main.url(forResource: "HDRMovie", withExtension: "mov")!)
+    let asset = AVURLAsset(url: Bundle.main.url(forResource: "Hand", withExtension: "mov")!)
     
     var body: some View {
         RealityView { content in
