@@ -9,11 +9,14 @@ import MetalKit
 
 final class OffscreenRenderer: Sendable {
     private let renderer: RealityRenderer
+    private var cameraAutoLookSuccess: Bool = false
+    
     let colorTexture: MTLTexture
     let camera = Entity()
     let light = DirectionalLight()
     
-    var cameraScale: Float = 0.5 {
+    // small value mean small viewport, but object will be larger in viewport
+    var cameraScale: Float = 0.2 {
         didSet {
             var orthComponent = OrthographicCameraComponent()
             orthComponent.near = 0.1
@@ -23,6 +26,7 @@ final class OffscreenRenderer: Sendable {
         }
     }
     var isRendering: Bool = false
+    var cameraAutoLookBoundingBoxCenterAtStart: Bool = true
     
     init(device: MTLDevice, textureSize: CGSize) throws {
         renderer = try RealityRenderer()
@@ -54,23 +58,33 @@ final class OffscreenRenderer: Sendable {
     func cameraLook(at position: SIMD3<Float>, from: SIMD3<Float>, relativeTo: Entity? = nil) {
         camera.look(at: position, from: from, relativeTo: relativeTo)
     }
-    func cameraAutoLookBoundingBoxCenter() {
-        guard !renderer.entities.isEmpty else { return }
+    @discardableResult
+    func cameraLookAtBoundingBoxCenter() -> Bool {
+        guard !renderer.entities.isEmpty else { return false}
         let boundingBox = renderer.entities.reduce(renderer.entities.first!.visualBounds(relativeTo: nil)) { $0.union($1.visualBounds(relativeTo: nil)) }
+        print(boundingBox)
+        if boundingBox.isEmpty { return false}
         camera.look(at: boundingBox.center, from: boundingBox.center + SIMD3<Float>(0, 0, 50), relativeTo: nil)
+        return true
     }
     func addEntity(_ scene: Entity) {
+        cameraAutoLookSuccess = false
         renderer.entities.append(scene)
     }
     func removeEntity(_ scene: Entity) {
+        cameraAutoLookSuccess = false
         renderer.entities.removeAll(where: { $0 == scene && $0 != renderer.activeCamera})
     }
     func removeAllEntities() {
+        cameraAutoLookSuccess = false
         renderer.entities.removeAll(where: { $0 != renderer.activeCamera})
     }
     
     
     func renderAsync() async throws {
+        if cameraAutoLookSuccess == false {
+            cameraAutoLookSuccess = cameraLookAtBoundingBoxCenter()
+        }
         let cameraOutput = try RealityRenderer.CameraOutput(.singleProjection(colorTexture: colorTexture))
         isRendering = true
         try await withCheckedThrowingContinuation { continuation in

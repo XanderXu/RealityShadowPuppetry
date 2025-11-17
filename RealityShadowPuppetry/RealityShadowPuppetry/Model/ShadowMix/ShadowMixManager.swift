@@ -133,8 +133,8 @@ final class ShadowMixManager {
         await handEntityManager.updateHand(from: simHand)
     }
     
-    public func cameraAutoLookHandCenter() {
-        offscreenRenderer?.cameraAutoLookBoundingBoxCenter()
+    public func cameraLookAtHandCenter() {
+        offscreenRenderer?.cameraLookAtBoundingBoxCenter()
     }
 
     public func renderEntityShadowTextureAsync() async throws {

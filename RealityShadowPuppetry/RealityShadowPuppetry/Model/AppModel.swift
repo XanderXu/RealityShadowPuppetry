@@ -63,14 +63,14 @@ class AppModel {
     nonisolated
     func prepareHandModel() async throws {
         try await shadowMixManager?.loadHandModelEntity()
-        await shadowMixManager?.cameraAutoLookHandCenter()
+        await shadowMixManager?.cameraLookAtHandCenter()
         try await shadowMixManager?.renderEntityShadowTextureAsync()
 //        await shadowMixManager?.populateFinalShadowIfNeeded()
     }
     nonisolated
     func prepareBodyModel() async throws {
         try await shadowMixManager?.loadBodyModelEntity()
-        await shadowMixManager?.cameraAutoLookHandCenter()
+        await shadowMixManager?.cameraLookAtHandCenter()
         try await shadowMixManager?.renderEntityShadowTextureAsync()
 //        await shadowMixManager?.populateFinalShadowIfNeeded()
     }
@@ -129,27 +129,27 @@ class AppModel {
     func publishHandTrackingUpdates() async {
         var count = 0
         for await update in handTracking.anchorUpdates {
-            count += 1
+            
             switch update.event {
             case .added, .updated:
-                if count % 5 == 0 {
-                    let anchor = update.anchor
-                    var deviceTransform: simd_float4x4?
-                    if worldTracking.state == .running {
-                        let device = worldTracking.queryDeviceAnchor(atTimestamp: anchor.timestamp)
-                        deviceTransform = device?.originFromAnchorTransform
-                    }
-                    await shadowMixManager?.updateEntity(from: anchor, deviceMatrix: deviceTransform)
+                let anchor = update.anchor
+                var deviceTransform: simd_float4x4?
+                if worldTracking.state == .running {
+                    let device = worldTracking.queryDeviceAnchor(atTimestamp: anchor.timestamp)
+                    deviceTransform = device?.originFromAnchorTransform
                 }
+                print("handUpdate", update.event, anchor.chirality)
+                await shadowMixManager?.updateEntity(from: anchor, deviceMatrix: deviceTransform)
                 if update.event == .added {
-                    shadowMixManager?.cameraAutoLookHandCenter()
+                    shadowMixManager?.cameraLookAtHandCenter()
                 }
             case .removed:
                 let anchor = update.anchor
                 shadowMixManager?.removeEntity(from: anchor)
             }
-            
+            count += 1
             if count % 5 == 0 {
+                
                 try? await shadowMixManager?.renderEntityShadowTextureAsync()
                 shadowMixManager?.populateFinalShadowIfNeeded()
                 count = 0
