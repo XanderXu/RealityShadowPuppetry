@@ -129,16 +129,18 @@ class AppModel {
     func publishHandTrackingUpdates() async {
         var count = 0
         for await update in handTracking.anchorUpdates {
+            count += 1
             switch update.event {
             case .added, .updated:
-                let anchor = update.anchor
-                print(anchor.chirality, update.event.description)
-                var deviceTransform: simd_float4x4?
-                if worldTracking.state == .running {
-                    let device = worldTracking.queryDeviceAnchor(atTimestamp: anchor.timestamp)
-                    deviceTransform = device?.originFromAnchorTransform
+                if count % 10 == 0 {
+                    let anchor = update.anchor
+                    var deviceTransform: simd_float4x4?
+                    if worldTracking.state == .running {
+                        let device = worldTracking.queryDeviceAnchor(atTimestamp: anchor.timestamp)
+                        deviceTransform = device?.originFromAnchorTransform
+                    }
+                    await shadowMixManager?.updateEntity(from: anchor, deviceMatrix: deviceTransform)
                 }
-                await shadowMixManager?.updateEntity(from: anchor, deviceMatrix: deviceTransform)
                 if update.event == .added {
                     shadowMixManager?.cameraAutoLookHandCenter()
                 }
@@ -146,8 +148,8 @@ class AppModel {
                 let anchor = update.anchor
                 shadowMixManager?.removeEntity(from: anchor)
             }
-            count += 1
-            if count % 5 == 0 {
+            
+            if count % 10 == 0 {
                 try? await shadowMixManager?.renderEntityShadowTextureAsync()
                 shadowMixManager?.populateFinalShadowIfNeeded()
                 count = 0
