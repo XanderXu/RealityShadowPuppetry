@@ -52,8 +52,86 @@
       [
         "AF09ED6F-1707-48FD-8720-65B998362C09",
         "Root",
+        "Hand4",
+        "root",
+        "skelenton"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "AF09ED6F-1707-48FD-8720-65B998362C09",
+        "Root",
+        "Sphere_Left"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "AF09ED6F-1707-48FD-8720-65B998362C09",
+        "Root",
         "Hand3",
         "______",
+        "Cube"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "AF09ED6F-1707-48FD-8720-65B998362C09",
+        "Root",
+        "Hand3",
+        "_materials"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "AF09ED6F-1707-48FD-8720-65B998362C09",
+        "Root",
+        "Hand3",
+        "______"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "AF09ED6F-1707-48FD-8720-65B998362C09",
+        "Root",
+        "Sphere_Right"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "AF09ED6F-1707-48FD-8720-65B998362C09",
+        "Root"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "AF09ED6F-1707-48FD-8720-65B998362C09",
+        "Root",
+        "Hand4",
+        "root"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "AF09ED6F-1707-48FD-8720-65B998362C09",
+        "Root",
+        "Hand4",
+        "root",
         "Cube"
       ],
       {
@@ -73,85 +151,7 @@
         "AF09ED6F-1707-48FD-8720-65B998362C09",
         "Root",
         "Hand4",
-        "root",
-        "Cube"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "AF09ED6F-1707-48FD-8720-65B998362C09",
-        "Root",
-        "Hand4",
         "_materials"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "AF09ED6F-1707-48FD-8720-65B998362C09",
-        "Root"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "AF09ED6F-1707-48FD-8720-65B998362C09",
-        "Root",
-        "Hand4",
-        "root",
-        "skelenton"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "AF09ED6F-1707-48FD-8720-65B998362C09",
-        "Root",
-        "Hand3",
-        "______"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "AF09ED6F-1707-48FD-8720-65B998362C09",
-        "Root",
-        "Sphere_Left"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "AF09ED6F-1707-48FD-8720-65B998362C09",
-        "Root",
-        "Sphere_Right"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "AF09ED6F-1707-48FD-8720-65B998362C09",
-        "Root",
-        "Hand3",
-        "_materials"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "AF09ED6F-1707-48FD-8720-65B998362C09",
-        "Root",
-        "Hand4",
-        "root"
       ],
       {
         "isExpanded" : true,
@@ -205,16 +205,6 @@
       [
         "C5C4AA83-D5BB-4A4A-A903-24DE7D1F578E",
         "root",
-        "Hand",
-        "Hand_001"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "C5C4AA83-D5BB-4A4A-A903-24DE7D1F578E",
-        "root",
         "_materials"
       ],
       {
@@ -225,6 +215,16 @@
         "C5C4AA83-D5BB-4A4A-A903-24DE7D1F578E",
         "root",
         "Hand"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "C5C4AA83-D5BB-4A4A-A903-24DE7D1F578E",
+        "root",
+        "Hand",
+        "Hand_001"
       ],
       {
         "isExpanded" : true,
@@ -265,7 +265,10 @@
     "objectMetadataList" : [
       [
         "D30FB9CA-7689-4AEA-BF58-D6EE12DC024F",
-        "root"
+        "root",
+        "scene",
+        "skin0",
+        "skeleton"
       ],
       {
         "isExpanded" : true,
@@ -274,10 +277,7 @@
       [
         "D30FB9CA-7689-4AEA-BF58-D6EE12DC024F",
         "root",
-        "scene",
-        "skin0",
-        "HandToMaya_BASE_0_lambert1_0",
-        "HandToMaya_BASE_0_lambert1_0"
+        "scene"
       ],
       {
         "isExpanded" : true,
@@ -294,21 +294,7 @@
       },
       [
         "D30FB9CA-7689-4AEA-BF58-D6EE12DC024F",
-        "root",
-        "scene",
-        "skin0",
-        "skeleton"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "D30FB9CA-7689-4AEA-BF58-D6EE12DC024F",
-        "root",
-        "scene",
-        "skin0",
-        "HandToMaya_BASE_0_lambert1_0"
+        "root"
       ],
       {
         "isExpanded" : true,
@@ -327,7 +313,21 @@
       [
         "D30FB9CA-7689-4AEA-BF58-D6EE12DC024F",
         "root",
-        "scene"
+        "scene",
+        "skin0",
+        "HandToMaya_BASE_0_lambert1_0"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "D30FB9CA-7689-4AEA-BF58-D6EE12DC024F",
+        "root",
+        "scene",
+        "skin0",
+        "HandToMaya_BASE_0_lambert1_0",
+        "HandToMaya_BASE_0_lambert1_0"
       ],
       {
         "isExpanded" : true,
@@ -355,26 +355,6 @@
       },
       [
         "D66134B1-3681-4A8E-AFE5-29F257229F3B",
-        "Root",
-        "robot",
-        "mtl"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "D66134B1-3681-4A8E-AFE5-29F257229F3B",
-        "Root",
-        "robot",
-        "rig_grp"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "D66134B1-3681-4A8E-AFE5-29F257229F3B",
         "Root"
       ],
       {
@@ -386,6 +366,26 @@
         "Root",
         "GridMaterial",
         "GridMaterial"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "D66134B1-3681-4A8E-AFE5-29F257229F3B",
+        "Root",
+        "robot",
+        "geo_grp"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "D66134B1-3681-4A8E-AFE5-29F257229F3B",
+        "Root",
+        "robot",
+        "mtl"
       ],
       {
         "isExpanded" : true,
@@ -407,7 +407,7 @@
         "D66134B1-3681-4A8E-AFE5-29F257229F3B",
         "Root",
         "robot",
-        "geo_grp"
+        "rig_grp"
       ],
       {
         "isExpanded" : true,
@@ -420,8 +420,7 @@
       [
         "E8BE79FE-70AA-4647-AB50-805835A80F78",
         "Root",
-        "HandBone",
-        "_materials"
+        "HandBone"
       ],
       {
         "isExpanded" : true,
@@ -438,7 +437,8 @@
       [
         "E8BE79FE-70AA-4647-AB50-805835A80F78",
         "Root",
-        "HandBone"
+        "HandBone",
+        "_materials"
       ],
       {
         "isExpanded" : true,
@@ -452,16 +452,6 @@
         "FE0E2D27-D8A1-4A07-A386-BCCDB870E9C9",
         "root",
         "Hand",
-        "Armature"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "FE0E2D27-D8A1-4A07-A386-BCCDB870E9C9",
-        "root",
-        "Hand",
         "Armature",
         "Cube"
       ],
@@ -471,7 +461,9 @@
       },
       [
         "FE0E2D27-D8A1-4A07-A386-BCCDB870E9C9",
-        "root"
+        "root",
+        "Hand",
+        "Armature"
       ],
       {
         "isExpanded" : true,
@@ -481,6 +473,14 @@
         "FE0E2D27-D8A1-4A07-A386-BCCDB870E9C9",
         "root",
         "Hand"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "FE0E2D27-D8A1-4A07-A386-BCCDB870E9C9",
+        "root"
       ],
       {
         "isExpanded" : true,

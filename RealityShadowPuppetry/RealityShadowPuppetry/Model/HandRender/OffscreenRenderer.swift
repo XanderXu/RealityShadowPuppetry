@@ -69,14 +69,7 @@ final class OffscreenRenderer: Sendable {
         renderer.entities.removeAll(where: { $0 != renderer.activeCamera})
     }
     
-    func render(onComplete: (@Sendable (RealityRenderer) -> Void)? = nil) throws {
-        let cameraOutput = try RealityRenderer.CameraOutput(.singleProjection(colorTexture: colorTexture))
-//        let c = colorTexture
-//        try renderer.updateAndRender(deltaTime: 0, cameraOutput: cameraOutput)
-        try renderer.updateAndRender(deltaTime: 0, cameraOutput: cameraOutput) { render in
-            onComplete?(render)
-        }
-    }
+    
     func renderAsync() async throws {
         let cameraOutput = try RealityRenderer.CameraOutput(.singleProjection(colorTexture: colorTexture))
         isRendering = true

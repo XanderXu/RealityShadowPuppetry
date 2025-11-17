@@ -101,15 +101,13 @@ final class ShadowMixManager {
         originalVideoEntity.removeFromParent()
         mixedTextureEntity.removeFromParent()
     }
-    public func loadModelEntity() async throws {
-        switch trackingType {
-        case .hand:
-            offscreenRenderer?.cameraScale = 0.5
-            try await handEntityManager.loadHandModelEntity()
-        case .body:
-            offscreenRenderer?.cameraScale = 1.5
-            try await bodyEntityManager.loadBodyModelEntity()
-        }
+    public func loadHandModelEntity() async throws {
+        offscreenRenderer?.cameraScale = 0.5
+        try await handEntityManager.loadHandModelEntity()
+    }
+    public func loadBodyModelEntity() async throws {
+        offscreenRenderer?.cameraScale = 1.5
+        try await bodyEntityManager.loadBodyModelEntity()
     }
     
     

@@ -19,7 +19,7 @@ def Xform "Root"
     )
     {
         quatf xformOp:orient = (-4.371139e-8, 0, 1, 0)
-        float3 xformOp:scale = (0.015, 0.015, 0.015)
+        float3 xformOp:scale = (0.018, 0.018, 0.018)
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
 
         def RealityKitCustomComponent "RealityKitContent_StationaryRobotComponent"

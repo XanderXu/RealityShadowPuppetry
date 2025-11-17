@@ -62,17 +62,17 @@ class AppModel {
     }
     nonisolated
     func prepareHandModel() async throws {
-        try await shadowMixManager?.loadModelEntity()
+        try await shadowMixManager?.loadHandModelEntity()
         await shadowMixManager?.cameraAutoLookHandCenter()
         try await shadowMixManager?.renderEntityShadowTextureAsync()
-        await shadowMixManager?.populateFinalShadowIfNeeded()
+//        await shadowMixManager?.populateFinalShadowIfNeeded()
     }
     nonisolated
     func prepareBodyModel() async throws {
-        try await shadowMixManager?.loadModelEntity()
+        try await shadowMixManager?.loadBodyModelEntity()
         await shadowMixManager?.cameraAutoLookHandCenter()
         try await shadowMixManager?.renderEntityShadowTextureAsync()
-        await shadowMixManager?.populateFinalShadowIfNeeded()
+//        await shadowMixManager?.populateFinalShadowIfNeeded()
     }
     
     func clear() {
