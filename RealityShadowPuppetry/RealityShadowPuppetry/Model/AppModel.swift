@@ -132,7 +132,7 @@ class AppModel {
             count += 1
             switch update.event {
             case .added, .updated:
-                if count % 10 == 0 {
+                if count % 5 == 0 {
                     let anchor = update.anchor
                     var deviceTransform: simd_float4x4?
                     if worldTracking.state == .running {
@@ -149,7 +149,7 @@ class AppModel {
                 shadowMixManager?.removeEntity(from: anchor)
             }
             
-            if count % 10 == 0 {
+            if count % 5 == 0 {
                 try? await shadowMixManager?.renderEntityShadowTextureAsync()
                 shadowMixManager?.populateFinalShadowIfNeeded()
                 count = 0
