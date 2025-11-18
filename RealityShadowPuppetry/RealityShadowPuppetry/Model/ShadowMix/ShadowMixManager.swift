@@ -102,7 +102,7 @@ final class ShadowMixManager {
         mixedTextureEntity.removeFromParent()
     }
     public func loadHandModelEntity() async throws {
-        offscreenRenderer?.cameraScale = 0.5//0.15
+        offscreenRenderer?.cameraScale = 0.15
         try await handEntityManager.loadHandModelEntity()
     }
     public func loadBodyModelEntity() async throws {

@@ -10,7 +10,6 @@ import ARKit
 import RealityKitContent
 
 final class HandEntityManager {
-    private let wm = UnlitMaterial(color: .white)
     private lazy var colorsM: [UnlitMaterial] = {
         let rm = UnlitMaterial(color: .red)
         let gm = UnlitMaterial(color: .green)
@@ -30,17 +29,24 @@ final class HandEntityManager {
     
     func clean() {
         rootEntity.children.removeAll()
+        leftModel = nil
         left = nil
+        rightModel = nil
         right = nil
     }
     
     public func loadHandModelEntity() async throws {
-//        left = try await Entity(named: "HandBone",in: realityKitContentBundle)
         left = try await Entity(named: "LeftHand13",in: realityKitContentBundle)
-//        left?.printHierarchy()
         leftModel = left?.findFirstEntity(with: SkeletalPosesComponent.self)
         right = try await Entity(named: "RightHand2",in: realityKitContentBundle)
         rightModel = right?.findFirstEntity(with: SkeletalPosesComponent.self)
+        
+        if let left {
+            rootEntity.addChild(left)
+        }
+        if let right {
+            rootEntity.addChild(right)
+        }
 //        if let  poses = leftModel?.components[SkeletalPosesComponent.self] {
 //            print(poses.poses.default?.id ?? "", poses.poses.default?.jointNames ?? "")
 //        }
@@ -53,12 +59,7 @@ final class HandEntityManager {
          "Wrist/RingFingerMetacarpal", "Wrist/RingFingerMetacarpal/RingFingerKnuckle", "Wrist/RingFingerMetacarpal/RingFingerKnuckle/RingFingerIntermediateBase", "Wrist/RingFingerMetacarpal/RingFingerKnuckle/RingFingerIntermediateBase/RingFingerIntermediateTip", "Wrist/RingFingerMetacarpal/RingFingerKnuckle/RingFingerIntermediateBase/RingFingerIntermediateTip/RingFingerTip",
          "Wrist/LittleFingerMetacarpal", "Wrist/LittleFingerMetacarpal/LittleFingerKnuckle", "Wrist/LittleFingerMetacarpal/LittleFingerKnuckle/LittleFingerIntermediateBase", "Wrist/LittleFingerMetacarpal/LittleFingerKnuckle/LittleFingerIntermediateBase/LittleFingerIntermediateTip", "Wrist/LittleFingerMetacarpal/LittleFingerKnuckle/LittleFingerIntermediateBase/LittleFingerIntermediateTip/LittleFingerTip"])
          */
-        if let left {
-            rootEntity.addChild(left)
-        }
-        if let right {
-            rootEntity.addChild(right)
-        }
+        
     }
     
     public func updateHandModel(from handAnchor: HandAnchor) {
@@ -109,9 +110,6 @@ final class HandEntityManager {
                     ("Wrist/LittleFingerMetacarpal/LittleFingerKnuckle/LittleFingerIntermediateBase/LittleFingerIntermediateTip/LittleFingerTip", Transform(matrix:  handSkeleton.joint(.littleFingerTip).parentFromJointTransform)),
             ])
             targetModel?.components[SkeletalPosesComponent.self]?.poses.default = skeletalPose
-//            print("prevSkeletalPose: \(prevSkeletalPose)")
-//            let newSkeletalPose =  targetModel?.components[SkeletalPosesComponent.self]?.poses
-//            print("newSkeletalPose: \(newSkeletalPose?.default?.id)")
         }
     }
 
@@ -121,9 +119,11 @@ final class HandEntityManager {
         if handAnchor.chirality == .left {
             left?.removeFromParent()
             left = nil
+            leftModel = nil
         } else if handAnchor.chirality == .right { // Update right hand info.
             right?.removeFromParent()
             right = nil
+            rightModel = nil
         }
     }
     
