@@ -36,9 +36,11 @@ final class HandEntityManager {
     
     public func loadHandModelEntity() async throws {
 //        left = try await Entity(named: "HandBone",in: realityKitContentBundle)
-        left = try await Entity(named: "LeftHand12",in: realityKitContentBundle)
-//        left?.printHierarchyDetails()
+        left = try await Entity(named: "LeftHand13",in: realityKitContentBundle)
+//        left?.printHierarchy()
         leftModel = left?.findFirstEntity(with: SkeletalPosesComponent.self)
+        right = try await Entity(named: "RightHand2",in: realityKitContentBundle)
+        rightModel = right?.findFirstEntity(with: SkeletalPosesComponent.self)
 //        if let  poses = leftModel?.components[SkeletalPosesComponent.self] {
 //            print(poses.poses.default?.id ?? "", poses.poses.default?.jointNames ?? "")
 //        }
@@ -54,6 +56,9 @@ final class HandEntityManager {
         if let left {
             rootEntity.addChild(left)
         }
+        if let right {
+            rootEntity.addChild(right)
+        }
     }
     
     public func updateHandModel(from handAnchor: HandAnchor) {
@@ -63,7 +68,6 @@ final class HandEntityManager {
             targetEntity = left
             targetModel = leftModel
         } else if handAnchor.chirality == .right {
-            return//For Test
             targetEntity = right
             targetModel = rightModel
         }
@@ -105,10 +109,9 @@ final class HandEntityManager {
                     ("Wrist/LittleFingerMetacarpal/LittleFingerKnuckle/LittleFingerIntermediateBase/LittleFingerIntermediateTip/LittleFingerTip", Transform(matrix:  handSkeleton.joint(.littleFingerTip).parentFromJointTransform)),
             ])
             targetModel?.components[SkeletalPosesComponent.self]?.poses.default = skeletalPose
-//            targetModel?.components[SkeletalPosesComponent.self]?.poses.default?.id = "/root/Armature/Armature"
 //            print("prevSkeletalPose: \(prevSkeletalPose)")
 //            let newSkeletalPose =  targetModel?.components[SkeletalPosesComponent.self]?.poses
-//            print("newSkeletalPose: \(newSkeletalPose?.default?.id), \(newSkeletalPose?.default?.jointNames)")
+//            print("newSkeletalPose: \(newSkeletalPose?.default?.id)")
         }
     }
 

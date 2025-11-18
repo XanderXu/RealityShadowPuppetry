@@ -2,7 +2,8 @@
   "advancedEditorSelectedIdentifier" : "ProjectBrowser",
   "openSceneRelativePaths" : [
     "RobotScene.usda",
-    "LeftHand12.usdc"
+    "LeftHand13.usdc",
+    "RightHand2.usdc"
   ],
   "recentIdentifiers" : {
     "AF09ED6F-1707-48FD-8720-65B998362C09" : [
@@ -656,5 +657,5 @@
   "sceneViewportBackgroundColors" : {
 
   },
-  "selectedSceneRelativePath" : "RobotScene.usda"
+  "selectedSceneRelativePath" : "RightHand2.usdc"
 }
