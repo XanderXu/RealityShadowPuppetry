@@ -80,10 +80,10 @@ public struct StationaryRobotRuntimeComponent: Component {
                             orientationWeight: SIMD3(repeating: 12.0)),
                     .point(named: leftHandConstraintName,
                            on: leftHandJointName,
-                           positionWeight: SIMD3(repeating: 1.0)),
+                           positionWeight: SIMD3(repeating: 10.0)),
                     .point(named: rightHandConstraintName,
                            on: rightHandJointName,
-                           positionWeight: SIMD3(repeating: 1.0))
+                           positionWeight: SIMD3(repeating: 10.0))
                 ]
 
                 // Make a resource containing the rig.

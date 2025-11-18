@@ -11,8 +11,6 @@ final class OffscreenRenderer: Sendable {
     private let renderer: RealityRenderer
     private let cameraAutoLookSuccessTimesLimit: Int = 5
     private var cameraAutoLookSuccessTimes: Int = 0
-    private var cameraAutoLookFinashed: Bool = false
-    
     
     let colorTexture: MTLTexture
     let camera = Entity()
