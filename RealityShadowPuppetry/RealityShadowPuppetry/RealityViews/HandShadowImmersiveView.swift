@@ -39,7 +39,6 @@ struct HandShadowImmersiveView: View {
             }
             
         }
-        .upperLimbVisibility(.hidden)
 
         .task {
             await model.startHandTracking()

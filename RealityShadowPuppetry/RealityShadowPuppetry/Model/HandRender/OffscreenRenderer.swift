@@ -9,7 +9,10 @@ import MetalKit
 
 final class OffscreenRenderer: Sendable {
     private let renderer: RealityRenderer
-    private var cameraAutoLookSuccess: Bool = false
+    private let cameraAutoLookSuccessTimesLimit: Int = 5
+    private var cameraAutoLookSuccessTimes: Int = 0
+    private var cameraAutoLookFinashed: Bool = false
+    
     
     let colorTexture: MTLTexture
     let camera = Entity()
@@ -26,7 +29,6 @@ final class OffscreenRenderer: Sendable {
         }
     }
     var isRendering: Bool = false
-    var cameraAutoLookBoundingBoxCenterAtStart: Bool = true
     
     init(device: MTLDevice, textureSize: CGSize) throws {
         renderer = try RealityRenderer()
@@ -68,22 +70,22 @@ final class OffscreenRenderer: Sendable {
         return true
     }
     func addEntity(_ scene: Entity) {
-        cameraAutoLookSuccess = false
         renderer.entities.append(scene)
     }
     func removeEntity(_ scene: Entity) {
-        cameraAutoLookSuccess = false
         renderer.entities.removeAll(where: { $0 == scene && $0 != renderer.activeCamera})
     }
     func removeAllEntities() {
-        cameraAutoLookSuccess = false
         renderer.entities.removeAll(where: { $0 != renderer.activeCamera})
     }
     
     
     func renderAsync() async throws {
-        if cameraAutoLookSuccess == false {
-            cameraAutoLookSuccess = cameraLookAtBoundingBoxCenter()
+        if cameraAutoLookSuccessTimes < cameraAutoLookSuccessTimesLimit {
+            let success = cameraLookAtBoundingBoxCenter()
+            if success {
+                cameraAutoLookSuccessTimes += 1
+            }
         }
         let cameraOutput = try RealityRenderer.CameraOutput(.singleProjection(colorTexture: colorTexture))
         isRendering = true
