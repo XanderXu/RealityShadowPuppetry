@@ -7,7 +7,6 @@
 
 import Foundation
 import AVFoundation
-import MetalPerformanceShaders
 import RealityKit
 
 enum CustomCompositorError: Int, Error, LocalizedError {
