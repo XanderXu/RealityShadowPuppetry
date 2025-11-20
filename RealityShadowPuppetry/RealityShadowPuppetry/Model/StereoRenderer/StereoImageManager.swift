@@ -8,6 +8,7 @@
 import RealityKit
 import MetalKit
 import RealityKitContent
+import Combine
 
 final class StereoImageManager {
     
@@ -29,15 +30,15 @@ final class StereoImageManager {
     private let offscreenRenderer: StereoOffscreenRenderer?
     private let lltLeft: LowLevelTexture
     private let lltRight: LowLevelTexture
+    private let sceneRoot = Entity()
     
-    
-    // MARK: - Private Properties
+    private var cancel: Cancellable?
     private var isProcessing: Bool = false
     
     init() async throws {
-        let naturalSize = CGSize(width: 500, height: 500)
+        let naturalSize = CGSize(width: 800, height: 800)
         offscreenRenderer = try StereoOffscreenRenderer(device: mtlDevice,textureSize: naturalSize)
-        
+        offscreenRenderer?.addEntity(sceneRoot)
         
         //An entity of a plane which uses the LowLevelTexture from mixedTexture.
         let textureDescriptor = Self.createTextureDescriptor(width: Int(naturalSize.width), height: Int(naturalSize.height))
@@ -62,19 +63,30 @@ final class StereoImageManager {
     
     public func clean() {
         mixedTextureEntity.removeFromParent()
+        sceneRoot.removeFromParent()
+        cancel?.cancel()
+        cancel = nil
     }
     public func loadModelEntity() async throws {
         let scene = try await Entity(named: "Scene/ArtistWorkflowExample", in: realityKitContentBundle)
-        offscreenRenderer?.addEntity(scene)
+        sceneRoot.addChild(scene)
         offscreenRenderer?.cameraLook(at: .one, from: [1, 1, 2])
     }
     
     public func play() {
+        cancel = Timer.publish(every: 0.033, on: .main, in: .default).autoconnect().sink {_ in 
+            self.sceneRoot.orientation *= simd_quatf(angle: -0.001, axis: SIMD3<Float>(0, 1, 0))
+            Task {
+                try? await self.renderTextureAsync()
+            }
+        }
         
     }
     
     public func pause() {
-        
+        sceneRoot.stopAllAnimations()
+        cancel?.cancel()
+        cancel = nil
     }
 
     public func renderTextureAsync() async throws {

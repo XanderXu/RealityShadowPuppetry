@@ -19,7 +19,11 @@ final class StereoOffscreenRenderer: Sendable {
     let light = DirectionalLight()
     
     
-    private(set) var isRendering: Bool = false
+    var isRendering: Bool {
+        return isRenderingLeft || isRenderingRight
+    }
+    private var isRenderingLeft: Bool = false
+    private var isRenderingRight: Bool = false
     private let cameraOutputLeft: RealityRenderer.CameraOutput
     private let cameraOutputRight: RealityRenderer.CameraOutput
     
@@ -75,37 +79,38 @@ final class StereoOffscreenRenderer: Sendable {
         renderer.entities.removeAll(where: { $0 != renderer.activeCamera?.parent})
     }
     func renderLeft() async throws {
-        isRendering = true
+        isRenderingLeft = true
         try await withCheckedThrowingContinuation { continuation in
             do {
                 renderer.activeCamera = cameraLeft
                 try renderer.updateAndRender(deltaTime: 0, cameraOutput: cameraOutputLeft) { render in
-                    self.isRendering = false
+                    self.isRenderingLeft = false
                     continuation.resume()
                 }
             } catch {
-                isRendering = false
+                isRenderingLeft = false
                 continuation.resume(throwing: error)
             }
         }
     }
     func renderRight() async throws {
-        isRendering = true
+        isRenderingRight = true
         try await withCheckedThrowingContinuation { continuation in
             do {
                 renderer.activeCamera = cameraRight
                 try renderer.updateAndRender(deltaTime: 0, cameraOutput: cameraOutputRight) { render in
-                    self.isRendering = false
+                    self.isRenderingRight = false
                     continuation.resume()
                 }
             } catch {
-                isRendering = false
+                isRenderingRight = false
                 continuation.resume(throwing: error)
             }
         }
     }
     
     func renderAsync() async throws {
+        if isRendering { return }
         try await renderLeft()
         try await renderRight()
     }

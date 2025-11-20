@@ -1,5 +1,5 @@
 {
-  "advancedEditorSelectedIdentifier" : "ProjectBrowser",
+  "advancedEditorSelectedIdentifier" : "ShaderGraphEditorPluginID",
   "openSceneRelativePaths" : [
     "Materials\/StereoMaterial.usda",
     "Materials\/GridMaterial.usda",
@@ -777,5 +777,5 @@
   "sceneViewportBackgroundColors" : {
 
   },
-  "selectedSceneRelativePath" : "Scene\/ArtistWorkflowExample.usda"
+  "selectedSceneRelativePath" : "Materials\/StereoMaterial.usda"
 }
