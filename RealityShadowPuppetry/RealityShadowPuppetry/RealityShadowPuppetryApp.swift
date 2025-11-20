@@ -33,6 +33,10 @@ struct RealityShadowPuppetryApp: App {
         }
         .immersionStyle(selection: .constant(.mixed), in: .mixed)
         
-        
+        ImmersiveSpace(id: Module.stereoImage.immersiveId) {
+            StereoImageImmersiveView()
+                .environment(model)
+        }
+        .immersionStyle(selection: .constant(.mixed), in: .mixed)
      }
 }

@@ -16,6 +16,25 @@ import AVFoundation
 class AppModel {
     
     var rootEntity: Entity?
+    var stereoImageManager: StereoImageManager?
+    var stereoStyle: StereoImageManager.StereoStyle {
+        get {
+            stereoImageManager?.stereoStyle ?? .Stereo
+        }
+        set {
+            stereoImageManager?.stereoStyle = newValue
+        }
+    }
+    var isStereoAnimationPlaying = false {
+        didSet {
+            if isStereoAnimationPlaying {
+                stereoImageManager?.play()
+            } else {
+                stereoImageManager?.pause()
+            }
+        }
+    }
+    
     var shadowMixManager: ShadowMixManager?
     var shadowStyle: ShadowMixManager.ShadowMixStyle {
         get {
@@ -50,7 +69,11 @@ class AppModel {
     init() {
         
     }
-    func setup(asset: AVAsset, trackingType: ShadowMixManager.TrackingType) async throws {
+    
+    func setupStereoImageManager() async throws {
+        stereoImageManager = try await StereoImageManager()
+    }
+    func setupShadowMixManager(asset: AVAsset, trackingType: ShadowMixManager.TrackingType) async throws {
         shadowMixManager = try await ShadowMixManager(asset: asset, trackingType: trackingType)
         
         // Set up playback completion callback
@@ -59,6 +82,11 @@ class AppModel {
             self?.isVideoPlaying = false
         }
         
+    }
+    nonisolated
+    func prepareStereoModel() async throws {
+        try await stereoImageManager?.loadModelEntity()
+        try await stereoImageManager?.renderTextureAsync()
     }
     nonisolated
     func prepareHandModel() async throws {
@@ -81,6 +109,9 @@ class AppModel {
         shadowMixManager?.clean()
         shadowMixManager = nil
         
+        stereoImageManager?.clean()
+        stereoImageManager = nil
+        
         rootEntity?.children.removeAll()
         rootEntity?.removeFromParent()
     }
@@ -90,6 +121,8 @@ class AppModel {
         debugPrint(#function)
         isVideoPlaying = false
         showOriginalVideo = false
+        
+        isStereoAnimationPlaying = false
         clear()
     }
     
@@ -186,6 +219,7 @@ class AppModel {
 enum Module: String, Identifiable, CaseIterable, Equatable {
     case handShadow
     case bodyShadow
+    case stereoImage
     
     var id: Self { self }
     var name: LocalizedStringKey {

@@ -33,8 +33,13 @@ struct ContentView: View {
             }
             .navigationTitle("RealityShadowPuppetry")
         } detail: {
-            DetailView()
-                .navigationTitle(selectedModule.name)
+            if selectedModule == .stereoImage {
+                StereoDetailView()
+                    .navigationTitle(selectedModule.name)
+            } else {
+                DetailView()
+                    .navigationTitle(selectedModule.name)
+            }
             
         }
         .frame(minWidth: 800, minHeight: 500)

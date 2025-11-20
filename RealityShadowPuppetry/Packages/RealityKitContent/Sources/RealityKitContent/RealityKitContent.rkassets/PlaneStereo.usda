@@ -1,0 +1,34 @@
+#usda 1.0
+(
+    customLayerData = {
+        string creator = "Reality Composer Pro Version 2.0 (494.40.1)"
+    }
+    defaultPrim = "Root"
+    metersPerUnit = 1
+    upAxis = "Y"
+)
+
+def Xform "Root"
+{
+    def Cube "Cube" (
+        active = true
+        prepend apiSchemas = ["MaterialBindingAPI"]
+    )
+    {
+        rel material:binding = </Root/StereoMaterial_1> (
+            bindMaterialAs = "weakerThanDescendants"
+        )
+        double size = 0.2
+    }
+
+    def "StereoMaterial_1" (
+        active = true
+        instanceable = true
+        references = @Materials/StereoMaterial.usda@</Root/StereoMaterial>
+    )
+    {
+        float2 ui:nodegraph:node:pos = (-150.33398, 22.179688)
+        int ui:nodegraph:node:stackingOrder = 1
+    }
+}
+

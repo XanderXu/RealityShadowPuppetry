@@ -1,0 +1,98 @@
+#usda 1.0
+(
+    customLayerData = {
+        string creator = "Reality Composer Pro Version 2.0 (494.40.1)"
+    }
+    defaultPrim = "Root"
+    metersPerUnit = 1
+    upAxis = "Y"
+)
+
+def Xform "Root"
+{
+    def Material "StereoMaterial"
+    {
+        asset inputs:LeftImage = @../textures/LeftImage.png@ (
+            customData = {
+                dictionary realitykit = {
+                    float2 positionInSubgraph = (-958.84045, -107.726715)
+                    int stackingOrderInSubgraph = 17
+                }
+            }
+        )
+        asset inputs:MonoImage = @../textures/LeftImage.png@ (
+            customData = {
+                dictionary realitykit = {
+                    float2 positionInSubgraph = (-982.6616, -378.7963)
+                    int stackingOrderInSubgraph = 17
+                }
+            }
+        )
+        asset inputs:RightImage = @../textures/RightImage.png@ (
+            customData = {
+                dictionary realitykit = {
+                    float2 positionInSubgraph = (-923.20746, 88.16875)
+                    int stackingOrderInSubgraph = 17
+                }
+            }
+        )
+        token outputs:mtlx:surface.connect = </Root/StereoMaterial/PreviewSurface.outputs:out>
+        token outputs:realitykit:vertex
+        float2 ui:nodegraph:realitykit:subgraphOutputs:pos = (335.25, 100.5)
+
+        def Shader "PreviewSurface"
+        {
+            uniform token info:id = "ND_UsdPreviewSurface_surfaceshader"
+            color3f inputs:diffuseColor.connect = </Root/StereoMaterial/CameraIndexSwitch.outputs:out>
+            float inputs:roughness
+            token outputs:out
+            float2 ui:nodegraph:node:pos = (93.5, 100.5)
+        }
+
+        def Shader "CameraIndexSwitch"
+        {
+            uniform token info:id = "ND_realitykit_geometry_switch_cameraindex_color3"
+            color3f inputs:left.connect = </Root/StereoMaterial/Image.outputs:out>
+            color3f inputs:mono.connect = </Root/StereoMaterial/Image_2.outputs:out>
+            color3f inputs:right.connect = </Root/StereoMaterial/Image_1.outputs:out>
+            color3f outputs:out
+            float2 ui:nodegraph:node:pos = (-212.17578, 17.40625)
+            int ui:nodegraph:node:stackingOrder = 15
+        }
+
+        def Shader "Image"
+        {
+            uniform token info:id = "ND_image_color3"
+            color3f inputs:default
+            asset inputs:file = @../textures/LeftImage.png@
+            asset inputs:file.connect = </Root/StereoMaterial.inputs:LeftImage>
+            color3f outputs:out
+            float2 ui:nodegraph:node:pos = (-645.16797, -95.25781)
+            int ui:nodegraph:node:stackingOrder = 6
+        }
+
+        def Shader "Image_1"
+        {
+            uniform token info:id = "ND_image_color3"
+            color3f inputs:default
+            asset inputs:file = @../textures/RightImage.png@
+            asset inputs:file.connect = </Root/StereoMaterial.inputs:RightImage>
+            color3f outputs:out
+            float2 ui:nodegraph:node:pos = (-636.0469, 131.61719)
+            int ui:nodegraph:node:stackingOrder = 7
+        }
+
+        def Shader "Image_2"
+        {
+            uniform token info:id = "ND_image_color3"
+            color3f inputs:default
+            asset inputs:file = @../textures/LeftImage.png@
+            asset inputs:file.connect = </Root/StereoMaterial.inputs:MonoImage>
+            float2 inputs:texcoord
+            color3f outputs:out
+            float2 ui:nodegraph:node:pos = (-663.8281, -317.69922)
+            int ui:nodegraph:node:stackingOrder = 11
+        }
+    }
+}
+

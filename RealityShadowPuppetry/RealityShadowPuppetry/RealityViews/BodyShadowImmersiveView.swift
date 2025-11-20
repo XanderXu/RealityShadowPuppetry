@@ -25,7 +25,7 @@ struct BodyShadowImmersiveView: View {
             content.add(entity)
             
             do {
-                try await model.setup(asset: asset, trackingType: .body)
+                try await model.setupShadowMixManager(asset: asset, trackingType: .body)
                 guard let originalEntity = model.shadowMixManager?.originalVideoEntity, let shadowEntity = model.shadowMixManager?.mixedTextureEntity else {
                     return
                 }

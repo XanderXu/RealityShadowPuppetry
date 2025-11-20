@@ -1,5 +1,5 @@
 //
-//  DetailView.swift
+//  StereoDetailView.swift
 //  RealityShadowPuppetry
 //
 //  Created by 许 on 2025/6/18.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct DetailView: View {
+struct StereoDetailView: View {
     @Environment(AppModel.self) private var model
     var body: some View {
         @Bindable var model = model
@@ -20,8 +20,8 @@ struct DetailView: View {
                 
             }
             
-            Picker(selection: $model.shadowStyle, label: Text("Shadow Style")) {
-                ForEach(ShadowMixManager.ShadowMixStyle.allCases, id: \.self) { type in
+            Picker(selection: $model.stereoStyle, label: Text("Stereo Style")) {
+                ForEach(StereoImageManager.StereoStyle.allCases, id: \.self) { type in
                     Text(type.rawValue)
                 }
             }
@@ -30,38 +30,16 @@ struct DetailView: View {
             .frame(width: 400)
             
             HStack(spacing: 20) {
-                Toggle("Play Video", isOn: $model.isVideoPlaying)
+                Toggle("Play Animation", isOn: $model.isStereoAnimationPlaying)
                     .disabled(!model.turnOnImmersiveSpace)
                     .toggleStyle(ButtonToggleStyle())
                     .padding(.bottom, 40)
                 
-                Toggle("Show Original Video", isOn: $model.showOriginalVideo)
-                    .disabled(!model.turnOnImmersiveSpace)
-                    .toggleStyle(ButtonToggleStyle())
-                    .padding(.bottom, 40)
             }
             
         }
     }
 
-    /// Toggle play/pause state
-    private func togglePlayback() {
-        guard model.turnOnImmersiveSpace else {
-            print("Immersive space not turned on")
-            return
-        }
-        
-        
-        if model.isVideoPlaying {
-            // Currently playing, click to pause
-            model.shadowMixManager?.videoPlayAndRenderCenter?.pause()
-            print("User paused video")
-        } else {
-            // Currently paused, click to play
-            model.shadowMixManager?.videoPlayAndRenderCenter?.play()
-            print("User started playing video")
-        }
-    }
 }
 
 #Preview {

@@ -26,7 +26,7 @@ final class OffscreenRenderer: Sendable {
             camera.components.set(orthComponent)
         }
     }
-    var isRendering: Bool = false
+    private(set) var isRendering: Bool = false
     
     init(device: MTLDevice, textureSize: CGSize) throws {
         renderer = try RealityRenderer()
