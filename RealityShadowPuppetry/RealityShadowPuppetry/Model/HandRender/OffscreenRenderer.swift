@@ -11,6 +11,7 @@ final class OffscreenRenderer: Sendable {
     private let renderer: RealityRenderer
     private let cameraAutoLookSuccessTimesLimit: Int = 5
     private var cameraAutoLookSuccessTimes: Int = 0
+    private let cameraOutput: RealityRenderer.CameraOutput
     
     let colorTexture: MTLTexture
     let camera = Entity()
@@ -54,6 +55,8 @@ final class OffscreenRenderer: Sendable {
         textureDesc.usage = [.renderTarget, .shaderRead]
         
         colorTexture = device.makeTexture(descriptor: textureDesc)!
+        
+        cameraOutput = try RealityRenderer.CameraOutput(.singleProjection(colorTexture: colorTexture))
     }
     func cameraLook(at position: SIMD3<Float>, from: SIMD3<Float>, relativeTo: Entity? = nil) {
         camera.look(at: position, from: from, relativeTo: relativeTo)
@@ -62,7 +65,7 @@ final class OffscreenRenderer: Sendable {
     func cameraLookAtBoundingBoxCenter() -> Bool {
         guard !renderer.entities.isEmpty else { return false}
         let boundingBox = renderer.entities.reduce(renderer.entities.first!.visualBounds(relativeTo: nil)) { $0.union($1.visualBounds(relativeTo: nil)) }
-        print(boundingBox.center, boundingBox.extents)
+//        print(boundingBox.center, boundingBox.extents)
         if boundingBox.isEmpty { return false}
         camera.look(at: boundingBox.center, from: boundingBox.center + SIMD3<Float>(0, 0, 50), relativeTo: nil)
         return true
@@ -85,7 +88,7 @@ final class OffscreenRenderer: Sendable {
                 cameraAutoLookSuccessTimes += 1
             }
         }
-        let cameraOutput = try RealityRenderer.CameraOutput(.singleProjection(colorTexture: colorTexture))
+        if isRendering { return }
         isRendering = true
         try await withCheckedThrowingContinuation { continuation in
             do {

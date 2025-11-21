@@ -51,6 +51,7 @@ final class StereoImageManager {
         
         // Create a shader graph material that uses the texture.
         var shaderGraphMaterial = try await ShaderGraphMaterial(named: "/Root/StereoMaterial", from: "Materials/StereoMaterial.usda", in: realityKitContentBundle)
+        try shaderGraphMaterial.setParameter(name: "MonoImage", value: .textureResource(resourceLeft))
         try shaderGraphMaterial.setParameter(name: "LeftImage", value: .textureResource(resourceLeft))
         try shaderGraphMaterial.setParameter(name: "RightImage", value: .textureResource(resourceRight))
 

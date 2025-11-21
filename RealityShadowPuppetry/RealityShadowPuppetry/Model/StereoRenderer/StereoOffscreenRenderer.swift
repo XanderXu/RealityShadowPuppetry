@@ -63,7 +63,7 @@ final class StereoOffscreenRenderer: Sendable {
     func cameraLookAtBoundingBoxCenter() -> Bool {
         guard !renderer.entities.isEmpty else { return false}
         let boundingBox = renderer.entities.reduce(renderer.entities.first!.visualBounds(relativeTo: nil)) { $0.union($1.visualBounds(relativeTo: nil)) }
-        print(boundingBox.center, boundingBox.extents)
+//        print(boundingBox.center, boundingBox.extents)
         if boundingBox.isEmpty { return false}
         camera.look(at: boundingBox.center, from: boundingBox.center + SIMD3<Float>(0, 0, 50), relativeTo: nil)
         return true
