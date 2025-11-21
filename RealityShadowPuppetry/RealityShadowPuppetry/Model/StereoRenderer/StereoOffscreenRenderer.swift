@@ -26,6 +26,7 @@ final class StereoOffscreenRenderer: Sendable {
     private var isRenderingRight: Bool = false
     private let cameraOutputLeft: RealityRenderer.CameraOutput
     private let cameraOutputRight: RealityRenderer.CameraOutput
+    private var lastUpdteTime: TimeInterval?
     
     init(device: MTLDevice, textureSize: CGSize) throws {
         renderer = try RealityRenderer()
@@ -78,12 +79,12 @@ final class StereoOffscreenRenderer: Sendable {
     func removeAllEntities() {
         renderer.entities.removeAll(where: { $0 != renderer.activeCamera?.parent})
     }
-    func renderLeft() async throws {
+    func renderLeft(deltaTime: TimeInterval) async throws {
         isRenderingLeft = true
         try await withCheckedThrowingContinuation { continuation in
             do {
                 renderer.activeCamera = cameraLeft
-                try renderer.updateAndRender(deltaTime: 0, cameraOutput: cameraOutputLeft) { render in
+                try renderer.updateAndRender(deltaTime: deltaTime, cameraOutput: cameraOutputLeft) { render in
                     self.isRenderingLeft = false
                     continuation.resume()
                 }
@@ -93,12 +94,12 @@ final class StereoOffscreenRenderer: Sendable {
             }
         }
     }
-    func renderRight() async throws {
+    func renderRight(deltaTime: TimeInterval) async throws {
         isRenderingRight = true
         try await withCheckedThrowingContinuation { continuation in
             do {
                 renderer.activeCamera = cameraRight
-                try renderer.updateAndRender(deltaTime: 0, cameraOutput: cameraOutputRight) { render in
+                try renderer.updateAndRender(deltaTime: deltaTime, cameraOutput: cameraOutputRight) { render in
                     self.isRenderingRight = false
                     continuation.resume()
                 }
@@ -111,7 +112,10 @@ final class StereoOffscreenRenderer: Sendable {
     
     func renderAsync() async throws {
         if isRendering { return }
-        try await renderLeft()
-        try await renderRight()
+        let currentTime = CACurrentMediaTime()
+        let deltaTime = lastUpdteTime == nil ? 0 : currentTime - lastUpdteTime!
+        lastUpdteTime = currentTime
+        try await renderLeft(deltaTime: deltaTime)
+        try await renderRight(deltaTime: deltaTime)
     }
 }

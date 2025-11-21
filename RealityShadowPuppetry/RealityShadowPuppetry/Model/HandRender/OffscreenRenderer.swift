@@ -9,9 +9,6 @@ import MetalKit
 
 final class OffscreenRenderer: Sendable {
     private let renderer: RealityRenderer
-    private let cameraAutoLookSuccessTimesLimit: Int = 5
-    private var cameraAutoLookSuccessTimes: Int = 0
-    private let cameraOutput: RealityRenderer.CameraOutput
     
     let colorTexture: MTLTexture
     let camera = Entity()
@@ -28,6 +25,10 @@ final class OffscreenRenderer: Sendable {
         }
     }
     private(set) var isRendering: Bool = false
+    private let cameraAutoLookSuccessTimesLimit: Int = 5
+    private var cameraAutoLookSuccessTimes: Int = 0
+    private let cameraOutput: RealityRenderer.CameraOutput
+    private var lastUpdteTime: TimeInterval?
     
     init(device: MTLDevice, textureSize: CGSize) throws {
         renderer = try RealityRenderer()
@@ -90,9 +91,12 @@ final class OffscreenRenderer: Sendable {
         }
         if isRendering { return }
         isRendering = true
+        let currentTime = CACurrentMediaTime()
+        let deltaTime = lastUpdteTime == nil ? 0 : currentTime - lastUpdteTime!
+        lastUpdteTime = currentTime
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try renderer.updateAndRender(deltaTime: 0, cameraOutput: cameraOutput) { render in
+                try renderer.updateAndRender(deltaTime: deltaTime, cameraOutput: cameraOutput) { render in
                     self.isRendering = false
                     continuation.resume()
                 }

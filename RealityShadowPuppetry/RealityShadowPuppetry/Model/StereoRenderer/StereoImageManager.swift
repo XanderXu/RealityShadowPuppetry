@@ -75,8 +75,25 @@ final class StereoImageManager {
     }
     
     public func play() {
-        cancel = Timer.publish(every: 0.033, on: .main, in: .default).autoconnect().sink {_ in 
-            self.sceneRoot.orientation *= simd_quatf(angle: -0.001, axis: SIMD3<Float>(0, 1, 0))
+        let spinAction = SpinAction(revolutions: -1,
+                                    localAxis: [0, 1, 0],
+                                    timingFunction: .linear,
+                                    isAdditive: true)
+
+
+        // A five second animation that plays an animation causing the entity to
+        // spin around a specified local axis.
+        let spinAnimation = try? AnimationResource
+            .makeActionAnimation(for: spinAction,
+                                 duration: 60,
+                                 bindTarget: .transform,
+                                 repeatMode: .repeat,
+            )
+
+
+        // Play the five second spin animation.
+        sceneRoot.playAnimation(spinAnimation!)
+        cancel = Timer.publish(every: 0.033, on: .main, in: .default).autoconnect().sink {_ in
             Task {
                 try? await self.renderTextureAsync()
             }
