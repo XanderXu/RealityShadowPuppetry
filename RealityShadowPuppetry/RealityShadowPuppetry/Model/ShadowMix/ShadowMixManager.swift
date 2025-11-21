@@ -106,7 +106,7 @@ final class ShadowMixManager {
         try await handEntityManager.loadHandModelEntity()
     }
     public func loadBodyModelEntity() async throws {
-        offscreenRenderer?.cameraScale = 1.0
+        offscreenRenderer?.cameraScale = 1.25
         try await bodyEntityManager.loadBodyModelEntity()
     }
     
