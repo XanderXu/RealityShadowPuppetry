@@ -116,6 +116,6 @@ final class StereoOffscreenRenderer: Sendable {
         let deltaTime = lastUpdteTime == nil ? 0 : currentTime - lastUpdteTime!
         lastUpdteTime = currentTime
         try await renderLeft(deltaTime: deltaTime)
-        try await renderRight(deltaTime: deltaTime)
+        try await renderRight(deltaTime: 0)//rightCamera use the same time as left, so deltaTime is 0
     }
 }
