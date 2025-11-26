@@ -27,6 +27,15 @@
     "objectMetadataList" : [
       [
         "495727F7-9864-40E9-8F44-CC379CBE3B69",
+        "Root",
+        "StereoMaterial"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "495727F7-9864-40E9-8F44-CC379CBE3B69",
         "Root"
       ],
       {
@@ -75,45 +84,18 @@
     "objectMetadataList" : [
       [
         "AF09ED6F-1707-48FD-8720-65B998362C09",
-        "Root"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "AF09ED6F-1707-48FD-8720-65B998362C09",
-        "Root",
-        "Hand4"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "AF09ED6F-1707-48FD-8720-65B998362C09",
-        "Root",
-        "Hand4",
-        "root"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "AF09ED6F-1707-48FD-8720-65B998362C09",
-        "Root",
-        "Sphere_Right"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "AF09ED6F-1707-48FD-8720-65B998362C09",
         "Root",
         "Hand4",
         "_materials"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "AF09ED6F-1707-48FD-8720-65B998362C09",
+        "Root",
+        "Sphere_Left"
       ],
       {
         "isExpanded" : true,
@@ -123,7 +105,8 @@
         "AF09ED6F-1707-48FD-8720-65B998362C09",
         "Root",
         "Hand3",
-        "_materials"
+        "______",
+        "Cube"
       ],
       {
         "isExpanded" : true,
@@ -153,7 +136,26 @@
       [
         "AF09ED6F-1707-48FD-8720-65B998362C09",
         "Root",
-        "Sphere_Left"
+        "Sphere_Right"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "AF09ED6F-1707-48FD-8720-65B998362C09",
+        "Root",
+        "Hand4",
+        "root"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "AF09ED6F-1707-48FD-8720-65B998362C09",
+        "Root",
+        "Hand4"
       ],
       {
         "isExpanded" : true,
@@ -172,10 +174,17 @@
       },
       [
         "AF09ED6F-1707-48FD-8720-65B998362C09",
+        "Root"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "AF09ED6F-1707-48FD-8720-65B998362C09",
         "Root",
         "Hand3",
-        "______",
-        "Cube"
+        "_materials"
       ],
       {
         "isExpanded" : true,
@@ -189,15 +198,7 @@
         "B81D02DF-126E-43D3-B7C9-00623708D6EB",
         "Root",
         "HandBone",
-        "scene"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "B81D02DF-126E-43D3-B7C9-00623708D6EB",
-        "Root"
+        "_materials"
       ],
       {
         "isExpanded" : true,
@@ -214,9 +215,17 @@
       },
       [
         "B81D02DF-126E-43D3-B7C9-00623708D6EB",
+        "Root"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "B81D02DF-126E-43D3-B7C9-00623708D6EB",
         "Root",
         "HandBone",
-        "_materials"
+        "scene"
       ],
       {
         "isExpanded" : true,
@@ -292,7 +301,6 @@
         "root",
         "scene",
         "skin0",
-        "HandToMaya_BASE_0_lambert1_0",
         "HandToMaya_BASE_0_lambert1_0"
       ],
       {
@@ -301,8 +309,7 @@
       },
       [
         "D30FB9CA-7689-4AEA-BF58-D6EE12DC024F",
-        "root",
-        "scene"
+        "root"
       ],
       {
         "isExpanded" : true,
@@ -311,9 +318,7 @@
       [
         "D30FB9CA-7689-4AEA-BF58-D6EE12DC024F",
         "root",
-        "scene",
-        "skin0",
-        "skeleton"
+        "Material"
       ],
       {
         "isExpanded" : true,
@@ -334,6 +339,7 @@
         "root",
         "scene",
         "skin0",
+        "HandToMaya_BASE_0_lambert1_0",
         "HandToMaya_BASE_0_lambert1_0"
       ],
       {
@@ -343,7 +349,9 @@
       [
         "D30FB9CA-7689-4AEA-BF58-D6EE12DC024F",
         "root",
-        "Material"
+        "scene",
+        "skin0",
+        "skeleton"
       ],
       {
         "isExpanded" : true,
@@ -351,7 +359,8 @@
       },
       [
         "D30FB9CA-7689-4AEA-BF58-D6EE12DC024F",
-        "root"
+        "root",
+        "scene"
       ],
       {
         "isExpanded" : true,
@@ -368,39 +377,6 @@
     "objectMetadataList" : [
       [
         "D66134B1-3681-4A8E-AFE5-29F257229F3B",
-        "Root",
-        "robot",
-        "geo_grp",
-        "backpack2_grp"
-      ],
-      {
-        "disallowsFraming" : false,
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "D66134B1-3681-4A8E-AFE5-29F257229F3B",
-        "Root",
-        "robot",
-        "rig_grp",
-        "root"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "D66134B1-3681-4A8E-AFE5-29F257229F3B",
-        "Root",
-        "robot",
-        "mtl"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "D66134B1-3681-4A8E-AFE5-29F257229F3B",
         "Root"
       ],
       {
@@ -411,7 +387,7 @@
         "D66134B1-3681-4A8E-AFE5-29F257229F3B",
         "Root",
         "robot",
-        "geo_grp"
+        "mtl"
       ],
       {
         "isExpanded" : true,
@@ -431,9 +407,42 @@
         "D66134B1-3681-4A8E-AFE5-29F257229F3B",
         "Root",
         "robot",
+        "rig_grp",
+        "root"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "D66134B1-3681-4A8E-AFE5-29F257229F3B",
+        "Root",
+        "robot",
+        "geo_grp"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "D66134B1-3681-4A8E-AFE5-29F257229F3B",
+        "Root",
+        "robot",
         "rig_grp"
       ],
       {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "D66134B1-3681-4A8E-AFE5-29F257229F3B",
+        "Root",
+        "robot",
+        "geo_grp",
+        "backpack2_grp"
+      ],
+      {
+        "disallowsFraming" : false,
         "isExpanded" : true,
         "isLocked" : false
       }
@@ -443,7 +452,8 @@
     "objectMetadataList" : [
       [
         "E734B1D4-82F1-41C3-8DB3-407CA19F8E72",
-        "Root"
+        "Root",
+        "StereoMaterial"
       ],
       {
         "isExpanded" : true,
@@ -451,8 +461,7 @@
       },
       [
         "E734B1D4-82F1-41C3-8DB3-407CA19F8E72",
-        "Root",
-        "StereoMaterial"
+        "Root"
       ],
       {
         "isExpanded" : true,
@@ -477,8 +486,7 @@
       [
         "E8BE79FE-70AA-4647-AB50-805835A80F78",
         "Root",
-        "HandBone",
-        "_materials"
+        "HandBone"
       ],
       {
         "isExpanded" : true,
@@ -487,7 +495,8 @@
       [
         "E8BE79FE-70AA-4647-AB50-805835A80F78",
         "Root",
-        "HandBone"
+        "HandBone",
+        "_materials"
       ],
       {
         "isExpanded" : true,
@@ -507,7 +516,8 @@
     "objectMetadataList" : [
       [
         "F49B352B-65A0-4F32-8CD3-E1D48F27BCEB",
-        "Root"
+        "Root",
+        "Cube"
       ],
       {
         "isExpanded" : true,
@@ -515,8 +525,7 @@
       },
       [
         "F49B352B-65A0-4F32-8CD3-E1D48F27BCEB",
-        "Root",
-        "Cube"
+        "Root"
       ],
       {
         "isExpanded" : true,
@@ -548,8 +557,7 @@
       [
         "FE0E2D27-D8A1-4A07-A386-BCCDB870E9C9",
         "root",
-        "Hand",
-        "Armature"
+        "Hand"
       ],
       {
         "isExpanded" : true,
@@ -558,7 +566,8 @@
       [
         "FE0E2D27-D8A1-4A07-A386-BCCDB870E9C9",
         "root",
-        "Hand"
+        "Hand",
+        "Armature"
       ],
       {
         "isExpanded" : true,

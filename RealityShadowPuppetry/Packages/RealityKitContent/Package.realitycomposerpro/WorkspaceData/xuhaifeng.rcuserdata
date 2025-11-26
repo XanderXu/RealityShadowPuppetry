@@ -253,6 +253,50 @@
     ],
     "8C52345C-3299-4C55-B26F-A2368FFC850D" : [
       {
+        "date" : 785820448.551952,
+        "title" : "Untitled",
+        "transform" : [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0.7071069,
+          -0.70710677,
+          0,
+          0,
+          0.70710677,
+          0.7071069,
+          0,
+          4.93783,
+          35.439426,
+          50.607723,
+          1
+        ]
+      },
+      {
+        "date" : 785820432.168073,
+        "title" : "Untitled",
+        "transform" : [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0.7071069,
+          -0.70710677,
+          0,
+          0,
+          0.70710677,
+          0.7071069,
+          0,
+          6.8956184,
+          36.62698,
+          49.420174,
+          1
+        ]
+      },
+      {
         "date" : 785298800.724917,
         "title" : "Untitled",
         "transform" : [
@@ -777,5 +821,5 @@
   "sceneViewportBackgroundColors" : {
 
   },
-  "selectedSceneRelativePath" : "Materials\/StereoMaterial.usda"
+  "selectedSceneRelativePath" : "Scene\/ArtistWorkflowExample.usda"
 }
