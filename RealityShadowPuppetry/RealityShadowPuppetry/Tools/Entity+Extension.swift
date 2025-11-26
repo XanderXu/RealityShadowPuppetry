@@ -9,14 +9,14 @@ import RealityKit
 
 extension Entity {
     
-    /// 打印当前 Entity 的子元素信息并递归遍历
-    /// - Parameter level: 递归层级，用于缩进显示
+    /// Print the child element information of the current Entity and traverse recursively
+    /// - Parameter level: Recursion level, used for indentation display
     func printHierarchyDetails(level: Int = 0) {
         let indent = String(repeating: "  ", count: level)
         
-        // 打印当前 Entity 的基本信息
+        // Print basic information of the current Entity
         print("\(indent)Entity: '\(self.name)' (\(type(of: self))),Children count: \(self.children.count)")
-        // 打印子元素的组件信息
+        // Print component information of child elements
         if !components.isEmpty {
             print("\(indent)    Components: \(components.count)")
             for component in components {
@@ -24,18 +24,18 @@ extension Entity {
             }
         }
        
-        // 如果有子元素，遍历并打印每个子元素的信息
+        // If there are child elements, iterate and print information of each child element
         if !self.children.isEmpty {
             print("\(indent)Children details:")
             
             for (index, child) in self.children.enumerated() {
                 let childIndent = String(repeating: "  ", count: level + 1)
                 
-                // 递归处理子元素的子元素
+                // Recursively process child elements of the child element
                 print("\(childIndent)    Recursive children:")
                 child.printHierarchyDetails(level: level + 2)
                 
-                // 在每个子元素之间添加分隔线
+                // Add separator line between each child element
                 if index < self.children.count - 1 {
                     print("\(childIndent)---")
                 }
@@ -45,8 +45,8 @@ extension Entity {
         }
     }
     
-    /// 简化版本：仅打印名字和类型的层级结构
-    /// - Parameter level: 递归层级，用于缩进显示
+    /// Simplified version: Print only the hierarchical structure of names and types
+    /// - Parameter level: Recursion level, used for indentation display
     func printHierarchy(level: Int = 0) {
         let indent = String(repeating: "  ", count: level)
         print("\(indent)\(self.name.isEmpty ? "<unnamed>" : self.name) (\(type(of: self)))")
@@ -58,16 +58,16 @@ extension Entity {
     
     // MARK: - Component Search Methods
     
-    /// 使用深度优先搜索查找包含特定 Component 类型的第一个 Entity
-    /// - Parameter componentType: 要查找的组件类型
-    /// - Returns: 包含指定组件的第一个 Entity，如果未找到则返回 nil
+    /// Find the first Entity containing a specific Component type using depth-first search
+    /// - Parameter componentType: The component type to search for
+    /// - Returns: The first Entity containing the specified component, or nil if not found
     func findFirstEntity<T: Component>(with componentType: T.Type) -> Entity? {
-        // 首先检查当前 Entity 是否包含指定组件
+        // First check if the current Entity contains the specified component
         if self.components.has(componentType) {
             return self
         }
         
-        // 深度优先搜索子元素
+        // Depth-first search child elements
         for child in self.children {
             if let found = child.findFirstEntity(with: componentType) {
                 return found
@@ -77,18 +77,18 @@ extension Entity {
         return nil
     }
     
-    /// 使用深度优先搜索查找所有包含特定 Component 类型的 Entity
-    /// - Parameter componentType: 要查找的组件类型
-    /// - Returns: 包含指定组件的所有 Entity 数组
+    /// Find all Entities containing a specific Component type using depth-first search
+    /// - Parameter componentType: The component type to search for
+    /// - Returns: An array of all Entities containing the specified component
     func findAllEntities<T: Component>(with componentType: T.Type) -> [Entity] {
         var results: [Entity] = []
         
-        // 检查当前 Entity 是否包含指定组件
+        // Check if the current Entity contains the specified component
         if self.components.has(componentType) {
             results.append(self)
         }
         
-        // 深度优先搜索子元素
+        // Depth-first search child elements
         for child in self.children {
             results.append(contentsOf: child.findAllEntities(with: componentType))
         }
