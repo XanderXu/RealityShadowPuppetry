@@ -112,8 +112,11 @@ class AppModel {
         stereoImageManager?.clean()
         stereoImageManager = nil
         
-        rootEntity?.children.removeAll()
-        rootEntity?.removeFromParent()
+        guard let rootEntity = rootEntity else { return }
+        for i in (0 ..< rootEntity.children.count).reversed() {
+            rootEntity.children[i].removeFromParent()
+        }
+        rootEntity.removeFromParent()
     }
     
     /// Resets game state information.

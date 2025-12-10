@@ -28,7 +28,9 @@ final class HandEntityManager {
     
     
     func clean() {
-        rootEntity.children.removeAll()
+        for i in (0 ..< rootEntity.children.count).reversed() {
+            rootEntity.children[i].removeFromParent()
+        }
         leftModel = nil
         left = nil
         rightModel = nil

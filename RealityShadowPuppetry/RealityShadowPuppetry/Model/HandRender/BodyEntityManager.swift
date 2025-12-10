@@ -15,7 +15,9 @@ final class BodyEntityManager {
     private var stationaryEntity: Entity?
     
     func clean() {
-        rootEntity.children.removeAll()
+        for i in (0 ..< rootEntity.children.count).reversed() {
+            rootEntity.children[i].removeFromParent()
+        }
         body = nil
         stationaryEntity = nil
     }
