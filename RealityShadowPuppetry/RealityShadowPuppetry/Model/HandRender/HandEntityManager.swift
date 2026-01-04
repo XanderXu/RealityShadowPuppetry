@@ -77,39 +77,41 @@ final class HandEntityManager {
         targetEntity?.transform.matrix = handAnchor.originFromAnchorTransform
         if let handSkeleton = handAnchor.handSkeleton {
             let skeletalPose: SkeletalPose = .init(id: "/root/Armature/Armature", joints: [
+                ("Wrist", Transform(matrix:  handSkeleton.joint(.wrist).parentFromJointTransform)),
+                
                 ("Wrist/ThumbKnuckle", Transform(matrix:  handSkeleton.joint(.thumbKnuckle).parentFromJointTransform)),
                 ("Wrist/ThumbKnuckle/ThumbIntermediateBase", Transform(matrix:  handSkeleton.joint(.thumbIntermediateBase).parentFromJointTransform)),
                 ("Wrist/ThumbKnuckle/ThumbIntermediateBase/ThumbIntermediateTip", Transform(matrix:  handSkeleton.joint(.thumbIntermediateTip).parentFromJointTransform)),
                 ("Wrist/ThumbKnuckle/ThumbIntermediateBase/ThumbIntermediateTip/ThumbTip", Transform(matrix:  handSkeleton.joint(.thumbTip).parentFromJointTransform)),
                 
                 
-                    ("Wrist/IndexFingerMetacarpal", Transform(matrix:  handSkeleton.joint(.indexFingerMetacarpal).parentFromJointTransform)),
-                    ("Wrist/IndexFingerMetacarpal/IndexFingerKnuckle", Transform(matrix:  handSkeleton.joint(.indexFingerKnuckle).parentFromJointTransform)),
-                    ("Wrist/IndexFingerMetacarpal/IndexFingerKnuckle/IndexFingerIntermediateBase", Transform(matrix:  handSkeleton.joint(.indexFingerIntermediateBase).parentFromJointTransform)),
-                    ("Wrist/IndexFingerMetacarpal/IndexFingerKnuckle/IndexFingerIntermediateBase/IndexFingerIntermediateTip", Transform(matrix:  handSkeleton.joint(.indexFingerIntermediateTip).parentFromJointTransform)),
-                    ("Wrist/IndexFingerMetacarpal/IndexFingerKnuckle/IndexFingerIntermediateBase/IndexFingerIntermediateTip/IndexFingerTip", Transform(matrix:  handSkeleton.joint(.indexFingerTip).parentFromJointTransform)),
-
-
-                    ("Wrist/MiddleFingerMetacarpal", Transform(matrix:  handSkeleton.joint(.middleFingerMetacarpal).parentFromJointTransform)),
-                    ("Wrist/MiddleFingerMetacarpal/MiddleFingerKnuckle", Transform(matrix:  handSkeleton.joint(.middleFingerKnuckle).parentFromJointTransform)),
-                    ("Wrist/MiddleFingerMetacarpal/MiddleFingerKnuckle/MiddleFingerIntermediateBase", Transform(matrix:  handSkeleton.joint(.middleFingerIntermediateBase).parentFromJointTransform)),
-                    ("Wrist/MiddleFingerMetacarpal/MiddleFingerKnuckle/MiddleFingerIntermediateBase/MiddleFingerIntermediateTip", Transform(matrix:  handSkeleton.joint(.middleFingerIntermediateTip).parentFromJointTransform)),
-                    ("Wrist/MiddleFingerMetacarpal/MiddleFingerKnuckle/MiddleFingerIntermediateBase/MiddleFingerIntermediateTip/MiddleFingerTip", Transform(matrix:  handSkeleton.joint(.middleFingerTip).parentFromJointTransform)),
-
-
-                    ("Wrist/RingFingerMetacarpal", Transform(matrix:  handSkeleton.joint(.ringFingerMetacarpal).parentFromJointTransform)),
-                    ("Wrist/RingFingerMetacarpal/RingFingerKnuckle", Transform(matrix:  handSkeleton.joint(.ringFingerKnuckle).parentFromJointTransform)),
-                    ("Wrist/RingFingerMetacarpal/RingFingerKnuckle/RingFingerIntermediateBase", Transform(matrix:  handSkeleton.joint(.ringFingerIntermediateBase).parentFromJointTransform)),
-                    ("Wrist/RingFingerMetacarpal/RingFingerKnuckle/RingFingerIntermediateBase/RingFingerIntermediateTip", Transform(matrix:  handSkeleton.joint(.ringFingerIntermediateTip).parentFromJointTransform)),
-                    ("Wrist/RingFingerMetacarpal/RingFingerKnuckle/RingFingerIntermediateBase/RingFingerIntermediateTip/RingFingerTip", Transform(matrix:  handSkeleton.joint(.ringFingerTip).parentFromJointTransform)),
-
-
-
-                    ("Wrist/LittleFingerMetacarpal", Transform(matrix:  handSkeleton.joint(.littleFingerMetacarpal).parentFromJointTransform)),
-                    ("Wrist/LittleFingerMetacarpal/LittleFingerKnuckle", Transform(matrix:  handSkeleton.joint(.littleFingerKnuckle).parentFromJointTransform)),
-                    ("Wrist/LittleFingerMetacarpal/LittleFingerKnuckle/LittleFingerIntermediateBase", Transform(matrix:  handSkeleton.joint(.littleFingerIntermediateBase).parentFromJointTransform)),
-                    ("Wrist/LittleFingerMetacarpal/LittleFingerKnuckle/LittleFingerIntermediateBase/LittleFingerIntermediateTip", Transform(matrix:  handSkeleton.joint(.littleFingerIntermediateTip).parentFromJointTransform)),
-                    ("Wrist/LittleFingerMetacarpal/LittleFingerKnuckle/LittleFingerIntermediateBase/LittleFingerIntermediateTip/LittleFingerTip", Transform(matrix:  handSkeleton.joint(.littleFingerTip).parentFromJointTransform)),
+                ("Wrist/IndexFingerMetacarpal", Transform(matrix:  handSkeleton.joint(.indexFingerMetacarpal).parentFromJointTransform)),
+                ("Wrist/IndexFingerMetacarpal/IndexFingerKnuckle", Transform(matrix:  handSkeleton.joint(.indexFingerKnuckle).parentFromJointTransform)),
+                ("Wrist/IndexFingerMetacarpal/IndexFingerKnuckle/IndexFingerIntermediateBase", Transform(matrix:  handSkeleton.joint(.indexFingerIntermediateBase).parentFromJointTransform)),
+                ("Wrist/IndexFingerMetacarpal/IndexFingerKnuckle/IndexFingerIntermediateBase/IndexFingerIntermediateTip", Transform(matrix:  handSkeleton.joint(.indexFingerIntermediateTip).parentFromJointTransform)),
+                ("Wrist/IndexFingerMetacarpal/IndexFingerKnuckle/IndexFingerIntermediateBase/IndexFingerIntermediateTip/IndexFingerTip", Transform(matrix:  handSkeleton.joint(.indexFingerTip).parentFromJointTransform)),
+                
+                
+                ("Wrist/MiddleFingerMetacarpal", Transform(matrix:  handSkeleton.joint(.middleFingerMetacarpal).parentFromJointTransform)),
+                ("Wrist/MiddleFingerMetacarpal/MiddleFingerKnuckle", Transform(matrix:  handSkeleton.joint(.middleFingerKnuckle).parentFromJointTransform)),
+                ("Wrist/MiddleFingerMetacarpal/MiddleFingerKnuckle/MiddleFingerIntermediateBase", Transform(matrix:  handSkeleton.joint(.middleFingerIntermediateBase).parentFromJointTransform)),
+                ("Wrist/MiddleFingerMetacarpal/MiddleFingerKnuckle/MiddleFingerIntermediateBase/MiddleFingerIntermediateTip", Transform(matrix:  handSkeleton.joint(.middleFingerIntermediateTip).parentFromJointTransform)),
+                ("Wrist/MiddleFingerMetacarpal/MiddleFingerKnuckle/MiddleFingerIntermediateBase/MiddleFingerIntermediateTip/MiddleFingerTip", Transform(matrix:  handSkeleton.joint(.middleFingerTip).parentFromJointTransform)),
+                
+                
+                ("Wrist/RingFingerMetacarpal", Transform(matrix:  handSkeleton.joint(.ringFingerMetacarpal).parentFromJointTransform)),
+                ("Wrist/RingFingerMetacarpal/RingFingerKnuckle", Transform(matrix:  handSkeleton.joint(.ringFingerKnuckle).parentFromJointTransform)),
+                ("Wrist/RingFingerMetacarpal/RingFingerKnuckle/RingFingerIntermediateBase", Transform(matrix:  handSkeleton.joint(.ringFingerIntermediateBase).parentFromJointTransform)),
+                ("Wrist/RingFingerMetacarpal/RingFingerKnuckle/RingFingerIntermediateBase/RingFingerIntermediateTip", Transform(matrix:  handSkeleton.joint(.ringFingerIntermediateTip).parentFromJointTransform)),
+                ("Wrist/RingFingerMetacarpal/RingFingerKnuckle/RingFingerIntermediateBase/RingFingerIntermediateTip/RingFingerTip", Transform(matrix:  handSkeleton.joint(.ringFingerTip).parentFromJointTransform)),
+                
+                
+                
+                ("Wrist/LittleFingerMetacarpal", Transform(matrix:  handSkeleton.joint(.littleFingerMetacarpal).parentFromJointTransform)),
+                ("Wrist/LittleFingerMetacarpal/LittleFingerKnuckle", Transform(matrix:  handSkeleton.joint(.littleFingerKnuckle).parentFromJointTransform)),
+                ("Wrist/LittleFingerMetacarpal/LittleFingerKnuckle/LittleFingerIntermediateBase", Transform(matrix:  handSkeleton.joint(.littleFingerIntermediateBase).parentFromJointTransform)),
+                ("Wrist/LittleFingerMetacarpal/LittleFingerKnuckle/LittleFingerIntermediateBase/LittleFingerIntermediateTip", Transform(matrix:  handSkeleton.joint(.littleFingerIntermediateTip).parentFromJointTransform)),
+                ("Wrist/LittleFingerMetacarpal/LittleFingerKnuckle/LittleFingerIntermediateBase/LittleFingerIntermediateTip/LittleFingerTip", Transform(matrix:  handSkeleton.joint(.littleFingerTip).parentFromJointTransform)),
             ])
             targetModel?.components[SkeletalPosesComponent.self]?.poses.default = skeletalPose
         }
