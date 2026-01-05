@@ -1,9 +1,7 @@
 {
   "advancedEditorSelectedIdentifier" : "ProjectBrowser",
   "openSceneRelativePaths" : [
-    "Materials\/StereoMaterial.usda",
-    "Materials\/GridMaterial.usda",
-    "Scene\/ArtistWorkflowExample.usda"
+    "PlaneStereo.usda"
   ],
   "recentIdentifiers" : {
     "AF09ED6F-1707-48FD-8720-65B998362C09" : [
@@ -820,6 +818,5 @@
   },
   "sceneViewportBackgroundColors" : {
 
-  },
-  "selectedSceneRelativePath" : "Scene\/ArtistWorkflowExample.usda"
+  }
 }

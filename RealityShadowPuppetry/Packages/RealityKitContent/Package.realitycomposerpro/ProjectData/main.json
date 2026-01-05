@@ -17,6 +17,7 @@
     "RealityKitContent\/Sources\/RealityKitContent\/RealityKitContent.rkassets\/LeftHand5.usdc" : "9DADDE90-41B5-4AB9-B5C1-17FEDA3446D9",
     "RealityKitContent\/Sources\/RealityKitContent\/RealityKitContent.rkassets\/Materials\/GridMaterial.usda" : "3461368C-43B9-4DD0-B7AA-EB6900460895",
     "RealityKitContent\/Sources\/RealityKitContent\/RealityKitContent.rkassets\/Materials\/StereoMaterial.usda" : "495727F7-9864-40E9-8F44-CC379CBE3B69",
+    "RealityKitContent\/Sources\/RealityKitContent\/RealityKitContent.rkassets\/PlaneStereo.usda" : "62762543-C929-47FF-BB1F-174718148BFD",
     "RealityKitContent\/Sources\/RealityKitContent\/RealityKitContent.rkassets\/RightHand2.usdc" : "E79A158C-B8C3-4EA9-A21A-A7850CB023FE",
     "RealityKitContent\/Sources\/RealityKitContent\/RealityKitContent.rkassets\/RobotScene.usda" : "7FA5D1DC-B376-42F5-9A2D-F3306C1CE69E",
     "RealityKitContent\/Sources\/RealityKitContent\/RealityKitContent.rkassets\/Scene.usda" : "D66134B1-3681-4A8E-AFE5-29F257229F3B",
@@ -27,6 +28,7 @@
   "uuidToIntID" : {
     "3461368C-43B9-4DD0-B7AA-EB6900460895" : 2911780258238067452,
     "495727F7-9864-40E9-8F44-CC379CBE3B69" : -3035467135867931031,
+    "62762543-C929-47FF-BB1F-174718148BFD" : -3317058249265288534,
     "7FA5D1DC-B376-42F5-9A2D-F3306C1CE69E" : -5585388057236840732,
     "88EDD32D-F64E-4A8B-8BA7-B785CD929E19" : -7114780726553521109,
     "8A750FB7-DDFE-48F5-8A98-20DFC012E1B5" : -2884508021410429172,
