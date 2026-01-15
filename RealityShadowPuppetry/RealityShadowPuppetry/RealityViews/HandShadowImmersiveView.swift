@@ -23,7 +23,7 @@ struct HandShadowImmersiveView: View {
             
             do {
                 try await model.setupShadowMixManager(asset: asset, trackingType: .hand)
-                guard let originalEntity = model.shadowMixManager?.originalVideoEntity, let shadowEntity = model.shadowMixManager?.mixedTextureEntity else {
+                guard let originalEntity = model.shadowMixManager?.originalTransparentVideoEntity, let shadowEntity = model.shadowMixManager?.mixedTextureEntity else {
                     return
                 }
                 entity.addChild(originalEntity)
@@ -31,8 +31,7 @@ struct HandShadowImmersiveView: View {
                 originalEntity.isEnabled = model.showOriginalVideo
                 
                 try await model.prepareHandModel()
-                //For test
-//                entity.addChild(model.shadowMixManager?.rootEntity ?? Entity())
+                
                 
             } catch {
                 print(error)

@@ -23,6 +23,7 @@ final class ShadowMixManager {
     }
     
     let originalVideoEntity = ModelEntity()
+    let originalTransparentVideoEntity = ModelEntity()
     let mixedTextureEntity = ModelEntity()
     var shadowStyle = ShadowMixStyle.GrayAdd
     var trackingType: TrackingType = .hand
@@ -72,13 +73,19 @@ final class ShadowMixManager {
         let textureDescriptor = Self.createTextureDescriptor(width: Int(naturalSize.width), height: Int(naturalSize.height))
         llt = try LowLevelTexture(descriptor: textureDescriptor)
         
-        guard let player = videoPlayAndRenderCenter?.player else { return }
+        guard let player = videoPlayAndRenderCenter?.player, let transparentPlayer = videoPlayAndRenderCenter?.transparentPlayer else { return }
         
         //An entity of a plane which uses the VideoMaterial.
         let videoMaterial = VideoMaterial(avPlayer: player)
         originalVideoEntity.model = .init(mesh: .generatePlane(width: 1, height: Float(naturalSize.height/naturalSize.width)), materials: [videoMaterial])
         originalVideoEntity.name = "OriginalVideo"
         originalVideoEntity.position = SIMD3(x: 1.2, y: 1, z: -2)
+        
+        //An entity of a plane which uses the VideoMaterial.
+        let videoMaterial2 = VideoMaterial(avPlayer: transparentPlayer)
+        originalTransparentVideoEntity.model = .init(mesh: .generatePlane(width: 1, height: Float(naturalSize.height/naturalSize.width)), materials: [videoMaterial2])
+        originalTransparentVideoEntity.name = "OriginalVideo"
+        originalTransparentVideoEntity.position = SIMD3(x: 1.2, y: 1, z: -2)
         
         let resource = try await TextureResource(from: llt)
         var material = UnlitMaterial(texture: resource)

@@ -26,16 +26,14 @@ struct BodyShadowImmersiveView: View {
             
             do {
                 try await model.setupShadowMixManager(asset: asset, trackingType: .body)
-                guard let originalEntity = model.shadowMixManager?.originalVideoEntity, let shadowEntity = model.shadowMixManager?.mixedTextureEntity else {
+                guard let originalEntity = model.shadowMixManager?.originalTransparentVideoEntity, let shadowEntity = model.shadowMixManager?.mixedTextureEntity else {
                     return
                 }
                 entity.addChild(originalEntity)
                 entity.addChild(shadowEntity)
                 originalEntity.isEnabled = model.showOriginalVideo
                 
-                try await model.prepareBodyModel()
-//                entity.addChild(model.shadowMixManager?.rootEntity ?? Entity())
-                
+                try await model.prepareBodyModel()                
             } catch {
                 print(error)
             }

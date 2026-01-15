@@ -19,8 +19,10 @@ final class VideoPlayAndRenderCenter {
         return customCompositor?.lastestPixel
     }
     
+    /// the AVPlayer with customVideoCompositorClass can't play a tranparent video, it's probably a bug
     private(set) var player: AVPlayer?
-    
+    /// the AVPlayer without customVideoCompositorClass, can play a tranparent video
+    private(set) var transparentPlayer: AVPlayer?
     
     // MARK: - Private Properties
     private var customCompositor: VideoCustomCompositor?
@@ -29,6 +31,7 @@ final class VideoPlayAndRenderCenter {
     private var playbackFinishedObserver: NSObjectProtocol?
     
     init(asset: AVAsset) async throws {
+        self.transparentPlayer = AVPlayer(playerItem: AVPlayerItem(asset: asset))
         let player = try await createPlayer(asset: asset)
         self.player = player
         self.customCompositor = player.currentItem?.customVideoCompositor as? VideoCustomCompositor
@@ -40,20 +43,25 @@ final class VideoPlayAndRenderCenter {
     }
     
     public func play() {
+        transparentPlayer?.play()
         player?.play()
     }
     
     public func pause() {
+        transparentPlayer?.pause()
         player?.pause()
     }
     
     public func seek(to time: CMTime) {
+        transparentPlayer?.seek(to: time)
         player?.seek(to: time)
     }
 
     public func clean() {
         removePlayerObservers()
         
+        transparentPlayer?.pause()
+        transparentPlayer?.seek(to: .zero)
         player?.pause()
         player?.seek(to: .zero)
         customCompositor?.cancelAllPendingVideoCompositionRequests()
@@ -117,7 +125,6 @@ final class VideoPlayAndRenderCenter {
         let playerItem = AVPlayerItem(asset: asset)
         playerItem.videoComposition = composition
         let player = AVPlayer(playerItem: playerItem)
-        
         return player
     }
     

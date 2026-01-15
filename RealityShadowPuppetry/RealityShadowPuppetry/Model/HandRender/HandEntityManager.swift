@@ -49,19 +49,6 @@ final class HandEntityManager {
         if let right {
             rootEntity.addChild(right)
         }
-//        if let  poses = leftModel?.components[SkeletalPosesComponent.self] {
-//            print(poses.poses.default?.id ?? "", poses.poses.default?.jointNames ?? "")
-//        }
-        
-        /*
-         Optional("/root/Armature/Armature")
-         Optional(["Wrist", "Wrist/ThumbKnuckle", "Wrist/ThumbKnuckle/ThumbIntermediateBase", "Wrist/ThumbKnuckle/ThumbIntermediateBase/ThumbIntermediateTip", "Wrist/ThumbKnuckle/ThumbIntermediateBase/ThumbIntermediateTip/ThumbTip",
-         "Wrist/IndexFingerMetacarpal", "Wrist/IndexFingerMetacarpal/IndexFingerKnuckle", "Wrist/IndexFingerMetacarpal/IndexFingerKnuckle/IndexFingerIntermediateBase", "Wrist/IndexFingerMetacarpal/IndexFingerKnuckle/IndexFingerIntermediateBase/IndexFingerIntermediateTip", "Wrist/IndexFingerMetacarpal/IndexFingerKnuckle/IndexFingerIntermediateBase/IndexFingerIntermediateTip/IndexFingerTip",
-         "Wrist/MiddleFingerMetacarpal", "Wrist/MiddleFingerMetacarpal/MiddleFingerKnuckle", "Wrist/MiddleFingerMetacarpal/MiddleFingerKnuckle/MiddleFingerIntermediateBase", "Wrist/MiddleFingerMetacarpal/MiddleFingerKnuckle/MiddleFingerIntermediateBase/MiddleFingerIntermediateTip", "Wrist/MiddleFingerMetacarpal/MiddleFingerKnuckle/MiddleFingerIntermediateBase/MiddleFingerIntermediateTip/MiddleFingerTip",
-         "Wrist/RingFingerMetacarpal", "Wrist/RingFingerMetacarpal/RingFingerKnuckle", "Wrist/RingFingerMetacarpal/RingFingerKnuckle/RingFingerIntermediateBase", "Wrist/RingFingerMetacarpal/RingFingerKnuckle/RingFingerIntermediateBase/RingFingerIntermediateTip", "Wrist/RingFingerMetacarpal/RingFingerKnuckle/RingFingerIntermediateBase/RingFingerIntermediateTip/RingFingerTip",
-         "Wrist/LittleFingerMetacarpal", "Wrist/LittleFingerMetacarpal/LittleFingerKnuckle", "Wrist/LittleFingerMetacarpal/LittleFingerKnuckle/LittleFingerIntermediateBase", "Wrist/LittleFingerMetacarpal/LittleFingerKnuckle/LittleFingerIntermediateBase/LittleFingerIntermediateTip", "Wrist/LittleFingerMetacarpal/LittleFingerKnuckle/LittleFingerIntermediateBase/LittleFingerIntermediateTip/LittleFingerTip"])
-         */
-        
     }
     
     public func updateHandModel(from handAnchor: HandAnchor) {

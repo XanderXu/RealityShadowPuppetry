@@ -28,8 +28,6 @@ struct StereoImageImmersiveView: View {
                 entity.addChild(stereoEntity)
                 
                 try await model.prepareStereoModel()
-                //For test
-//                entity.addChild(model.shadowMixManager?.rootEntity ?? Entity())
                 
             } catch {
                 print(error)
