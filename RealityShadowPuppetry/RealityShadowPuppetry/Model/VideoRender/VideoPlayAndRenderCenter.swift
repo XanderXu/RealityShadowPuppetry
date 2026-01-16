@@ -31,7 +31,6 @@ final class VideoPlayAndRenderCenter {
     private var playbackFinishedObserver: NSObjectProtocol?
     
     init(asset: AVAsset) async throws {
-        self.transparentPlayer = AVPlayer(playerItem: AVPlayerItem(asset: asset))
         let player = try await createPlayer(asset: asset)
         self.player = player
         self.customCompositor = player.currentItem?.customVideoCompositor as? VideoCustomCompositor
@@ -39,6 +38,7 @@ final class VideoPlayAndRenderCenter {
         self.customCompositor?.videoPixelUpdate = { [weak self] in
             self?.videoPixelUpdate?()
         }
+        self.transparentPlayer = AVPlayer(playerItem: AVPlayerItem(asset: asset))
         setupPlayerObservers()
     }
     
@@ -117,6 +117,7 @@ final class VideoPlayAndRenderCenter {
         playerStatusDidChange = nil
         playerItemStatusDidChange = nil
         playbackDidFinish = nil
+        videoPixelUpdate = nil
     }
     private func createPlayer(asset: AVAsset) async throws -> AVPlayer {
         // Create a video composition with CustomCompositor

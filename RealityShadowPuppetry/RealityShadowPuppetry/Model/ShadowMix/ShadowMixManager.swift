@@ -6,10 +6,25 @@
 //
 
 import RealityKit
-import MetalKit
+@preconcurrency import MetalKit
 @preconcurrency import AVFoundation
 import MetalPerformanceShaders
 import ARKit
+
+// Processing state manager using actor for thread safety
+actor ProcessingStateManager {
+    private var isProcessing: Bool = false
+
+    func tryStartProcessing() -> Bool {
+        guard !isProcessing else { return false }
+        isProcessing = true
+        return true
+    }
+
+    func finishProcessing() {
+        isProcessing = false
+    }
+}
 
 final class ShadowMixManager {
     enum TrackingType: String, CaseIterable {
@@ -37,28 +52,37 @@ final class ShadowMixManager {
         }
     }
     
-    private let mtlDevice = MTLCreateSystemDefaultDevice()!
+    private let mtlDevice: MTLDevice
     private let offscreenRenderer: OffscreenRenderer?
     private let llt: LowLevelTexture
     private(set) var videoPlayAndRenderCenter: VideoPlayAndRenderCenter?
-    
+
     private let handEntityManager: HandEntityManager
     private let bodyEntityManager: BodyEntityManager
-    
+
     // MARK: - Private Properties
     private var grayMixRedPipelineState: MTLComputePipelineState?
-    private var isProcessing: Bool = false
+    private let processingStateManager = ProcessingStateManager()
     
     init(asset: AVAsset, trackingType: TrackingType) async throws {
         bodyEntityManager = BodyEntityManager()
-        handEntityManager =  HandEntityManager()
+        handEntityManager = HandEntityManager()
         self.trackingType = trackingType
-        
+
+        // Create Metal device
+        guard let device = MTLCreateSystemDefaultDevice() else {
+            throw NSError(domain: "ShadowMixManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create Metal device"])
+        }
+        self.mtlDevice = device
+
         // Initialize compute pipeline state
         grayMixRedPipelineState = Self.createGrayMixRedComputePipelineState(device: mtlDevice)
         videoPlayAndRenderCenter = try await VideoPlayAndRenderCenter(asset: asset)
-        
-        let videoTrack = try await asset.loadTracks(withMediaType: .video).first!
+
+        // Load video track
+        guard let videoTrack = try await asset.loadTracks(withMediaType: .video).first else {
+            throw NSError(domain: "ShadowMixManager", code: -2, userInfo: [NSLocalizedDescriptionKey: "No video track found in asset"])
+        }
         let naturalSize = try await videoTrack.load(.naturalSize)
         
         offscreenRenderer = try OffscreenRenderer(device: mtlDevice,textureSize: naturalSize)
@@ -72,8 +96,11 @@ final class ShadowMixManager {
         //An entity of a plane which uses the LowLevelTexture from mixedTexture.
         let textureDescriptor = Self.createTextureDescriptor(width: Int(naturalSize.width), height: Int(naturalSize.height))
         llt = try LowLevelTexture(descriptor: textureDescriptor)
-        
-        guard let player = videoPlayAndRenderCenter?.player, let transparentPlayer = videoPlayAndRenderCenter?.transparentPlayer else { return }
+
+        // Validate players are created
+        guard let player = videoPlayAndRenderCenter?.player, let transparentPlayer = videoPlayAndRenderCenter?.transparentPlayer else {
+            throw NSError(domain: "ShadowMixManager", code: -3, userInfo: [NSLocalizedDescriptionKey: "Failed to create video players"])
+        }
         
         //An entity of a plane which uses the VideoMaterial.
         let videoMaterial = VideoMaterial(avPlayer: player)
@@ -94,9 +121,12 @@ final class ShadowMixManager {
         mixedTextureEntity.name = "MixedTexture"
         mixedTextureEntity.position = SIMD3(x: 0, y: 1, z: -2)
         
-        videoPlayAndRenderCenter?.videoPixelUpdate = { [weak self, weak videoPlayAndRenderCenter] in
-            Task { @MainActor in
-                self?.populateMPS(videoTexture: videoPlayAndRenderCenter?.lastestPixel, offscreenTexture: self?.offscreenRenderer?.colorTexture, lowLevelTexture: self?.llt, device: self?.mtlDevice)
+        videoPlayAndRenderCenter?.videoPixelUpdate = { [weak self] in
+            Task.detached(priority: .userInitiated) { [weak self] in
+                await self?.populateMPS(videoTexture: self?.videoPlayAndRenderCenter?.lastestPixel,
+                        offscreenTexture: self?.offscreenRenderer?.colorTexture,
+                        lowLevelTexture: self?.llt,
+                        device: self?.mtlDevice)
             }
         }
     }
@@ -106,6 +136,7 @@ final class ShadowMixManager {
         handEntityManager.clean()
         videoPlayAndRenderCenter?.clean()
         originalVideoEntity.removeFromParent()
+        originalTransparentVideoEntity.removeFromParent()
         mixedTextureEntity.removeFromParent()
     }
     public func loadHandModelEntity() async throws {
@@ -156,8 +187,13 @@ final class ShadowMixManager {
     
 
     public func populateFinalShadowIfNeeded() {
-        if videoPlayAndRenderCenter?.player?.timeControlStatus != .playing {
-            populateMPS(videoTexture: videoPlayAndRenderCenter?.lastestPixel, offscreenTexture: offscreenRenderer?.colorTexture, lowLevelTexture: llt, device: mtlDevice)
+        guard videoPlayAndRenderCenter?.player?.timeControlStatus != .playing else { return }
+
+        Task.detached(priority: .userInitiated) { [weak self] in
+            await self?.populateMPS(videoTexture: self?.videoPlayAndRenderCenter?.lastestPixel,
+                    offscreenTexture: self?.offscreenRenderer?.colorTexture,
+                    lowLevelTexture: self?.llt,
+                    device: self?.mtlDevice)
         }
     }
     
@@ -198,41 +234,58 @@ final class ShadowMixManager {
     }
     
     // MARK: - Texture Processing
-    private func populateMPS(videoTexture: (any MTLTexture)?, offscreenTexture: (any MTLTexture)?, lowLevelTexture: LowLevelTexture?, device: MTLDevice?) {
-        if isProcessing { return }
+    private func populateMPS(videoTexture: (any MTLTexture)?, offscreenTexture: (any MTLTexture)?, lowLevelTexture: LowLevelTexture?, device: MTLDevice?) async {
+        // Thread-safe check and set of isProcessing flag using actor
+        let shouldProcess = await processingStateManager.tryStartProcessing()
+        guard shouldProcess else { return }
+
+        // Ensure processing state is reset even if errors occur
+        defer {
+            Task {
+                await processingStateManager.finishProcessing()
+            }
+        }
+
         guard let lowLevelTexture = lowLevelTexture,
-              let device = device, 
-              let offscreenTexture = offscreenTexture else { return }
-        
+              let device = device,
+              let offscreenTexture = offscreenTexture else {
+            return
+        }
+
         guard let commandQueue = device.makeCommandQueue(),
               let commandBuffer = commandQueue.makeCommandBuffer() else {
             print("Failed to create command queue or command buffer")
             return
         }
-        
-        isProcessing = true
+
         let outTexture = lowLevelTexture.replace(using: commandBuffer)
-        
-        switch shadowStyle {
+
+        // Capture current style to avoid actor isolation issues
+        let currentStyle = shadowStyle
+
+        switch currentStyle {
         case .ColorAdd:
             processColorAdd(videoTexture: videoTexture, offscreenTexture: offscreenTexture, outputTexture: outTexture, commandBuffer: commandBuffer, device: device)
-            
+
         case .GrayAdd:
             processGrayAdd(videoTexture: videoTexture, offscreenTexture: offscreenTexture, outputTexture: outTexture, commandBuffer: commandBuffer, device: device)
-            
+
         case .GrayMixRed:
             processGrayMixRed(videoTexture: videoTexture, offscreenTexture: offscreenTexture, outputTexture: outTexture, commandBuffer: commandBuffer, device: device)
         }
-        
-        commandBuffer.addCompletedHandler { cmdBuffer in
-            let start = commandBuffer.gpuStartTime
-            let end = commandBuffer.gpuEndTime
-            let gpuRuntimeDuration = end - start
-            print("GPU Runtime Duration: \(gpuRuntimeDuration)")
-            
-            self.isProcessing = false
+
+        // Use async continuation to wait for GPU completion
+        await withCheckedContinuation { continuation in
+            commandBuffer.addCompletedHandler { cmdBuffer in
+                let start = commandBuffer.gpuStartTime
+                let end = commandBuffer.gpuEndTime
+                let gpuRuntimeDuration = end - start
+                print("GPU Runtime Duration: \(gpuRuntimeDuration)")
+
+                continuation.resume()
+            }
+            commandBuffer.commit()
         }
-        commandBuffer.commit()
     }
     
     // MARK: - Processing Methods
