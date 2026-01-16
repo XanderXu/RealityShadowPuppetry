@@ -31,8 +31,6 @@ struct HandShadowImmersiveView: View {
                 originalEntity.isEnabled = model.showOriginalVideo
                 
                 try await model.prepareHandModel()
-                
-                
             } catch {
                 print(error)
             }

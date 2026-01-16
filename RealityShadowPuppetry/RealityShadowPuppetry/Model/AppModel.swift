@@ -170,23 +170,20 @@ class AppModel {
             switch update.event {
             case .added, .updated:
                 let anchor = update.anchor
+                guard anchor.isTracked else { continue }
                 var deviceTransform: simd_float4x4?
                 if worldTracking.state == .running {
                     let device = worldTracking.queryDeviceAnchor(atTimestamp: anchor.timestamp)
                     deviceTransform = device?.originFromAnchorTransform
                 }
-                print("handUpdate", update.event, anchor.chirality)
+//                debugPrint("handUpdate", update.event, anchor.chirality)
                 await shadowMixManager?.updateEntity(from: anchor, deviceMatrix: deviceTransform)
-                if update.event == .added {
-                    shadowMixManager?.cameraLookAtHandCenter()
-                }
             case .removed:
                 let anchor = update.anchor
                 shadowMixManager?.removeEntity(from: anchor)
             }
             count += 1
-            if count % 5 == 0 {
-                
+            if count % 8 == 0 {
                 try? await shadowMixManager?.renderEntityShadowTextureAsync()
                 shadowMixManager?.populateFinalShadowIfNeeded()
                 count = 0

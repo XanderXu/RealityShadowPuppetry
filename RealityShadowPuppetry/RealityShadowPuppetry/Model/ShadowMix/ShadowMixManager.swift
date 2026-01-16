@@ -150,7 +150,7 @@ final class ShadowMixManager {
         textureCacheLock.unlock()
     }
     public func loadHandModelEntity() async throws {
-        offscreenRenderer?.cameraScale = 0.15
+        offscreenRenderer?.cameraScale = 0.13
         try await handEntityManager.loadHandModelEntity()
     }
     public func loadBodyModelEntity() async throws {
@@ -220,7 +220,7 @@ final class ShadowMixManager {
 
         desc.mipmapLevelCount = 1
         desc.pixelFormat = .bgra8Unorm
-        desc.textureUsage = [ .shaderWrite]
+        desc.textureUsage = [.shaderWrite]
         desc.swizzle = .init(red: .red, green: .green, blue: .blue, alpha: .alpha)
 
         return desc
@@ -295,7 +295,7 @@ final class ShadowMixManager {
                 let start = commandBuffer.gpuStartTime
                 let end = commandBuffer.gpuEndTime
                 let gpuRuntimeDuration = end - start
-                print("GPU Runtime Duration: \(gpuRuntimeDuration)")
+                debugPrint("GPU Runtime Duration: \(gpuRuntimeDuration)")
             }
             commandBuffer.commit()
         }
