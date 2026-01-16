@@ -12,7 +12,6 @@ final class VideoPlayAndRenderCenter: @unchecked Sendable {
     var playerStatusDidChange: (@Sendable (AVPlayer.TimeControlStatus) -> Void)?
     var playerItemStatusDidChange: (@Sendable (AVPlayerItem.Status) -> Void)?
     var playbackDidFinish: (() -> Void)?
-    
     var videoPixelUpdate: (() -> Void)?
     var lastestPixel: MTLTexture? {
         return customCompositor?.lastestPixel
@@ -35,7 +34,9 @@ final class VideoPlayAndRenderCenter: @unchecked Sendable {
         self.customCompositor = player.currentItem?.customVideoCompositor as? VideoCustomCompositor
         
         self.customCompositor?.videoPixelUpdate = { [weak self] in
-            self?.videoPixelUpdate?()
+            Task { @MainActor [weak self] in
+                self?.videoPixelUpdate?()
+            }
         }
         self.transparentPlayer = AVPlayer(playerItem: AVPlayerItem(asset: asset))
         setupPlayerObservers()

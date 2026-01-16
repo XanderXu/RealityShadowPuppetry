@@ -9,10 +9,10 @@ import Foundation
 import AVFoundation
 import RealityKit
 
-enum CustomCompositorError: Int, Error, LocalizedError {
+enum CustomCompositorError: Int, Error, LocalizedError, Sendable {
     case ciFilterFailedToProduceOutputImage = -1_000_001
     case notSupportingMoreThanOneSources
-    
+
     var errorDescription: String? {
         switch self {
         case .ciFilterFailedToProduceOutputImage:
@@ -23,15 +23,42 @@ enum CustomCompositorError: Int, Error, LocalizedError {
     }
 }
 
-nonisolated
 final class VideoCustomCompositor: NSObject, AVVideoCompositing, @unchecked Sendable {
-    
-    var videoPixelUpdate: (() -> Void)?
-    
-    var lastestPixel: (any MTLTexture)?
-    
+    // Use a lock-protected state for thread safety
+    private let stateLock = NSLock()
+    private var _videoPixelUpdate: (@Sendable () -> Void)?
+    private var _lastestPixel: (any MTLTexture)?
+
+    // Thread-safe property accessors
+    var videoPixelUpdate: (@Sendable () -> Void)? {
+        get {
+            stateLock.lock()
+            defer { stateLock.unlock() }
+            return _videoPixelUpdate
+        }
+        set {
+            stateLock.lock()
+            defer { stateLock.unlock() }
+            _videoPixelUpdate = newValue
+        }
+    }
+
+    var lastestPixel: (any MTLTexture)? {
+        get {
+            stateLock.lock()
+            defer { stateLock.unlock() }
+            return _lastestPixel
+        }
+        set {
+            stateLock.lock()
+            defer { stateLock.unlock() }
+            _lastestPixel = newValue
+        }
+    }
+
     private var isCancelled = false
     private var request: AVAsynchronousVideoCompositionRequest?
+
     var sourcePixelBufferAttributes: [String: any Sendable]? = [
         String(kCVPixelBufferPixelFormatTypeKey): [kCVPixelFormatType_32BGRA],
         String(kCVPixelBufferMetalCompatibilityKey): true // Critical!
@@ -45,45 +72,56 @@ final class VideoCustomCompositor: NSObject, AVVideoCompositing, @unchecked Send
         return
     }
     func cancelAllPendingVideoCompositionRequests() {
+        stateLock.lock()
+        defer { stateLock.unlock() }
         isCancelled = true
         request?.finishCancelledRequest()
         request = nil
     }
+
     func startRequest(_ request: AVAsynchronousVideoCompositionRequest) {
+        stateLock.lock()
         self.request = request
-        isCancelled = false  // Reset cancellation status
+        self.isCancelled = false
+        stateLock.unlock()
+
 //        guard let outputPixelBuffer = request.renderContext.newPixelBuffer() else {
 //            print("No valid pixel buffer found. Returning.")
 //            request.finish(with: CustomCompositorError.ciFilterFailedToProduceOutputImage)
 //            return
 //        }
-        
+
         guard let requiredTrackIDs = request.videoCompositionInstruction.requiredSourceTrackIDs, !requiredTrackIDs.isEmpty else {
             print("No valid track IDs found in composition instruction.")
             return
         }
-        
+
         let sourceCount = requiredTrackIDs.count
-        
+
         if sourceCount > 1 {
             request.finish(with: CustomCompositorError.notSupportingMoreThanOneSources)
             return
         }
-        
+
         if sourceCount == 1 {
             let sourceID = requiredTrackIDs[0]
             let sourceBuffer = request.sourceFrame(byTrackID: sourceID.value(of: Int32.self)!)!
             request.finish(withComposedVideoFrame: sourceBuffer)
-            self.lastestPixel = self.convertToMetalTexture(sourceBuffer)
-            Task {
-                self.videoPixelUpdate?()
+
+            let metalTexture = convertToMetalTexture(sourceBuffer)
+            self.lastestPixel = metalTexture
+
+            // Trigger update callback outside of lock
+            let callback = self.videoPixelUpdate
+            Task { @MainActor in
+                callback?()
             }
         }
-        
+
 //        request.finish(withComposedVideoFrame: outputPixelBuffer)
     }
-//    @concurrent
-    func convertToMetalTexture(_ pixelBuffer: CVPixelBuffer) -> MTLTexture? {
+
+    nonisolated func convertToMetalTexture(_ pixelBuffer: CVPixelBuffer) -> MTLTexture? {
         guard let device = MTLCreateSystemDefaultDevice() else {
             print("Failed to create Metal device")
             return nil
