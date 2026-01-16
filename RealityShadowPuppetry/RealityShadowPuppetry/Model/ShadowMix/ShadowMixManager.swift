@@ -128,9 +128,9 @@ final class ShadowMixManager {
         mixedTextureEntity.position = SIMD3(x: 0, y: 1, z: -2)
 
         // Start listening to update stream from compositor
-        if let compositor = videoPlayAndRenderCenter?.player?.currentItem?.customVideoCompositor as? VideoCustomCompositor {
+        if let updateStream = videoPlayAndRenderCenter?.updateStream {
             updateStreamTask = Task { [weak self] in
-                for await _ in compositor.updateStream {
+                for await _ in updateStream {
                     await self?.populateMPS(videoTexture: self?.videoPlayAndRenderCenter?.lastestPixel,
                             offscreenTexture: self?.offscreenRenderer?.colorTexture,
                             lowLevelTexture: self?.llt,
