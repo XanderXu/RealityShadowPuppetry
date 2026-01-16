@@ -8,6 +8,7 @@
 import Foundation
 import AVFoundation
 import RealityKit
+import os
 
 enum CustomCompositorError: Int, Error, LocalizedError, Sendable {
     case ciFilterFailedToProduceOutputImage = -1_000_001
@@ -25,43 +26,34 @@ enum CustomCompositorError: Int, Error, LocalizedError, Sendable {
 
 nonisolated
 final class VideoCustomCompositor: NSObject, AVVideoCompositing, @unchecked Sendable {
-    // Use a lock-protected state for thread safety
-    private let stateLock = NSLock()
-    private var _videoPixelUpdate: (@Sendable () -> Void)?
-    private var _lastestPixel: (any MTLTexture)?
+    // Thread-safe state container
+    private struct State: Sendable {
+        var videoPixelUpdate: (@Sendable () -> Void)?
+        var lastestPixel: MTLTexture?
+        var isCancelled = false
+        var request: AVAsynchronousVideoCompositionRequest?
+    }
+
+    // Use OSAllocatedUnfairLock for better performance and proper Sendable conformance
+    private let state = OSAllocatedUnfairLock(initialState: State())
 
     // Reusable Metal texture cache for better performance
-    private var metalTextureCache: CVMetalTextureCache?
+    private let metalTextureCache: CVMetalTextureCache?
 
     // Thread-safe property accessors
     var videoPixelUpdate: (@Sendable () -> Void)? {
-        get {
-            stateLock.lock()
-            defer { stateLock.unlock() }
-            return _videoPixelUpdate
-        }
-        set {
-            stateLock.lock()
-            defer { stateLock.unlock() }
-            _videoPixelUpdate = newValue
-        }
+        get { state.withLock { $0.videoPixelUpdate } }
+        set { state.withLock { $0.videoPixelUpdate = newValue } }
     }
 
     var lastestPixel: (any MTLTexture)? {
-        get {
-            stateLock.lock()
-            defer { stateLock.unlock() }
-            return _lastestPixel
-        }
+        get { state.withLock { $0.lastestPixel } }
         set {
-            stateLock.lock()
-            defer { stateLock.unlock() }
-            _lastestPixel = newValue
+            state.withLock { state in
+                state.lastestPixel = newValue
+            }
         }
     }
-
-    private var isCancelled = false
-    private var request: AVAsynchronousVideoCompositionRequest?
 
     var sourcePixelBufferAttributes: [String: any Sendable]? = [
         String(kCVPixelBufferPixelFormatTypeKey): [kCVPixelFormatType_32BGRA],
@@ -75,13 +67,19 @@ final class VideoCustomCompositor: NSObject, AVVideoCompositing, @unchecked Send
     override init() {
         // Initialize Metal device and texture cache once
         let metalDevice = MTLCreateSystemDefaultDevice()
+        var cache: CVMetalTextureCache?
+
         if let device = metalDevice {
-            var cache: CVMetalTextureCache?
             let result = CVMetalTextureCacheCreate(kCFAllocatorDefault, nil, device, nil, &cache)
             if result == kCVReturnSuccess {
                 metalTextureCache = cache
+            } else {
+                metalTextureCache = nil
             }
+        } else {
+            metalTextureCache = nil
         }
+
         super.init()
     }
 
@@ -89,18 +87,18 @@ final class VideoCustomCompositor: NSObject, AVVideoCompositing, @unchecked Send
         return
     }
     func cancelAllPendingVideoCompositionRequests() {
-        stateLock.lock()
-        defer { stateLock.unlock() }
-        isCancelled = true
-        request?.finishCancelledRequest()
-        request = nil
+        state.withLock { state in
+            state.isCancelled = true
+            state.request?.finishCancelledRequest()
+            state.request = nil
+        }
     }
 
     func startRequest(_ request: AVAsynchronousVideoCompositionRequest) {
-        stateLock.lock()
-        self.request = request
-        self.isCancelled = false
-        stateLock.unlock()
+        state.withLock { state in
+            state.request = request
+            state.isCancelled = false
+        }
 
 //        guard let outputPixelBuffer = request.renderContext.newPixelBuffer() else {
 //            print("No valid pixel buffer found. Returning.")
@@ -126,10 +124,14 @@ final class VideoCustomCompositor: NSObject, AVVideoCompositing, @unchecked Send
             request.finish(withComposedVideoFrame: sourceBuffer)
 
             let metalTexture = convertToMetalTexture(sourceBuffer)
-            self.lastestPixel = metalTexture
+
+            // Atomically update state and get callback in one lock operation
+            let callback = state.withLock { state -> (@Sendable () -> Void)? in
+                state.lastestPixel = metalTexture
+                return state.videoPixelUpdate
+            }
 
             // Trigger update callback outside of lock
-            let callback = self.videoPixelUpdate
             Task { @MainActor in
                 callback?()
             }
