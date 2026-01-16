@@ -116,7 +116,7 @@ final class ShadowMixManager {
         //An entity of a plane which uses the VideoMaterial.
         let videoMaterial2 = VideoMaterial(avPlayer: transparentPlayer)
         originalTransparentVideoEntity.model = .init(mesh: .generatePlane(width: 1, height: Float(naturalSize.height/naturalSize.width)), materials: [videoMaterial2])
-        originalTransparentVideoEntity.name = "OriginalVideo"
+        originalTransparentVideoEntity.name = "OriginalTransparentVideo"
         originalTransparentVideoEntity.position = SIMD3(x: 1.2, y: 1, z: -2)
         
         let resource = try await TextureResource(from: llt)
@@ -250,22 +250,17 @@ final class ShadowMixManager {
         let shouldProcess = await processingStateManager.tryStartProcessing()
         guard shouldProcess else { return }
 
-        // Ensure processing state is reset even if errors occur
-        defer {
-            Task {
-                await processingStateManager.finishProcessing()
-            }
-        }
-
         guard let lowLevelTexture = lowLevelTexture,
               let device = device,
               let offscreenTexture = offscreenTexture else {
+            await processingStateManager.finishProcessing()
             return
         }
 
         guard let commandQueue = device.makeCommandQueue(),
               let commandBuffer = commandQueue.makeCommandBuffer() else {
             print("Failed to create command queue or command buffer")
+            await processingStateManager.finishProcessing()
             return
         }
 
@@ -299,6 +294,9 @@ final class ShadowMixManager {
             }
             commandBuffer.commit()
         }
+
+        // Clean up: reset processing state after GPU work is scheduled
+        await processingStateManager.finishProcessing()
     }
     
     // MARK: - Processing Methods
@@ -394,24 +392,21 @@ final class ShadowMixManager {
 
     nonisolated
     private func getCachedTexture(descriptor: MTLTextureDescriptor, cacheKey: String, device: MTLDevice) -> MTLTexture? {
-        // Try to get from cache
         textureCacheLock.lock()
+        defer { textureCacheLock.unlock() }
+
+        // Try to get from cache
         if let cachedTexture = textureCache[cacheKey] {
-            textureCacheLock.unlock()
             return cachedTexture
         }
-        textureCacheLock.unlock()
 
-        // Create new texture if not in cache
+        // Create new texture if not in cache (while still holding the lock)
         guard let newTexture = device.makeTexture(descriptor: descriptor) else {
             return nil
         }
 
         // Add to cache
-        textureCacheLock.lock()
         textureCache[cacheKey] = newTexture
-        textureCacheLock.unlock()
-
         return newTexture
     }
     
