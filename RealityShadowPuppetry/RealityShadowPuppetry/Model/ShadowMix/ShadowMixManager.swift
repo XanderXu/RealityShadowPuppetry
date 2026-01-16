@@ -63,6 +63,11 @@ final class ShadowMixManager {
     // MARK: - Private Properties
     private nonisolated let grayMixRedPipelineState: MTLComputePipelineState?
     private let processingStateManager = ProcessingStateManager()
+
+    // Texture cache for reusing temporary textures
+    // nonisolated(unsafe) is safe here because we use textureCacheLock for thread safety
+    private nonisolated(unsafe) var textureCache: [String: MTLTexture] = [:]
+    private nonisolated let textureCacheLock = NSLock()
     
     init(asset: AVAsset, trackingType: TrackingType) async throws {
         bodyEntityManager = BodyEntityManager()
@@ -138,6 +143,11 @@ final class ShadowMixManager {
         originalVideoEntity.removeFromParent()
         originalTransparentVideoEntity.removeFromParent()
         mixedTextureEntity.removeFromParent()
+
+        // Clear texture cache
+        textureCacheLock.lock()
+        textureCache.removeAll()
+        textureCacheLock.unlock()
     }
     public func loadHandModelEntity() async throws {
         offscreenRenderer?.cameraScale = 0.15
@@ -275,15 +285,17 @@ final class ShadowMixManager {
             processGrayMixRed(videoTexture: videoTexture, offscreenTexture: offscreenTexture, outputTexture: outTexture, commandBuffer: commandBuffer, device: device)
         }
 
-        // Use async continuation to wait for GPU completion
+        // Use scheduled handler for better performance - reduces latency compared to completed handler
         await withCheckedContinuation { continuation in
+            commandBuffer.addScheduledHandler { _ in
+                // GPU execution has been scheduled, can continue
+                continuation.resume()
+            }
             commandBuffer.addCompletedHandler { cmdBuffer in
                 let start = commandBuffer.gpuStartTime
                 let end = commandBuffer.gpuEndTime
                 let gpuRuntimeDuration = end - start
                 print("GPU Runtime Duration: \(gpuRuntimeDuration)")
-
-                continuation.resume()
             }
             commandBuffer.commit()
         }
@@ -303,26 +315,29 @@ final class ShadowMixManager {
     nonisolated
     private func processGrayAdd(videoTexture: (any MTLTexture)?, offscreenTexture: MTLTexture, outputTexture: MTLTexture, commandBuffer: MTLCommandBuffer, device: MTLDevice) {
         let tempTextureDesc = createTempTextureDescriptor(from: offscreenTexture)
-        
-        guard let tempOffscreenTexture = device.makeTexture(descriptor: tempTextureDesc) else {
+
+        // Use texture cache to reuse textures
+        let offscreenCacheKey = "tempOffscreen_\(offscreenTexture.width)x\(offscreenTexture.height)"
+        guard let tempOffscreenTexture = getCachedTexture(descriptor: tempTextureDesc, cacheKey: offscreenCacheKey, device: device) else {
             print("Failed to create temporary offscreen texture")
             copyTexture(from: offscreenTexture, to: outputTexture, commandBuffer: commandBuffer)
             return
         }
-        
+
         // Convert offscreen texture to binary image
         let offscreenThreshold = MPSImageThresholdBinary(device: device, thresholdValue: 0, maximumValue: 0.8, linearGrayColorTransform: nil)
         offscreenThreshold.encode(commandBuffer: commandBuffer, sourceTexture: offscreenTexture, destinationTexture: tempOffscreenTexture)
-        
+
         if let videoTexture = videoTexture {
-            guard let tempVideoTexture = device.makeTexture(descriptor: tempTextureDesc) else {
+            // Use texture cache for video texture as well
+            let videoCacheKey = "tempVideo_\(videoTexture.width)x\(videoTexture.height)"
+            guard let tempVideoTexture = getCachedTexture(descriptor: tempTextureDesc, cacheKey: videoCacheKey, device: device) else {
                 print("Failed to create temporary video texture")
                 copyTexture(from: tempOffscreenTexture, to: outputTexture, commandBuffer: commandBuffer)
                 return
             }
-            
+
             // Use very low threshold and linear grayscale conversion
-//            let threshold = MPSImageThresholdToZero(device: device, thresholdValue: 0, linearGrayColorTransform: nil)
             let threshold = MPSImageThresholdBinary(device: device, thresholdValue: 0, maximumValue: 0.8, linearGrayColorTransform: nil)
             threshold.encode(commandBuffer: commandBuffer, sourceTexture: videoTexture, destinationTexture: tempVideoTexture)
             // Add two binary images
@@ -375,6 +390,29 @@ final class ShadowMixManager {
         )
         descriptor.usage = [.shaderRead, .shaderWrite]
         return descriptor
+    }
+
+    nonisolated
+    private func getCachedTexture(descriptor: MTLTextureDescriptor, cacheKey: String, device: MTLDevice) -> MTLTexture? {
+        // Try to get from cache
+        textureCacheLock.lock()
+        if let cachedTexture = textureCache[cacheKey] {
+            textureCacheLock.unlock()
+            return cachedTexture
+        }
+        textureCacheLock.unlock()
+
+        // Create new texture if not in cache
+        guard let newTexture = device.makeTexture(descriptor: descriptor) else {
+            return nil
+        }
+
+        // Add to cache
+        textureCacheLock.lock()
+        textureCache[cacheKey] = newTexture
+        textureCacheLock.unlock()
+
+        return newTexture
     }
     
     nonisolated
