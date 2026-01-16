@@ -25,11 +25,9 @@ enum CustomCompositorError: Int, Error, LocalizedError, Sendable {
 }
 
 nonisolated
-final class VideoCustomCompositor: NSObject, AVVideoCompositing, @unchecked Sendable {
+final class VideoCustomCompositor: NSObject, AVVideoCompositing, Sendable {
     // Thread-safe state container
     private struct State: Sendable {
-        var videoPixelUpdate: (@Sendable () -> Void)?
-        var lastestPixel: MTLTexture?
         var isCancelled = false
         var request: AVAsynchronousVideoCompositionRequest?
     }
@@ -37,22 +35,20 @@ final class VideoCustomCompositor: NSObject, AVVideoCompositing, @unchecked Send
     // Use OSAllocatedUnfairLock for better performance and proper Sendable conformance
     private let state = OSAllocatedUnfairLock(initialState: State())
 
+    // Store latest texture separately with its own lock (not in State to avoid Sendable issue)
+    private let latestTextureLock = OSAllocatedUnfairLock<MTLTexture?>(initialState: nil)
+
     // Reusable Metal texture cache for better performance
     private let metalTextureCache: CVMetalTextureCache?
 
-    // Thread-safe property accessors
-    var videoPixelUpdate: (@Sendable () -> Void)? {
-        get { state.withLock { $0.videoPixelUpdate } }
-        set { state.withLock { $0.videoPixelUpdate = newValue } }
-    }
+    // AsyncStream for update events - fully Sendable compliant
+    private let updateContinuation: AsyncStream<Void>.Continuation
+    let updateStream: AsyncStream<Void>
 
-    var lastestPixel: (any MTLTexture)? {
-        get { state.withLock { $0.lastestPixel } }
-        set {
-            state.withLock { state in
-                state.lastestPixel = newValue
-            }
-        }
+    // Thread-safe property accessor for latest texture
+    var lastestPixel: MTLTexture? {
+        get { latestTextureLock.withLock { $0 } }
+        set { latestTextureLock.withLock { $0 = newValue } }
     }
 
     var sourcePixelBufferAttributes: [String: any Sendable]? = [
@@ -65,6 +61,14 @@ final class VideoCustomCompositor: NSObject, AVVideoCompositing, @unchecked Send
     ]
 
     override init() {
+        // Create AsyncStream for update events
+        var continuation: AsyncStream<Void>.Continuation!
+        let stream = AsyncStream<Void> { cont in
+            continuation = cont
+        }
+        self.updateContinuation = continuation
+        self.updateStream = stream
+
         // Initialize Metal device and texture cache once
         let metalDevice = MTLCreateSystemDefaultDevice()
         var cache: CVMetalTextureCache?
@@ -81,6 +85,11 @@ final class VideoCustomCompositor: NSObject, AVVideoCompositing, @unchecked Send
         }
 
         super.init()
+    }
+
+    deinit {
+        // Finish the stream when compositor is deallocated
+        updateContinuation.finish()
     }
 
     func renderContextChanged(_ newRenderContext: AVVideoCompositionRenderContext) {
@@ -123,17 +132,12 @@ final class VideoCustomCompositor: NSObject, AVVideoCompositing, @unchecked Send
             let sourceBuffer = request.sourceFrame(byTrackID: sourceID.value(of: Int32.self)!)!
             request.finish(withComposedVideoFrame: sourceBuffer)
 
-            let metalTexture = convertToMetalTexture(sourceBuffer)
+            if let metalTexture = convertToMetalTexture(sourceBuffer) {
+                // Update the latest texture
+                self.lastestPixel = metalTexture
 
-            // Atomically update state and get callback in one lock operation
-            let callback = state.withLock { state -> (@Sendable () -> Void)? in
-                state.lastestPixel = metalTexture
-                return state.videoPixelUpdate
-            }
-
-            // Trigger update callback outside of lock
-            Task { @MainActor in
-                callback?()
+                // Yield update event to AsyncStream - this is Sendable-safe
+                updateContinuation.yield()
             }
         }
 

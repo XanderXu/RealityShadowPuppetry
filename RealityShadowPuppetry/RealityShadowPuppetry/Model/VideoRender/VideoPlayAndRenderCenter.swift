@@ -12,32 +12,30 @@ final class VideoPlayAndRenderCenter: @unchecked Sendable {
     var playerStatusDidChange: (@Sendable (AVPlayer.TimeControlStatus) -> Void)?
     var playerItemStatusDidChange: (@Sendable (AVPlayerItem.Status) -> Void)?
     var playbackDidFinish: (() -> Void)?
-    var videoPixelUpdate: (() -> Void)?
     var lastestPixel: MTLTexture? {
         return customCompositor?.lastestPixel
     }
-    
+
     /// the AVPlayer with customVideoCompositorClass can't play a tranparent video, it's probably a bug
     private(set) var player: AVPlayer?
     /// the AVPlayer without customVideoCompositorClass, can play a tranparent video
     private(set) var transparentPlayer: AVPlayer?
-    
+
     // MARK: - Private Properties
     private var customCompositor: VideoCustomCompositor?
     private var timeControlStatusObserver: NSKeyValueObservation?
     private var playerItemStatusObserver: NSKeyValueObservation?
     private var playbackFinishedObserver: NSObjectProtocol?
+
+    // Stream for external consumers to listen to texture updates
+    var updateStream: AsyncStream<Void>? {
+        return customCompositor?.updateStream
+    }
     
     init(asset: AVAsset) async throws {
         let player = try await createPlayer(asset: asset)
         self.player = player
         self.customCompositor = player.currentItem?.customVideoCompositor as? VideoCustomCompositor
-        
-        self.customCompositor?.videoPixelUpdate = { [weak self] in
-            Task { @MainActor [weak self] in
-                self?.videoPixelUpdate?()
-            }
-        }
         self.transparentPlayer = AVPlayer(playerItem: AVPlayerItem(asset: asset))
         setupPlayerObservers()
     }
@@ -59,14 +57,13 @@ final class VideoPlayAndRenderCenter: @unchecked Sendable {
 
     public func clean() {
         removePlayerObservers()
-        
+
         transparentPlayer?.pause()
         transparentPlayer?.seek(to: .zero)
         player?.pause()
         player?.seek(to: .zero)
         customCompositor?.cancelAllPendingVideoCompositionRequests()
         customCompositor?.lastestPixel = nil
-        customCompositor?.videoPixelUpdate = nil
     }
     
     private func setupPlayerObservers() {
@@ -125,7 +122,6 @@ final class VideoPlayAndRenderCenter: @unchecked Sendable {
         playerStatusDidChange = nil
         playerItemStatusDidChange = nil
         playbackDidFinish = nil
-        videoPixelUpdate = nil
     }
     private func createPlayer(asset: AVAsset) async throws -> AVPlayer {
         // Create a video composition with CustomCompositor

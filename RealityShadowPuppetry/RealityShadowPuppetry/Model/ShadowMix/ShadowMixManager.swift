@@ -56,6 +56,7 @@ final class ShadowMixManager {
     private let offscreenRenderer: OffscreenRenderer?
     private let llt: LowLevelTexture
     private(set) var videoPlayAndRenderCenter: VideoPlayAndRenderCenter?
+    private var updateStreamTask: Task<Void, Never>?
 
     private let handEntityManager: HandEntityManager
     private let bodyEntityManager: BodyEntityManager
@@ -125,18 +126,25 @@ final class ShadowMixManager {
         mixedTextureEntity.model = .init(mesh: .generatePlane(width: 1, height: Float(naturalSize.height/naturalSize.width)), materials: [material])
         mixedTextureEntity.name = "MixedTexture"
         mixedTextureEntity.position = SIMD3(x: 0, y: 1, z: -2)
-        
-        videoPlayAndRenderCenter?.videoPixelUpdate = { [weak self] in
-            Task(priority: .userInitiated) { [weak self] in
-                await self?.populateMPS(videoTexture: self?.videoPlayAndRenderCenter?.lastestPixel,
-                        offscreenTexture: self?.offscreenRenderer?.colorTexture,
-                        lowLevelTexture: self?.llt,
-                        device: self?.mtlDevice)
+
+        // Start listening to update stream from compositor
+        if let compositor = videoPlayAndRenderCenter?.player?.currentItem?.customVideoCompositor as? VideoCustomCompositor {
+            updateStreamTask = Task { [weak self] in
+                for await _ in compositor.updateStream {
+                    await self?.populateMPS(videoTexture: self?.videoPlayAndRenderCenter?.lastestPixel,
+                            offscreenTexture: self?.offscreenRenderer?.colorTexture,
+                            lowLevelTexture: self?.llt,
+                            device: self?.mtlDevice)
+                }
             }
         }
     }
     
     public func clean() {
+        // Cancel the update stream task
+        updateStreamTask?.cancel()
+        updateStreamTask = nil
+
         bodyEntityManager.clean()
         handEntityManager.clean()
         videoPlayAndRenderCenter?.clean()
