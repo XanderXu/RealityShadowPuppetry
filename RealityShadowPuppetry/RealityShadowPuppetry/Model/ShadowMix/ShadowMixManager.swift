@@ -31,7 +31,7 @@ final class ShadowMixManager {
         case hand
         case body
     }
-    enum ShadowMixStyle: String, CaseIterable {
+    enum ShadowMixStyle: String, CaseIterable, Sendable {
         case ColorAdd
         case GrayAdd
         case GrayMixRed
@@ -61,7 +61,7 @@ final class ShadowMixManager {
     private let bodyEntityManager: BodyEntityManager
 
     // MARK: - Private Properties
-    private var grayMixRedPipelineState: MTLComputePipelineState?
+    private nonisolated let grayMixRedPipelineState: MTLComputePipelineState?
     private let processingStateManager = ProcessingStateManager()
     
     init(asset: AVAsset, trackingType: TrackingType) async throws {
@@ -122,7 +122,7 @@ final class ShadowMixManager {
         mixedTextureEntity.position = SIMD3(x: 0, y: 1, z: -2)
         
         videoPlayAndRenderCenter?.videoPixelUpdate = { [weak self] in
-            Task.detached(priority: .userInitiated) { [weak self] in
+            Task(priority: .userInitiated) { [weak self] in
                 await self?.populateMPS(videoTexture: self?.videoPlayAndRenderCenter?.lastestPixel,
                         offscreenTexture: self?.offscreenRenderer?.colorTexture,
                         lowLevelTexture: self?.llt,
@@ -189,7 +189,7 @@ final class ShadowMixManager {
     public func populateFinalShadowIfNeeded() {
         guard videoPlayAndRenderCenter?.player?.timeControlStatus != .playing else { return }
 
-        Task.detached(priority: .userInitiated) { [weak self] in
+        Task(priority: .userInitiated) { [weak self] in
             await self?.populateMPS(videoTexture: self?.videoPlayAndRenderCenter?.lastestPixel,
                     offscreenTexture: self?.offscreenRenderer?.colorTexture,
                     lowLevelTexture: self?.llt,
@@ -234,6 +234,7 @@ final class ShadowMixManager {
     }
     
     // MARK: - Texture Processing
+    nonisolated
     private func populateMPS(videoTexture: (any MTLTexture)?, offscreenTexture: (any MTLTexture)?, lowLevelTexture: LowLevelTexture?, device: MTLDevice?) async {
         // Thread-safe check and set of isProcessing flag using actor
         let shouldProcess = await processingStateManager.tryStartProcessing()
@@ -258,10 +259,10 @@ final class ShadowMixManager {
             return
         }
 
-        let outTexture = lowLevelTexture.replace(using: commandBuffer)
+        let outTexture = await lowLevelTexture.replace(using: commandBuffer)
 
         // Capture current style to avoid actor isolation issues
-        let currentStyle = shadowStyle
+        let currentStyle = await self.shadowStyle
 
         switch currentStyle {
         case .ColorAdd:
@@ -332,32 +333,33 @@ final class ShadowMixManager {
         }
     }
     
+    nonisolated
     private func processGrayMixRed(videoTexture: (any MTLTexture)?, offscreenTexture: MTLTexture, outputTexture: MTLTexture, commandBuffer: MTLCommandBuffer, device: MTLDevice) {
         guard let videoTexture = videoTexture,
-              let pipelineState = grayMixRedPipelineState else {
+              let pipelineState = self.grayMixRedPipelineState else {
             // No video texture or pipeline state, fall back to copying offscreen texture
             copyTexture(from: offscreenTexture, to: outputTexture, commandBuffer: commandBuffer)
             return
         }
-        
+
         guard let computeEncoder = commandBuffer.makeComputeCommandEncoder() else {
             print("Failed to create compute encoder")
             copyTexture(from: offscreenTexture, to: outputTexture, commandBuffer: commandBuffer)
             return
         }
-        
+
         computeEncoder.setComputePipelineState(pipelineState)
         computeEncoder.setTexture(videoTexture, index: 0)    // Video texture
         computeEncoder.setTexture(offscreenTexture, index: 1) // Offscreen texture
         computeEncoder.setTexture(outputTexture, index: 2)    // Output texture
-        
+
         let threadgroupSize = MTLSize(width: 8, height: 8, depth: 1)
         let threadgroupCount = MTLSize(
             width: (outputTexture.width + threadgroupSize.width - 1) / threadgroupSize.width,
             height: (outputTexture.height + threadgroupSize.height - 1) / threadgroupSize.height,
             depth: 1
         )
-        
+
         computeEncoder.dispatchThreadgroups(threadgroupCount, threadsPerThreadgroup: threadgroupSize)
         computeEncoder.endEncoding()
     }
