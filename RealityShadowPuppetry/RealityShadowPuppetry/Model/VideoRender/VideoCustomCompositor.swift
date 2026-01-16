@@ -23,6 +23,7 @@ enum CustomCompositorError: Int, Error, LocalizedError, Sendable {
     }
 }
 
+nonisolated
 final class VideoCustomCompositor: NSObject, AVVideoCompositing, @unchecked Sendable {
     // Use a lock-protected state for thread safety
     private let stateLock = NSLock()
