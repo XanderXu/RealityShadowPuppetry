@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(swift-concurrency-expert)",
+      "Skill(swift-concurrency-expert:*)"
+    ]
+  }
+}

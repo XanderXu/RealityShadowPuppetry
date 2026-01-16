@@ -6,12 +6,11 @@
 //
 
 import MetalKit
-@preconcurrency import AVFoundation
+import AVFoundation
 
-
-final class VideoPlayAndRenderCenter {
-    var playerStatusDidChange: ((AVPlayer.TimeControlStatus) -> Void)?
-    var playerItemStatusDidChange: ((AVPlayerItem.Status) -> Void)?
+final class VideoPlayAndRenderCenter: @unchecked Sendable {
+    var playerStatusDidChange: (@Sendable (AVPlayer.TimeControlStatus) -> Void)?
+    var playerItemStatusDidChange: (@Sendable (AVPlayerItem.Status) -> Void)?
     var playbackDidFinish: (() -> Void)?
     
     var videoPixelUpdate: (() -> Void)?
@@ -71,22 +70,16 @@ final class VideoPlayAndRenderCenter {
     
     private func setupPlayerObservers() {
         guard let player = player else { return }
-        
+
         // Monitor playback control status changes (playing, paused, waitingToPlayAtSpecifiedRate)
         timeControlStatusObserver = player.observe(\.timeControlStatus, options: [.new, .old]) { [weak self] player, change in
-            DispatchQueue.main.async {
-                self?.playerStatusDidChange?(player.timeControlStatus)
-                print("Player status changed to: \(player.timeControlStatus)")
-            }
+            self?.handleTimeControlStatusChange(player.timeControlStatus)
         }
-        
+
         // Monitor player item status changes (unknown, readyToPlay, failed)
         if let playerItem = player.currentItem {
             playerItemStatusObserver = playerItem.observe(\.status, options: [.new, .old]) { [weak self] playerItem, change in
-                DispatchQueue.main.async {
-                    self?.playerItemStatusDidChange?(playerItem.status)
-                    print("PlayerItem status changed to: \(playerItem.status)")
-                }
+                self?.handlePlayerItemStatusChange(playerItem.status)
             }
         }
         
@@ -98,6 +91,20 @@ final class VideoPlayAndRenderCenter {
         ) { [weak self] notification in
             self?.playbackDidFinish?()
             print("Playback finished")
+        }
+    }
+
+    private nonisolated func handleTimeControlStatusChange(_ status: AVPlayer.TimeControlStatus) {
+        Task { @MainActor [weak self] in
+            self?.playerStatusDidChange?(status)
+            print("Player status changed to: \(status)")
+        }
+    }
+
+    private nonisolated func handlePlayerItemStatusChange(_ status: AVPlayerItem.Status) {
+        Task { @MainActor [weak self] in
+            self?.playerItemStatusDidChange?(status)
+            print("PlayerItem status changed to: \(status)")
         }
     }
     
