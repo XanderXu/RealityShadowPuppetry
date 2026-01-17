@@ -46,7 +46,7 @@ final class VideoCustomCompositor: NSObject, AVVideoCompositing, Sendable {
     let updateStream: AsyncStream<Void>
 
     // Thread-safe property accessor for latest texture
-    var lastestPixel: MTLTexture? {
+    var latestPixel: MTLTexture? {
         get { latestTextureLock.withLock { $0 } }
         set { latestTextureLock.withLock { $0 = newValue } }
     }
@@ -134,7 +134,7 @@ final class VideoCustomCompositor: NSObject, AVVideoCompositing, Sendable {
 
             if let metalTexture = convertToMetalTexture(sourceBuffer) {
                 // Update the latest texture
-                self.lastestPixel = metalTexture
+                self.latestPixel = metalTexture
 
                 // Yield update event to AsyncStream - this is Sendable-safe
                 updateContinuation.yield()

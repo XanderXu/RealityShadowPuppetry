@@ -38,7 +38,7 @@ final class ShadowMixManager {
     }
     
     let originalVideoEntity = ModelEntity()
-    let originalTransparentVideoEntity = ModelEntity()
+    let originalTextureEntity = ModelEntity()
     let mixedTextureEntity = ModelEntity()
     var shadowStyle = ShadowMixStyle.GrayAdd
     var trackingType: TrackingType = .hand
@@ -54,7 +54,8 @@ final class ShadowMixManager {
     
     private let mtlDevice: MTLDevice
     private let offscreenRenderer: OffscreenRenderer?
-    private let llt: LowLevelTexture
+    private let mixLLT: LowLevelTexture
+    private let originTextureLLT: LowLevelTexture
     private(set) var videoPlayAndRenderCenter: VideoPlayAndRenderCenter?
     private var updateStreamTask: Task<Void, Never>?
 
@@ -101,10 +102,11 @@ final class ShadowMixManager {
         
         //An entity of a plane which uses the LowLevelTexture from mixedTexture.
         let textureDescriptor = Self.createTextureDescriptor(width: Int(naturalSize.width), height: Int(naturalSize.height))
-        llt = try LowLevelTexture(descriptor: textureDescriptor)
+        mixLLT = try LowLevelTexture(descriptor: textureDescriptor)
+        originTextureLLT = try LowLevelTexture(descriptor: textureDescriptor)
 
         // Validate players are created
-        guard let player = videoPlayAndRenderCenter?.player, let transparentPlayer = videoPlayAndRenderCenter?.transparentPlayer else {
+        guard let player = videoPlayAndRenderCenter?.player else {
             throw NSError(domain: "ShadowMixManager", code: -3, userInfo: [NSLocalizedDescriptionKey: "Failed to create video players"])
         }
         
@@ -114,16 +116,17 @@ final class ShadowMixManager {
         originalVideoEntity.name = "OriginalVideo"
         originalVideoEntity.position = SIMD3(x: 1.2, y: 1, z: -2)
         
-        //An entity of a plane which uses the VideoMaterial.
-        let videoMaterial2 = VideoMaterial(avPlayer: transparentPlayer)
-        originalTransparentVideoEntity.model = .init(mesh: .generatePlane(width: 1, height: Float(naturalSize.height/naturalSize.width)), materials: [videoMaterial2])
-        originalTransparentVideoEntity.name = "OriginalTransparentVideo"
-        originalTransparentVideoEntity.position = SIMD3(x: 1.2, y: 1, z: -2)
+        let originResource = try await TextureResource(from: originTextureLLT)
+        var originMaterial = UnlitMaterial(texture: originResource)
+        originMaterial.opacityThreshold = 0.001
+        originalTextureEntity.model = .init(mesh: .generatePlane(width: 1, height: Float(naturalSize.height/naturalSize.width)), materials: [originMaterial])
+        originalTextureEntity.name = "OriginalTransparentTexture"
+        originalTextureEntity.position = SIMD3(x: 1.2, y: 1, z: -2)
         
-        let resource = try await TextureResource(from: llt)
-        var material = UnlitMaterial(texture: resource)
-        material.opacityThreshold = 0.01
-        mixedTextureEntity.model = .init(mesh: .generatePlane(width: 1, height: Float(naturalSize.height/naturalSize.width)), materials: [material])
+        let mixResource = try await TextureResource(from: mixLLT)
+        var mixMaterial = UnlitMaterial(texture: mixResource)
+        mixMaterial.opacityThreshold = 0.01
+        mixedTextureEntity.model = .init(mesh: .generatePlane(width: 1, height: Float(naturalSize.height/naturalSize.width)), materials: [mixMaterial])
         mixedTextureEntity.name = "MixedTexture"
         mixedTextureEntity.position = SIMD3(x: 0, y: 1, z: -2)
 
@@ -131,10 +134,11 @@ final class ShadowMixManager {
         if let updateStream = videoPlayAndRenderCenter?.updateStream {
             updateStreamTask = Task { [weak self] in
                 for await _ in updateStream {
-                    await self?.populateMPS(videoTexture: self?.videoPlayAndRenderCenter?.lastestPixel,
-                            offscreenTexture: self?.offscreenRenderer?.colorTexture,
-                            lowLevelTexture: self?.llt,
-                            device: self?.mtlDevice)
+                    await self?.populateMPS(videoTexture: self?.videoPlayAndRenderCenter?.latestPixel,
+                                            offscreenTexture: self?.offscreenRenderer?.colorTexture,
+                                            mixLLT: self?.mixLLT,
+                                            originLLT: self?.originTextureLLT,
+                                            device: self?.mtlDevice)
                 }
             }
         }
@@ -149,7 +153,7 @@ final class ShadowMixManager {
         handEntityManager.clean()
         videoPlayAndRenderCenter?.clean()
         originalVideoEntity.removeFromParent()
-        originalTransparentVideoEntity.removeFromParent()
+        originalTextureEntity.removeFromParent()
         mixedTextureEntity.removeFromParent()
 
         // Clear texture cache
@@ -208,10 +212,11 @@ final class ShadowMixManager {
         guard videoPlayAndRenderCenter?.player?.timeControlStatus != .playing else { return }
 
         Task(priority: .userInitiated) { [weak self] in
-            await self?.populateMPS(videoTexture: self?.videoPlayAndRenderCenter?.lastestPixel,
-                    offscreenTexture: self?.offscreenRenderer?.colorTexture,
-                    lowLevelTexture: self?.llt,
-                    device: self?.mtlDevice)
+            await self?.populateMPS(videoTexture: self?.videoPlayAndRenderCenter?.latestPixel,
+                                    offscreenTexture: self?.offscreenRenderer?.colorTexture,
+                                    mixLLT: self?.mixLLT,
+                                    originLLT: self?.originTextureLLT,
+                                    device: self?.mtlDevice)
         }
     }
     
@@ -253,12 +258,12 @@ final class ShadowMixManager {
     
     // MARK: - Texture Processing
     nonisolated
-    private func populateMPS(videoTexture: (any MTLTexture)?, offscreenTexture: (any MTLTexture)?, lowLevelTexture: LowLevelTexture?, device: MTLDevice?) async {
+    private func populateMPS(videoTexture: (any MTLTexture)?, offscreenTexture: (any MTLTexture)?, mixLLT: LowLevelTexture?, originLLT: LowLevelTexture?, device: MTLDevice?) async {
         // Thread-safe check and set of isProcessing flag using actor
         let shouldProcess = await processingStateManager.tryStartProcessing()
         guard shouldProcess else { return }
 
-        guard let lowLevelTexture = lowLevelTexture,
+        guard let mixLLT = mixLLT,
               let device = device,
               let offscreenTexture = offscreenTexture else {
             await processingStateManager.finishProcessing()
@@ -272,20 +277,23 @@ final class ShadowMixManager {
             return
         }
 
-        let outTexture = await lowLevelTexture.replace(using: commandBuffer)
-
+        let mixOutTexture = await mixLLT.replace(using: commandBuffer)
+        if let originLLT = originLLT, let videoTexture = videoTexture {
+            let originOutTexture = await originLLT.replace(using: commandBuffer)
+            copyTexture(from: videoTexture, to: originOutTexture, commandBuffer: commandBuffer)
+        }
         // Capture current style to avoid actor isolation issues
         let currentStyle = await self.shadowStyle
 
         switch currentStyle {
         case .ColorAdd:
-            processColorAdd(videoTexture: videoTexture, offscreenTexture: offscreenTexture, outputTexture: outTexture, commandBuffer: commandBuffer, device: device)
+            processColorAdd(videoTexture: videoTexture, offscreenTexture: offscreenTexture, outputTexture: mixOutTexture, commandBuffer: commandBuffer, device: device)
 
         case .GrayAdd:
-            processGrayAdd(videoTexture: videoTexture, offscreenTexture: offscreenTexture, outputTexture: outTexture, commandBuffer: commandBuffer, device: device)
+            processGrayAdd(videoTexture: videoTexture, offscreenTexture: offscreenTexture, outputTexture: mixOutTexture, commandBuffer: commandBuffer, device: device)
 
         case .GrayMixRed:
-            processGrayMixRed(videoTexture: videoTexture, offscreenTexture: offscreenTexture, outputTexture: outTexture, commandBuffer: commandBuffer, device: device)
+            processGrayMixRed(videoTexture: videoTexture, offscreenTexture: offscreenTexture, outputTexture: mixOutTexture, commandBuffer: commandBuffer, device: device)
         }
 
         // Use scheduled handler for better performance - reduces latency compared to completed handler

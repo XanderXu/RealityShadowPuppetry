@@ -56,7 +56,7 @@ class AppModel {
     var showOriginalVideo: Bool = false {
         didSet {
             shadowMixManager?.originalVideoEntity.isEnabled = showOriginalVideo
-            shadowMixManager?.originalTransparentVideoEntity.isEnabled = showOriginalVideo
+            shadowMixManager?.originalTextureEntity.isEnabled = showOriginalVideo
         }
     }
     

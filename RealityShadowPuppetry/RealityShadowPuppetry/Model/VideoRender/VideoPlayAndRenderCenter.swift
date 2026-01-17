@@ -12,15 +12,14 @@ final class VideoPlayAndRenderCenter: @unchecked Sendable {
     var playerStatusDidChange: (@Sendable (AVPlayer.TimeControlStatus) -> Void)?
     var playerItemStatusDidChange: (@Sendable (AVPlayerItem.Status) -> Void)?
     var playbackDidFinish: (() -> Void)?
-    var lastestPixel: MTLTexture? {
-        return customCompositor?.lastestPixel
+    
+    var latestPixel: MTLTexture? {
+        return customCompositor?.latestPixel
     }
 
     /// the AVPlayer with customVideoCompositorClass can't play a tranparent video, it's probably a bug
     private(set) var player: AVPlayer?
-    /// the AVPlayer without customVideoCompositorClass, can play a tranparent video
-    private(set) var transparentPlayer: AVPlayer?
-
+    
     // MARK: - Private Properties
     private var customCompositor: VideoCustomCompositor?
     private var timeControlStatusObserver: NSKeyValueObservation?
@@ -36,34 +35,30 @@ final class VideoPlayAndRenderCenter: @unchecked Sendable {
         let player = try await createPlayer(asset: asset)
         self.player = player
         self.customCompositor = player.currentItem?.customVideoCompositor as? VideoCustomCompositor
-        self.transparentPlayer = AVPlayer(playerItem: AVPlayerItem(asset: asset))
         setupPlayerObservers()
     }
     
     public func play() {
-        transparentPlayer?.play()
         player?.play()
     }
     
     public func pause() {
-        transparentPlayer?.pause()
         player?.pause()
     }
     
     public func seek(to time: CMTime) {
-        transparentPlayer?.seek(to: time)
         player?.seek(to: time)
     }
 
     public func clean() {
         removePlayerObservers()
 
-        transparentPlayer?.pause()
-        transparentPlayer?.seek(to: .zero)
         player?.pause()
         player?.seek(to: .zero)
+
+        // Clean up compositor
         customCompositor?.cancelAllPendingVideoCompositionRequests()
-        customCompositor?.lastestPixel = nil
+        customCompositor?.latestPixel = nil
     }
     
     private func setupPlayerObservers() {
@@ -94,14 +89,16 @@ final class VideoPlayAndRenderCenter: @unchecked Sendable {
 
     private nonisolated func handleTimeControlStatusChange(_ status: AVPlayer.TimeControlStatus) {
         Task { @MainActor [weak self] in
-            self?.playerStatusDidChange?(status)
+            guard let self = self else { return }
+            self.playerStatusDidChange?(status)
             print("Player status changed to: \(status)")
         }
     }
 
     private nonisolated func handlePlayerItemStatusChange(_ status: AVPlayerItem.Status) {
         Task { @MainActor [weak self] in
-            self?.playerItemStatusDidChange?(status)
+            guard let self = self else { return }
+            self.playerItemStatusDidChange?(status)
             print("PlayerItem status changed to: \(status)")
         }
     }
@@ -109,15 +106,15 @@ final class VideoPlayAndRenderCenter: @unchecked Sendable {
     private func removePlayerObservers() {
         timeControlStatusObserver?.invalidate()
         timeControlStatusObserver = nil
-        
+
         playerItemStatusObserver?.invalidate()
         playerItemStatusObserver = nil
-        
+
         if let playbackFinishedObserver = playbackFinishedObserver {
             NotificationCenter.default.removeObserver(playbackFinishedObserver)
             self.playbackFinishedObserver = nil
         }
-        
+
         // Clean up closure references
         playerStatusDidChange = nil
         playerItemStatusDidChange = nil
