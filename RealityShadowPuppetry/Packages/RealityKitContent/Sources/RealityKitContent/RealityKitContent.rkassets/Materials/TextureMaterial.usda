@@ -42,8 +42,9 @@ def Xform "Root"
             float inputs:opacity.connect = </Root/TextureMaterial/Separate4.outputs:outa>
             float inputs:opacityThreshold = 0.001
             token outputs:out
-            float2 ui:nodegraph:node:pos = (1835.9922, 292.52734)
-            int ui:nodegraph:node:stackingOrder = 1390
+            float2 ui:nodegraph:node:pos = (1933.0625, 252.71484)
+            int ui:nodegraph:node:stackingOrder = 1433
+            string[] ui:nodegraph:realitykit:node:attributesShowingChildren = ["inputs:applyPostProcessToneMap"]
         }
 
         def Shader "Image_1"
@@ -75,8 +76,8 @@ def Xform "Root"
             float inputs:in2.connect = </Root/TextureMaterial/Separate4.outputs:outg>
             float inputs:in3.connect = </Root/TextureMaterial/Separate4.outputs:outb>
             color3f outputs:out
-            float2 ui:nodegraph:node:pos = (1530.9688, 207.98438)
-            int ui:nodegraph:node:stackingOrder = 1418
+            float2 ui:nodegraph:node:pos = (1521.375, 178.4961)
+            int ui:nodegraph:node:stackingOrder = 1430
         }
 
         def Shader "Power"
@@ -85,8 +86,8 @@ def Xform "Root"
             prepend color3f inputs:in1.connect = </Root/TextureMaterial/Combine3.outputs:out>
             float inputs:in2 = 2
             color3f outputs:out
-            float2 ui:nodegraph:node:pos = (1711.375, 129.28906)
-            int ui:nodegraph:node:stackingOrder = 1422
+            float2 ui:nodegraph:node:pos = (1711.375, 192.89062)
+            int ui:nodegraph:node:stackingOrder = 1428
         }
     }
 }
