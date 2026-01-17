@@ -10,6 +10,7 @@ import RealityKit
 @preconcurrency import AVFoundation
 import MetalPerformanceShaders
 import ARKit
+import RealityKitContent
 
 // Processing state manager using actor for thread safety
 actor ProcessingStateManager {
@@ -114,12 +115,16 @@ final class ShadowMixManager {
         let videoMaterial = VideoMaterial(avPlayer: player)
         originalVideoEntity.model = .init(mesh: .generatePlane(width: 1, height: Float(naturalSize.height/naturalSize.width)), materials: [videoMaterial])
         originalVideoEntity.name = "OriginalVideo"
-        originalVideoEntity.position = SIMD3(x: 1.2, y: 1, z: -2)
+        originalVideoEntity.position = SIMD3(x: 2.4, y: 1, z: -2)
         
         let originResource = try await TextureResource(from: originTextureLLT)
-        var originMaterial = UnlitMaterial(texture: originResource)
-        originMaterial.opacityThreshold = 0.001
-        originalTextureEntity.model = .init(mesh: .generatePlane(width: 1, height: Float(naturalSize.height/naturalSize.width)), materials: [originMaterial])
+//        var originMaterial = UnlitMaterial(texture: originResource)
+//        originMaterial.opacityThreshold = 0.001
+//        originalTextureEntity.model = .init(mesh: .generatePlane(width: 1, height: Float(naturalSize.height/naturalSize.width)), materials: [originMaterial])
+        // Create a shader graph material that uses the texture.
+        var shaderGraphMaterial = try await ShaderGraphMaterial(named: "/Root/TextureMaterial", from: "Materials/TextureMaterial.usda", in: realityKitContentBundle)
+        try shaderGraphMaterial.setParameter(name: "BaseImage", value: .textureResource(originResource))
+        originalTextureEntity.model = .init(mesh: .generatePlane(width: 1, height: Float(naturalSize.height/naturalSize.width)), materials: [shaderGraphMaterial])
         originalTextureEntity.name = "OriginalTransparentTexture"
         originalTextureEntity.position = SIMD3(x: 1.2, y: 1, z: -2)
         

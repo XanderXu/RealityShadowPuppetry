@@ -1,9 +1,18 @@
 {
-  "advancedEditorSelectedIdentifier" : "ProjectBrowser",
+  "advancedEditorSelectedIdentifier" : "ShaderGraphEditorPluginID",
   "openSceneRelativePaths" : [
-    "PlaneStereo.usda"
+    "PlaneStereo.usda",
+    "GridMaterial.usda",
+    "Materials\/GridMaterial.usda",
+    "Materials\/TextureMaterial.usda"
   ],
   "recentIdentifiers" : {
+    "36492A78-5306-4839-A7CE-500E07AFA9D9" : [
+
+    ],
+    "66168B71-AB05-424E-8B6C-D33D6E61B08F" : [
+
+    ],
     "AF09ED6F-1707-48FD-8720-65B998362C09" : [
 
     ],
@@ -818,5 +827,6 @@
   },
   "sceneViewportBackgroundColors" : {
 
-  }
+  },
+  "selectedSceneRelativePath" : "Materials\/TextureMaterial.usda"
 }

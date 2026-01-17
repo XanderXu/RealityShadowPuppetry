@@ -1,0 +1,93 @@
+#usda 1.0
+(
+    defaultPrim = "Root"
+    metersPerUnit = 1
+    upAxis = "Y"
+)
+
+def Xform "Root"
+{
+    def Material "TextureMaterial"
+    {
+        reorder nameChildren = ["", "", "", "", "", "", "", "", "", "", "", "", "", "", "DefaultSurfaceShader", "MaterialXPreviewSurface", "Texcoord", "Add", "Multiply", "Fractional", "LineCounts", "Multiply_1", "Separate2", "Separate2_1", "Ifgreater", "Ifgreater_1", "Max", "Background_Color"]
+        asset inputs:BaseImage (
+            customData = {
+                dictionary realitykit = {
+                    float2 positionInSubgraph = (996.7577, 124.40875)
+                    int stackingOrderInSubgraph = 1394
+                }
+            }
+        )
+        token outputs:mtlx:surface.connect = </Root/TextureMaterial/UnlitSurface.outputs:out>
+        token outputs:realitykit:vertex
+        token outputs:surface
+        float2 ui:nodegraph:realitykit:subgraphOutputs:pos = (2222, 300.5)
+        float2 ui:nodegraph:realitykit:subgraphOutputs:size = (182, 89)
+        int ui:nodegraph:realitykit:subgraphOutputs:stackingOrder = 749
+
+        def Shader "DefaultSurfaceShader"
+        {
+            uniform token info:id = "UsdPreviewSurface"
+            color3f inputs:diffuseColor = (1, 1, 1)
+            float inputs:roughness = 0.75
+            token outputs:surface
+        }
+
+        def Shader "UnlitSurface"
+        {
+            uniform token info:id = "ND_realitykit_unlit_surfaceshader"
+            bool inputs:applyPostProcessToneMap = 0
+            color3f inputs:color.connect = </Root/TextureMaterial/Power.outputs:out>
+            bool inputs:hasPremultipliedAlpha
+            float inputs:opacity.connect = </Root/TextureMaterial/Separate4.outputs:outa>
+            float inputs:opacityThreshold = 0.001
+            token outputs:out
+            float2 ui:nodegraph:node:pos = (1835.9922, 292.52734)
+            int ui:nodegraph:node:stackingOrder = 1390
+        }
+
+        def Shader "Image_1"
+        {
+            uniform token info:id = "ND_image_color4"
+            prepend asset inputs:file.connect = </Root/TextureMaterial.inputs:BaseImage>
+            string inputs:filtertype
+            color4f outputs:out
+            float2 ui:nodegraph:node:pos = (1170.6211, 150.13672)
+            int ui:nodegraph:node:stackingOrder = 1418
+        }
+
+        def Shader "Separate4"
+        {
+            uniform token info:id = "ND_separate4_color4"
+            color4f inputs:in.connect = </Root/TextureMaterial/Image_1.outputs:out>
+            float outputs:outa
+            float outputs:outb
+            float outputs:outg
+            float outputs:outr
+            float2 ui:nodegraph:node:pos = (1343.6797, 227.4961)
+            int ui:nodegraph:node:stackingOrder = 1418
+        }
+
+        def Shader "Combine3"
+        {
+            uniform token info:id = "ND_combine3_color3"
+            float inputs:in1.connect = </Root/TextureMaterial/Separate4.outputs:outr>
+            float inputs:in2.connect = </Root/TextureMaterial/Separate4.outputs:outg>
+            float inputs:in3.connect = </Root/TextureMaterial/Separate4.outputs:outb>
+            color3f outputs:out
+            float2 ui:nodegraph:node:pos = (1530.9688, 207.98438)
+            int ui:nodegraph:node:stackingOrder = 1418
+        }
+
+        def Shader "Power"
+        {
+            uniform token info:id = "ND_power_color3FA"
+            prepend color3f inputs:in1.connect = </Root/TextureMaterial/Combine3.outputs:out>
+            float inputs:in2 = 2
+            color3f outputs:out
+            float2 ui:nodegraph:node:pos = (1711.375, 129.28906)
+            int ui:nodegraph:node:stackingOrder = 1422
+        }
+    }
+}
+
