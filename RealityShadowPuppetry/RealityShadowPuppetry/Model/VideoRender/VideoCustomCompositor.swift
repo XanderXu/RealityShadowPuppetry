@@ -25,7 +25,7 @@ enum CustomCompositorError: Int, Error, LocalizedError, Sendable {
 }
 
 nonisolated
-final class VideoCustomCompositor: NSObject, AVVideoCompositing, Sendable {
+final class VideoCustomCompositor: NSObject, AVVideoCompositing,@unchecked Sendable {
     // Thread-safe state container
     private struct State: Sendable {
         var isCancelled = false

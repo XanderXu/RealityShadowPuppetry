@@ -8,7 +8,7 @@
 import MetalKit
 import AVFoundation
 
-final class VideoPlayAndRenderCenter: @unchecked Sendable {
+final class VideoPlayAndRenderCenter {
     var playerStatusDidChange: (@Sendable (AVPlayer.TimeControlStatus) -> Void)?
     var playerItemStatusDidChange: (@Sendable (AVPlayerItem.Status) -> Void)?
     var playbackDidFinish: (() -> Void)?
@@ -66,13 +66,17 @@ final class VideoPlayAndRenderCenter: @unchecked Sendable {
 
         // Monitor playback control status changes (playing, paused, waitingToPlayAtSpecifiedRate)
         timeControlStatusObserver = player.observe(\.timeControlStatus, options: [.new, .old]) { [weak self] player, change in
-            self?.handleTimeControlStatusChange(player.timeControlStatus)
+            guard let self = self else { return }
+            self.playerStatusDidChange?(player.timeControlStatus)
+            print("Player status changed to: \(player.timeControlStatus)")
         }
 
         // Monitor player item status changes (unknown, readyToPlay, failed)
         if let playerItem = player.currentItem {
             playerItemStatusObserver = playerItem.observe(\.status, options: [.new, .old]) { [weak self] playerItem, change in
-                self?.handlePlayerItemStatusChange(playerItem.status)
+                guard let self = self else { return }
+                self.playerItemStatusDidChange?(playerItem.status)
+                print("PlayerItem status changed to: \(playerItem.status)")
             }
         }
         
@@ -87,22 +91,6 @@ final class VideoPlayAndRenderCenter: @unchecked Sendable {
         }
     }
 
-    private nonisolated func handleTimeControlStatusChange(_ status: AVPlayer.TimeControlStatus) {
-        Task { @MainActor [weak self] in
-            guard let self = self else { return }
-            self.playerStatusDidChange?(status)
-            print("Player status changed to: \(status)")
-        }
-    }
-
-    private nonisolated func handlePlayerItemStatusChange(_ status: AVPlayerItem.Status) {
-        Task { @MainActor [weak self] in
-            guard let self = self else { return }
-            self.playerItemStatusDidChange?(status)
-            print("PlayerItem status changed to: \(status)")
-        }
-    }
-    
     private func removePlayerObservers() {
         timeControlStatusObserver?.invalidate()
         timeControlStatusObserver = nil
